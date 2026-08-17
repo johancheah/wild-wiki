@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% block title %}Player Stats — WILD Gaming{% endblock %}
+{% block content %}
+<h1>Player Stats</h1>
+<div class="subtitle">Career totals across all {{ players|length }} tracked roster members. Click a player for match log + agent pool.</div>
+
+<div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Player</th>
+        <th class="num-col">MP</th>
+        <th class="num-col">Kills</th>
+        <th class="num-col">Deaths</th>
+        <th class="num-col">Assists</th>
+        <th class="num-col">K/D</th>
+        <th class="num-col">ADR</th>
+        <th class="num-col">HS%</th>
+        <th class="num-col">Multi-K</th>
+        <th class="num-col">Clutches</th>
+        <th class="num-col">ECON</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in players %}
+      <tr class="linkable" onclick="location.href='/players/{{ p.player_id }}'">
+        <td class="name">{{ ui.avatar(p.display_name, p.headshot_filename) }}{{ p.display_name }}</td>
+        <td class="num-col num">{{ p.matches_played }}</td>
+        <td class="num-col num">{{ p.kills }}</td>
+        <td class="num-col num">{{ p.deaths }}</td>
+        <td class="num-col num">{{ p.assists }}</td>
+        <td class="num-col num">{{ p.kd if p.kd is not none else "—" }}</td>
+        <td class="num-col num">{{ p.adr if p.adr is not none else "—" }}</td>
+        <td class="num-col num">{{ p.hs_pct if p.hs_pct is not none else "—" }}%</td>
+        <td class="num-col num">{{ (p.two_k or 0) + (p.three_k or 0) + (p.four_k or 0) + (p.five_k or 0) }}</td>
+        <td class="num-col num">{{ p.clutches or 0 }}</td>
+        <td class="num-col num">{{ p.econ if p.econ is not none else "—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

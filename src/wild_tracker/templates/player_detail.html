@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% block title %}{{ player.riot_name }} — WILD Gaming{% endblock %}
+{% block content %}
+<a class="back-link" href="/players">&larr; All Players</a>
+<h1 class="player-header">{{ ui.avatar(player.display_name, player.headshot_filename, "lg") }}{{ player.display_name }}</h1>
+
+<div class="stat-row">
+  <div class="stat"><div class="label">Matches</div><div class="value num">{{ totals.matches_played }}</div></div>
+  <div class="stat"><div class="label">K / D / A</div><div class="value num" style="font-size:20px;">{{ totals.kills }}/{{ totals.deaths }}/{{ totals.assists }}</div></div>
+  <div class="stat"><div class="label">K/D</div><div class="value num">{{ totals.kd if totals.kd is not none else "—" }}</div></div>
+  <div class="stat"><div class="label">ADR</div><div class="value num">{{ totals.adr if totals.adr is not none else "—" }}</div></div>
+  <div class="stat"><div class="label">HS%</div><div class="value num">{{ totals.hs_pct if totals.hs_pct is not none else "—" }}%</div></div>
+  <div class="stat"><div class="label">ECON</div><div class="value num">{{ totals.econ if totals.econ is not none else "—" }}</div></div>
+</div>
+
+<section>
+  <h2>Multi-Kills &amp; Clutches (Career)</h2>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th class="num-col">2K</th><th class="num-col">3K</th><th class="num-col">4K</th><th class="num-col">5K</th><th class="num-col">1v1</th><th class="num-col">1v2</th><th class="num-col">1v3</th><th class="num-col">1v4</th><th class="num-col">1v5</th><th class="num-col">Plants</th><th class="num-col">Defuses</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="num-col num">{{ totals.two_k or 0 }}</td>
+          <td class="num-col num">{{ totals.three_k or 0 }}</td>
+          <td class="num-col num">{{ totals.four_k or 0 }}</td>
+          <td class="num-col num">{{ totals.five_k or 0 }}</td>
+          <td class="num-col num">{{ totals.clutch_1v1 or 0 }}</td>
+          <td class="num-col num">{{ totals.clutch_1v2 or 0 }}</td>
+          <td class="num-col num">{{ totals.clutch_1v3 or 0 }}</td>
+          <td class="num-col num">{{ totals.clutch_1v4 or 0 }}</td>
+          <td class="num-col num">{{ totals.clutch_1v5 or 0 }}</td>
+          <td class="num-col num">{{ totals.plants or 0 }}</td>
+          <td class="num-col num">{{ totals.defuses or 0 }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Agent Pool</h2>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Agent</th><th class="num-col">Played</th><th class="num-col">W</th><th class="num-col">Win %</th></tr></thead>
+      <tbody>
+        {% for a in agents %}
+        <tr>
+          <td class="name">{{ ui.agent_cell(a.agent) }}</td>
+          <td class="num-col num">{{ a.n }}</td>
+          <td class="num-col num win">{{ a.wins }}</td>
+          <td class="num-col num">{{ "%.0f"|format(100.0 * a.wins / a.n) }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Match Log</h2>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th><th>Map</th><th>Result</th><th>Agent</th>
+          <th class="num-col">K</th><th class="num-col">D</th><th class="num-col">A</th>
+          <th class="num-col">ADR</th><th class="num-col">HS%</th><th class="num-col">Multi-K</th><th class="num-col">Clutch</th><th class="num-col">ECON</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in match_log %}
+        <tr class="linkable" onclick="location.href='/matches/{{ m.match_id }}'">
+          <td>{{ m.date[:10] }}</td>
+          <td>{{ ui.map_cell(m.map) }}</td>
+          <td><span class="pill {{ 'win' if m.match_result == 'WIN' else 'loss' }}">{{ m.match_result }}</span></td>
+          <td>{{ ui.agent_cell(m.agent) }}</td>
+          <td class="num-col num">{{ m.kills }}</td>
+          <td class="num-col num">{{ m.deaths }}</td>
+          <td class="num-col num">{{ m.assists }}</td>
+          <td class="num-col num">{{ "%.1f"|format(m.adr) if m.adr is not none else "—" }}</td>
+          <td class="num-col num">{{ "%.1f"|format(m.hs_pct) if m.hs_pct is not none else "—" }}%</td>
+          <td class="num-col num">{{ (m.two_k or 0) + (m.three_k or 0) + (m.four_k or 0) + (m.five_k or 0) }}</td>
+          <td class="num-col num">{{ m.clutches or 0 }}</td>
+          <td class="num-col num">{{ "%.0f"|format(m.econ) if m.econ is not none else "—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

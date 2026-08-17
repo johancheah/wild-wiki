@@ -1,0 +1,9 @@
+.env
+data/*.sqlite3
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+# Raw asset drop folder (headshots/logo) — already copied into
+# src/wild_tracker/static/ and web/public/, the actually-served locations.
+src/assets/

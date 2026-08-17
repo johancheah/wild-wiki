@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}WILD Gaming{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/"><img class="brand-logo" src="/static/logo.png" alt="WILD Gaming">WILD <span>GAMING</span></a>
+      <nav>
+        <a href="/" class="{{ 'active' if active == 'team' }}">Team Stats</a>
+        <a href="/players" class="{{ 'active' if active == 'players' }}">Player Stats</a>
+        <a href="/matches" class="{{ 'active' if active == 'matches' }}">Matches</a>
+        <a href="/schedule" class="{{ 'active' if active == 'schedule' }}">Schedule</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

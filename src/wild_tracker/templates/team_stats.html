@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% block title %}Team Stats — WILD Gaming{% endblock %}
+{% block content %}
+<h1>Team Stats</h1>
+
+<div class="stat-row">
+  <div class="stat">
+    <div class="label">Record</div>
+    <div class="value"><span class="win">{{ overall.wins }}</span><span class="of">&ndash;</span><span class="loss">{{ overall.losses }}</span></div>
+  </div>
+  <div class="stat">
+    <div class="label">Win Rate</div>
+    <div class="value num">{{ overall.win_pct }}<span class="of">%</span></div>
+  </div>
+  <div class="stat">
+    <div class="label">Matches</div>
+    <div class="value num">{{ overall.total }}</div>
+  </div>
+  <div class="stat">
+    <div class="label">Seasons</div>
+    <div class="value num">{{ by_season|length }}</div>
+  </div>
+</div>
+
+<section>
+  <h2>By Map</h2>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Map</th><th class="num-col">Played</th><th class="num-col">W</th><th class="num-col">L</th><th class="num-col">Win %</th></tr></thead>
+      <tbody>
+        {% for m in by_map %}
+        <tr>
+          <td class="name">{{ ui.map_cell(m.map) }}</td>
+          <td class="num-col num">{{ m.n }}</td>
+          <td class="num-col num win">{{ m.wins }}</td>
+          <td class="num-col num loss">{{ m.n - m.wins }}</td>
+          <td class="num-col num">{{ "%.1f"|format(100.0 * m.wins / m.n) }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>By Season</h2>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Season</th><th class="num-col">Played</th><th class="num-col">W</th><th class="num-col">L</th><th class="num-col">Win %</th></tr></thead>
+      <tbody>
+        {% for s in by_season %}
+        <tr>
+          <td class="name">{{ s.season_id or "—" }}</td>
+          <td class="num-col num">{{ s.n }}</td>
+          <td class="num-col num win">{{ s.wins }}</td>
+          <td class="num-col num loss">{{ s.n - s.wins }}</td>
+          <td class="num-col num">{{ "%.1f"|format(100.0 * s.wins / s.n) }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>By Match Type</h2>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Type</th><th class="num-col">Played</th><th class="num-col">W</th><th class="num-col">L</th><th class="num-col">Win %</th></tr></thead>
+      <tbody>
+        {% for t in by_type %}
+        <tr>
+          <td class="name">{{ t.match_type }}</td>
+          <td class="num-col num">{{ t.n }}</td>
+          <td class="num-col num win">{{ t.wins }}</td>
+          <td class="num-col num loss">{{ t.n - t.wins }}</td>
+          <td class="num-col num">{{ "%.1f"|format(100.0 * t.wins / t.n) }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

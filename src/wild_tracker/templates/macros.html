@@ -1,0 +1,77 @@
+{% macro avatar(display_name, headshot_filename, size="") %}
+  {% set url = headshot_url(headshot_filename) %}
+  {% if url %}
+    <img class="avatar{{ ' avatar-' + size if size }}" src="{{ url }}" alt="{{ display_name }}">
+  {% else %}
+    <span class="avatar-fallback{{ ' avatar-fallback-' + size if size }}">{{ display_name[:2]|upper }}</span>
+  {% endif %}
+{% endmacro %}
+
+{% macro agent_cell(agent) %}
+  {% set icon = agent_icon(agent) %}
+  <span class="agent-cell">
+    {% if icon %}<img class="agent-icon" src="{{ icon }}" alt="{{ agent }}">{% endif %}
+    {{ agent or "—" }}
+  </span>
+{% endmacro %}
+
+{% macro map_cell(map_name) %}
+  {% set icon = map_icon(map_name) %}
+  <span class="map-cell">
+    {% if icon %}<img class="map-icon" src="{{ icon }}" alt="{{ map_name }}">{% endif %}
+    {{ map_name }}
+  </span>
+{% endmacro %}
+
+{% macro chip(value, diff=False) %}
+  {% if value is none %}
+    <span class="stat-chip">—</span>
+  {% elif diff %}
+    <span class="stat-chip {{ 'chip-pos' if value > 0 else ('chip-neg' if value < 0 else '') }}">{{ "+%d"|format(value) if value > 0 else value }}</span>
+  {% else %}
+    <span class="stat-chip">{{ value }}</span>
+  {% endif %}
+{% endmacro %}
+
+{# VLR-style compact box score: Player, ACS, K/D/A, +/-, KAST, ADR, HS%, FK, FD, +/- #}
+{% macro box_score_table(rows, clickable=True) %}
+<div class="table-scroll">
+  <table class="vlr-table">
+    <thead>
+      <tr>
+        <th>Player</th><th>Agent</th>
+        <th class="num-col">ACS</th>
+        <th class="num-col">K / D / A</th>
+        <th class="num-col">+/&minus;</th>
+        <th class="num-col">KAST</th>
+        <th class="num-col">ADR</th>
+        <th class="num-col">HS%</th>
+        <th class="num-col">FK</th>
+        <th class="num-col">FD</th>
+        <th class="num-col">+/&minus;</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      {% if clickable %}
+      <tr class="linkable" onclick="location.href='/players/{{ r.player_id }}'">
+      {% else %}
+      <tr>
+      {% endif %}
+        <td class="name">{{ avatar(r.display_name, r.headshot_filename) }}{{ r.display_name }}</td>
+        <td>{{ agent_cell(r.agent) }}</td>
+        <td class="num-col">{{ chip("%.0f"|format(r.acs) if r.acs is not none else None) }}</td>
+        <td class="num-col"><span class="stat-chip kda">{{ r.kills }} / {{ r.deaths }} / {{ r.assists }}</span></td>
+        <td class="num-col">{{ chip(r.kills - r.deaths, diff=True) }}</td>
+        <td class="num-col">{{ chip("%.0f%%"|format(r.kast_pct) if r.kast_pct is not none else None) }}</td>
+        <td class="num-col">{{ chip("%.0f"|format(r.adr) if r.adr is not none else None) }}</td>
+        <td class="num-col">{{ chip("%.0f%%"|format(r.hs_pct) if r.hs_pct is not none else None) }}</td>
+        <td class="num-col">{{ chip(r.fk) }}</td>
+        <td class="num-col">{{ chip(r.fd) }}</td>
+        <td class="num-col">{{ chip((r.fk - r.fd) if (r.fk is not none and r.fd is not none) else None, diff=True) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endmacro %}

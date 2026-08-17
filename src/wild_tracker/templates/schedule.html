@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Schedule — WILD Gaming{% endblock %}
+{% block content %}
+<h1>Schedule</h1>
+<div class="empty-note">
+  The original spreadsheet's Schedule sheet (Week 1&ndash;7 + Playoffs, mapped to specific date ranges) is a manually-curated calendar that hasn't been entered into <code>season_schedule</code> yet — it isn't something the API or the legacy export can derive on its own (see PLAN.md §1/§6.5). Showing seasons grouped by their real dates instead until that table is populated.
+</div>
+
+<div class="table-scroll" style="margin-top: 24px;">
+  <table>
+    <thead><tr><th>Season</th><th class="num-col">Matches</th><th class="num-col">W</th><th class="num-col">L</th><th>First Match</th></tr></thead>
+    <tbody>
+      {% for s in by_season %}
+      <tr>
+        <td class="name">{{ s.season_id or "—" }}</td>
+        <td class="num-col num">{{ s.n }}</td>
+        <td class="num-col num win">{{ s.wins }}</td>
+        <td class="num-col num loss">{{ s.n - s.wins }}</td>
+        <td>{{ s.first_date[:10] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

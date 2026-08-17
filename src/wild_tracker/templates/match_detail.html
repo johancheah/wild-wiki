@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% block title %}{{ match.map }} — WILD Gaming{% endblock %}
+{% block content %}
+<a class="back-link" href="/matches">&larr; All Matches</a>
+{% set splash = map_splash(match.map) %}
+{% if splash %}<img class="map-splash-banner" src="{{ splash }}" alt="{{ match.map }}">{% endif %}
+<h1>
+  {{ match.map }}
+  <span class="pill {{ 'win' if match.result == 'WIN' else 'loss' }}" style="vertical-align: middle;">{{ match.result }}</span>
+</h1>
+<div class="subtitle">
+  {{ match.date[:10] }} &middot; {{ match.season_id or "—" }} &middot; {{ match.match_type or "—" }}
+  {% if match.opponent_name %} &middot; vs {{ match.opponent_name }} ({{ match.opponent_tag }}){% endif %}
+  &middot; margin {{ "+%d"|format(match.margin) if match.margin and match.margin > 0 else match.margin }}
+  &middot; <span class="pill {{ 'src-api' if match.source == 'api' else 'src-sheet' }}">{{ "API-sourced" if match.source == "api" else "Spreadsheet-sourced" }}</span>
+  {% if match.source == "api" %} &middot; <span style="color:var(--text-faint)">KAST unavailable from the API — see PLAN.md §5</span>{% endif %}
+</div>
+
+{% set wild_rows = box_score|selectattr("is_wild_player")|list|sort(attribute="acs", reverse=True) %}
+{% set enemy_rows = box_score|rejectattr("is_wild_player")|list|sort(attribute="acs", reverse=True) %}
+
+<section>
+  <h2>WILD Box Score</h2>
+  {{ ui.box_score_table(wild_rows, clickable=True) }}
+</section>
+
+{% if enemy_rows %}
+<section>
+  <h2>Opponent Box Score</h2>
+  {{ ui.box_score_table(enemy_rows, clickable=False) }}
+</section>
+{% else %}
+<div class="empty-note">This match was imported from the legacy spreadsheet, which never recorded opponent identity or individual opponent stats — only the final score (see PLAN.md §5.5).</div>
+{% endif %}
+
+<section>
+  <h2>Advanced Stats — WILD</h2>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th class="num-col">2K</th><th class="num-col">3K</th><th class="num-col">4K</th><th class="num-col">5K</th>
+          <th class="num-col">Clutch</th><th class="num-col">PL</th><th class="num-col">DE</th><th class="num-col">ECON</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in wild_rows %}
+        <tr class="linkable" onclick="location.href='/players/{{ r.player_id }}'">
+          <td class="name">{{ ui.avatar(r.display_name, r.headshot_filename) }}{{ r.display_name }}</td>
+          <td class="num-col num">{{ r.two_k or 0 }}</td>
+          <td class="num-col num">{{ r.three_k or 0 }}</td>
+          <td class="num-col num">{{ r.four_k or 0 }}</td>
+          <td class="num-col num">{{ r.five_k or 0 }}</td>
+          <td class="num-col num">{{ (r.clutch_1v1 or 0) + (r.clutch_1v2 or 0) + (r.clutch_1v3 or 0) + (r.clutch_1v4 or 0) + (r.clutch_1v5 or 0) }}</td>
+          <td class="num-col num">{{ r.plants or 0 }}</td>
+          <td class="num-col num">{{ r.defuses or 0 }}</td>
+          <td class="num-col num">{{ "%.0f"|format(r.econ) if r.econ is not none else "—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% if weapon_kills %}
+<section>
+  <h2>Weapon Kills</h2>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Player</th><th>Weapon</th><th class="num-col">Kills</th></tr></thead>
+      <tbody>
+        {% for w in weapon_kills %}
+        <tr>
+          <td class="name">{{ w.display_name }}</td>
+          <td>{{ w.weapon }}</td>
+          <td class="num-col num">{{ w.kill_count }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+{% endblock %}
