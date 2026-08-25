@@ -112,6 +112,14 @@ def match_detail(request: Request, match_id: str):
     return templates.TemplateResponse("match_detail.html", {"request": request, "active": "matches", **data})
 
 
+@app.get("/comps", response_class=HTMLResponse)
+def team_comps(request: Request):
+    conn = get_conn()
+    comps = queries.team_comps(conn)
+    conn.close()
+    return templates.TemplateResponse("team_comps.html", {"request": request, "active": "comps", "comps": comps})
+
+
 @app.get("/schedule", response_class=HTMLResponse)
 def schedule(request: Request):
     conn = get_conn()

@@ -301,6 +301,38 @@ def match_week_detail(conn: sqlite3.Connection, season_id: str, local_date: str)
     }
 
 
+def team_comps(conn: sqlite3.Connection) -> list[dict]:
+    """One row per map played, with the 5-agent composition WILD ran that
+    map — role/agent pool decisions, not per-player performance, so this
+    only needs match_players.agent (present for both API and spreadsheet
+    rows) grouped by match, not the derived-stats layer."""
+    rows = conn.execute("""
+        SELECT m.match_id, m.date, m.season_id, m.match_type, m.map, m.result, m.margin, m.source,
+          t.name AS opponent, mp.agent
+        FROM matches m
+        JOIN match_players mp ON mp.match_id = m.match_id AND mp.team_id = m.team_id
+        LEFT JOIN teams t ON t.team_id = m.enemy_team_id
+        WHERE mp.agent IS NOT NULL
+        ORDER BY m.date DESC
+    """).fetchall()
+
+    matches: dict[str, dict] = {}
+    for r in rows:
+        m = matches.setdefault(r["match_id"], {
+            "match_id": r["match_id"], "date": r["date"], "season_id": r["season_id"],
+            "match_type": r["match_type"], "map": r["map"], "result": r["result"],
+            "margin": r["margin"], "source": r["source"], "opponent": r["opponent"],
+            "agents": [],
+        })
+        m["agents"].append(r["agent"])
+
+    comps = [m for m in matches.values() if len(m["agents"]) == 5]
+    comps.sort(key=lambda m: m["date"], reverse=True)
+    for m in comps:
+        m["agents"].sort()
+    return comps
+
+
 def match_list(conn: sqlite3.Connection) -> list[dict]:
     return [dict(r) for r in conn.execute("""
         SELECT m.match_id, m.date, m.season_id, m.match_type, m.map, m.result, m.margin, m.source,
