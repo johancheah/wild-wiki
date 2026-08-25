@@ -1,7 +1,20 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Direct port of src/wild_tracker/queries.py::team_comps — one row per map
-// played, with the 5-agent composition WILD ran that map.
+// played, with the 5-agent composition WILD ran that map, grouped by role
+// (Controller/Initiator/Sentinel/Duelist) with a hover preview of the
+// player who played each agent that map.
+
+const ROLE_ORDER: Record<string, number> = { Controller: 0, Initiator: 1, Sentinel: 2, Duelist: 3 };
+
+export type CompAgent = {
+  agent: string;
+  role: string | null;
+  player_id: string;
+  headshot_filename: string | null;
+  display_name: string;
+  gap_before: boolean;
+};
 
 export type TeamComp = {
   match_id: string;
@@ -13,31 +26,59 @@ export type TeamComp = {
   margin: number | null;
   source: string;
   opponent: string | null;
-  agents: string[];
+  agents: CompAgent[];
+};
+
+type BoxScoreAgentRow = {
+  match_id: string;
+  team_id: string;
+  agent: string;
+  role: string | null;
+  player_id: string;
+  headshot_filename: string | null;
+  display_name: string;
 };
 
 export async function fetchTeamComps(supabase: SupabaseClient): Promise<TeamComp[]> {
   const [{ data: matches }, { data: teams }, { data: players }] = await Promise.all([
     supabase.from("matches").select("match_id, date, season_id, match_type, map, result, margin, source, team_id, enemy_team_id"),
     supabase.from("teams").select("team_id, name"),
-    supabase.from("match_players").select("match_id, team_id, agent").not("agent", "is", null),
+    supabase
+      .from("v_match_box_score")
+      .select("match_id, team_id, agent, role, player_id, headshot_filename, display_name")
+      .not("agent", "is", null)
+      .returns<BoxScoreAgentRow[]>(),
   ]);
 
   const teamName = new Map<string, string>();
   for (const t of teams ?? []) teamName.set(t.team_id, t.name);
 
-  const agentsByMatch = new Map<string, { team_id: string; agent: string }[]>();
+  const rowsByMatch = new Map<string, BoxScoreAgentRow[]>();
   for (const p of players ?? []) {
-    if (!agentsByMatch.has(p.match_id)) agentsByMatch.set(p.match_id, []);
-    agentsByMatch.get(p.match_id)!.push({ team_id: p.team_id, agent: p.agent });
+    if (!rowsByMatch.has(p.match_id)) rowsByMatch.set(p.match_id, []);
+    rowsByMatch.get(p.match_id)!.push(p);
   }
 
   const comps: TeamComp[] = [];
   for (const m of matches ?? []) {
-    const rows = agentsByMatch.get(m.match_id) ?? [];
-    const agents = rows.filter((r) => r.team_id === m.team_id).map((r) => r.agent);
-    if (agents.length !== 5) continue;
-    agents.sort();
+    const rows = rowsByMatch.get(m.match_id) ?? [];
+    const wildRows = rows.filter((r) => r.team_id === m.team_id);
+    if (wildRows.length !== 5) continue;
+
+    wildRows.sort((a, b) => {
+      const roleDiff = (ROLE_ORDER[a.role ?? ""] ?? 99) - (ROLE_ORDER[b.role ?? ""] ?? 99);
+      return roleDiff !== 0 ? roleDiff : (a.agent ?? "").localeCompare(b.agent ?? "");
+    });
+
+    const agents: CompAgent[] = wildRows.map((r, i) => ({
+      agent: r.agent,
+      role: r.role,
+      player_id: r.player_id,
+      headshot_filename: r.headshot_filename,
+      display_name: r.display_name,
+      gap_before: i > 0 && r.role !== wildRows[i - 1].role,
+    }));
+
     comps.push({
       match_id: m.match_id,
       date: m.date,

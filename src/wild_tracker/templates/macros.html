@@ -36,6 +36,24 @@
   </span>
 {% endmacro %}
 
+{# Team Comps composition icon: agent icon, grouped by role (a small gap
+   before the first icon of a new role group, via the pre-computed
+   `gap_before` flag from queries.py::team_comps), with a hover preview of
+   the player who played that agent that map. #}
+{% macro comp_agent(a) %}
+  <span class="comp-agent{{ ' comp-agent-gap' if a.gap_before }}">
+    {% set icon = agent_icon(a.agent) %}
+    {% if icon %}<img class="agent-icon-only" src="{{ icon }}" alt="{{ a.agent or '' }}">{% endif %}
+    {% set hs = headshot_url(a.headshot_filename) %}
+    {% if hs %}
+    <span class="comp-agent-preview">
+      <img src="{{ hs }}" alt="{{ a.display_name }}">
+      <span class="comp-agent-preview-name">{{ a.display_name }}</span>
+    </span>
+    {% endif %}
+  </span>
+{% endmacro %}
+
 {# Combined (match-week) box score variant: a player can play a different
    agent on each map, so show one small icon per map instead of one agent. #}
 {% macro agent_cell_icons(agents) %}

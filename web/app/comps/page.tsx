@@ -2,7 +2,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { fetchTeamComps } from "@/lib/comps";
 import { mapSplash } from "@/lib/assets";
-import { AgentCellIconOnly } from "@/components/AgentCellIconOnly";
+import { CompAgentIcon } from "@/components/CompAgentIcon";
 import { MapSelect } from "@/components/MapSelect";
 
 export const revalidate = 0;
@@ -41,9 +41,6 @@ export default async function TeamCompsPage({
           <thead>
             <tr>
               <th>Date</th>
-              <th>Season</th>
-              <th>Type</th>
-              <th>Opponent</th>
               <th>Result</th>
               <th className="num-col">Margin</th>
               <th>Composition</th>
@@ -55,9 +52,6 @@ export default async function TeamCompsPage({
                 <td>
                   <Link href={`/matches/${c.match_id}`}>{c.date.slice(0, 10)}</Link>
                 </td>
-                <td className="num">{c.season_id ?? "—"}</td>
-                <td className="type-tag">{c.match_type ?? "—"}</td>
-                <td>{c.opponent ?? "—"}</td>
                 <td>
                   <span className={`pill ${c.result === "WIN" ? "win" : "loss"}`}>{c.result}</span>
                 </td>
@@ -67,7 +61,7 @@ export default async function TeamCompsPage({
                 <td>
                   <span className="agent-cell-icon-only agent-cell-multi">
                     {c.agents.map((a, i) => (
-                      <AgentCellIconOnly key={i} agent={a} />
+                      <CompAgentIcon key={i} a={a} />
                     ))}
                   </span>
                 </td>

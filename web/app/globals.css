@@ -345,3 +345,24 @@ tr.week-row td:first-child { color: var(--text-faint); }
   font-family: inherit; cursor: pointer; min-width: 180px;
 }
 .comps-map-select select:hover { border-color: var(--accent-dim); }
+
+/* Team Comps: role-grouped composition icons with a hover headshot preview */
+.comp-agent { position: relative; display: inline-flex; }
+.comp-agent.comp-agent-gap { margin-left: 14px; }
+.comp-agent-preview {
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%) translateY(8px);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity 0.12s ease; z-index: 20;
+}
+.comp-agent:hover .comp-agent-preview { opacity: 1; visibility: visible; }
+.comp-agent-preview img {
+  width: 56px; height: 56px; border-radius: 8px; object-fit: cover;
+  border: 2px solid var(--accent); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  display: block; background: var(--surface-2);
+}
+.comp-agent-preview-name {
+  font-size: 10.5px; font-weight: 700; color: var(--text);
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 4px; padding: 2px 6px; white-space: nowrap;
+}
