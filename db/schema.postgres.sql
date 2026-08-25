@@ -125,13 +125,16 @@ CREATE TABLE IF NOT EXISTS match_player_weapon_kills (
 );
 
 -- side (ATK/DEF) is not directly present per round in match-details-v4 and
--- is left null in Phase 1 — determinable later from map side-swap
--- conventions if needed, not worth guessing at now.
+-- is left null here — inferred at read time from plant evidence + the
+-- standard 12-round half-swap convention instead (see PLAN.md).
+-- result is data.rounds[].result from the API ("Elimination", "Defuse",
+-- "Detonate", "Surrendered", "" for time-expiry).
 CREATE TABLE IF NOT EXISTS rounds (
     match_id            TEXT NOT NULL REFERENCES matches(match_id),
     round_number        INTEGER NOT NULL,
     winning_team_id     TEXT REFERENCES teams(team_id),
     side                TEXT,
+    result              TEXT,
     ceremony            TEXT,
     plant_player_id     TEXT REFERENCES players(player_id),
     plant_site          TEXT,

@@ -29,7 +29,7 @@ SELECT
     COALESCE(mp.adr, mp.damage_dealt * 1.0 / NULLIF(mp.rounds_played, 0)) AS adr,
     COALESCE(mp.hs_pct, mp.headshots * 100.0 / NULLIF(mp.headshots + mp.bodyshots + mp.legshots, 0)) AS hs_pct,
     COALESCE(mp.acs, mp.score * 1.0 / NULLIF(mp.rounds_played, 0)) AS acs,
-    mp.kast_pct,  -- spreadsheet rows only; genuinely unavailable from match-details-v4 for API rows (PLAN.md §5)
+    mp.kast_pct,  -- direct for spreadsheet rows; computed for API rows from kill_events (compute_kast.py) — not in match-details-v4 directly, but derivable (PLAN.md §5, resolved)
     mp.fk,
     mp.fd,
     CASE WHEN mp.rounds_played > 0 THEN mp.kills * 1.0 / mp.rounds_played END AS kpr,
@@ -103,6 +103,21 @@ SELECT
 FROM v_wild_player_match_stats
 WHERE agent IS NOT NULL
 GROUP BY player_id, agent;
+
+-- Role/class breakdown (Duelist/Initiator/Controller/Sentinel) for the
+-- player page — mirrors queries.py::player_detail's `roles` query exactly
+-- (rounds-weighted K/D, ACS, ADR; % of maps played per role computed
+-- client-side from the total across all of a player's role rows).
+CREATE OR REPLACE VIEW v_player_role_breakdown AS
+SELECT
+    player_id, role, COUNT(*) AS n,
+    SUM(CASE WHEN match_result = 'WIN' THEN 1 ELSE 0 END) AS wins,
+    ROUND((SUM(kills) * 1.0 / NULLIF(SUM(deaths), 0))::numeric, 2) AS kd,
+    ROUND((SUM(acs * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0))::numeric, 1) AS acs,
+    ROUND((SUM(adr * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0))::numeric, 1) AS adr
+FROM v_wild_player_match_stats
+WHERE role IS NOT NULL
+GROUP BY player_id, role;
 
 CREATE OR REPLACE VIEW v_match_list AS
 SELECT m.match_id, m.date, m.season_id, m.match_type, m.map, m.result, m.margin, m.source,

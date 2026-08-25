@@ -30,7 +30,7 @@ SELECT
     COALESCE(mp.adr, mp.damage_dealt * 1.0 / NULLIF(mp.rounds_played, 0)) AS adr,
     COALESCE(mp.hs_pct, mp.headshots * 100.0 / NULLIF(mp.headshots + mp.bodyshots + mp.legshots, 0)) AS hs_pct,
     COALESCE(mp.acs, mp.score * 1.0 / NULLIF(mp.rounds_played, 0)) AS acs,
-    mp.kast_pct,  -- spreadsheet rows only; genuinely unavailable from match-details-v4 for API rows (PLAN.md §5)
+    mp.kast_pct,  -- direct for spreadsheet rows; computed for API rows from kill_events (compute_kast.py) — not in match-details-v4 directly, but derivable (PLAN.md §5, resolved)
     mp.fk,
     mp.fd,
     CASE WHEN mp.rounds_played > 0 THEN mp.kills * 1.0 / mp.rounds_played END AS kpr,

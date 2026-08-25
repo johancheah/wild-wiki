@@ -39,6 +39,35 @@
 </section>
 
 <section>
+  <h2>Role Breakdown</h2>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Role</th><th class="num-col">Maps</th><th class="num-col">% of Maps</th>
+          <th class="num-col">W</th><th class="num-col">Win %</th>
+          <th class="num-col">ACS</th><th class="num-col">ADR</th><th class="num-col">K/D</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in roles %}
+        <tr>
+          <td class="name">{{ ui.role_cell(r.role) }}</td>
+          <td class="num-col num">{{ r.n }}</td>
+          <td class="num-col num">{{ r.pct }}%</td>
+          <td class="num-col num win">{{ r.wins }}</td>
+          <td class="num-col num">{{ "%.0f"|format(100.0 * r.wins / r.n) }}%</td>
+          <td class="num-col num">{{ r.acs if r.acs is not none else "—" }}</td>
+          <td class="num-col num">{{ r.adr if r.adr is not none else "—" }}</td>
+          <td class="num-col num">{{ r.kd if r.kd is not none else "—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
   <h2>Agent Pool</h2>
   <div class="table-scroll">
     <table>

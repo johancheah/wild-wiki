@@ -1,25 +1,53 @@
 {% extends "base.html" %}
+{% import "macros.html" as ui %}
 {% block title %}Schedule — WILD Gaming{% endblock %}
 {% block content %}
 <h1>Schedule</h1>
-<div class="empty-note">
-  The original spreadsheet's Schedule sheet (Week 1&ndash;7 + Playoffs, mapped to specific date ranges) is a manually-curated calendar that hasn't been entered into <code>season_schedule</code> yet — it isn't something the API or the legacy export can derive on its own (see PLAN.md §1/§6.5). Showing seasons grouped by their real dates instead until that table is populated.
+<div class="subtitle">
+  Organized by match week — Premier plays one assigned map per week, twice (against two different opponents), so a week's outcome is 2&ndash;0, 1&ndash;1, or 0&ndash;2. Older seasons (Beta through early E8) ran single-map weeks instead; those show one map per row.
 </div>
 
-<div class="table-scroll" style="margin-top: 24px;">
+<div class="table-scroll">
   <table>
-    <thead><tr><th>Season</th><th class="num-col">Matches</th><th class="num-col">W</th><th class="num-col">L</th><th>First Match</th></tr></thead>
-    <tbody>
-      {% for s in by_season %}
+    <thead>
       <tr>
-        <td class="name">{{ s.season_id or "—" }}</td>
-        <td class="num-col num">{{ s.n }}</td>
-        <td class="num-col num win">{{ s.wins }}</td>
-        <td class="num-col num loss">{{ s.n - s.wins }}</td>
-        <td>{{ s.first_date[:10] }}</td>
+        <th>Season</th><th>Week</th><th>Date</th><th>Maps</th><th class="num-col">Record</th>
+      </tr>
+    </thead>
+    {% for s in seasons %}
+    <tbody class="season-group{{ '' if loop.first else ' collapsed' }}">
+      <tr class="season-header" onclick="this.closest('tbody').classList.toggle('collapsed')">
+        <td class="name" colspan="3">
+          <span class="season-toggle">&#9656;</span>{{ s.season_id or "—" }}
+        </td>
+        <td>{{ s.weeks|length }} week{{ "" if s.weeks|length == 1 else "s" }}</td>
+        <td class="num-col num">
+          {% if s.wins > s.losses %}<span class="win">{{ s.record }}</span>
+          {% elif s.losses > s.wins %}<span class="loss">{{ s.record }}</span>
+          {% else %}{{ s.record }}{% endif %}
+        </td>
+      </tr>
+      {% for w in s.weeks %}
+      <tr class="week-row linkable" onclick="location.href='/schedule/{{ w.season_id|urlencode }}/{{ w.local_date }}'">
+        <td class="num" style="padding-left:32px;">&#8627;</td>
+        <td class="name">{{ w.label }}</td>
+        <td>{{ w.local_date }}</td>
+        <td>
+          {% for m in w.maps %}
+            <span class="pill {{ 'win' if m.result == 'WIN' else 'loss' }}" style="margin-right:6px;">
+              {{ m.map }} {{ m.result }}
+            </span>
+          {% endfor %}
+        </td>
+        <td class="num-col num">
+          {% if w.wins > w.losses %}<span class="win">{{ w.record }}</span>
+          {% elif w.losses > w.wins %}<span class="loss">{{ w.record }}</span>
+          {% else %}{{ w.record }}{% endif %}
+        </td>
       </tr>
       {% endfor %}
     </tbody>
+    {% endfor %}
   </table>
 </div>
 {% endblock %}

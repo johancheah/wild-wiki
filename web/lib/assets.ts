@@ -22,3 +22,25 @@ export function mapSplash(map: string | null | undefined): string | null {
 export function headshotUrl(filename: string | null | undefined): string | null {
   return filename ? `/headshots/${filename}` : null;
 }
+
+const ROUND_ICON_FILES: Record<string, string> = {
+  Elimination: "elimination.webp",
+  Defuse: "defuse.webp",
+  Detonate: "detonate.webp",
+  Surrendered: "surrendered.webp",
+};
+
+export function roundIconUrl(result: string | null | undefined): string {
+  return `/icons/${ROUND_ICON_FILES[result ?? ""] ?? "time.webp"}`;
+}
+
+const ROLE_ICON_FILES: Record<string, string> = {
+  Duelist: "role-duelist.png",
+  Initiator: "role-initiator.webp",
+  Controller: "role-controller.webp",
+  Sentinel: "role-sentinel.webp",
+};
+
+export function roleIconUrl(role: string | null | undefined): string | null {
+  return role && ROLE_ICON_FILES[role] ? `/icons/${ROLE_ICON_FILES[role]}` : null;
+}

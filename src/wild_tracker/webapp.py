@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
@@ -48,6 +49,17 @@ templates.env.globals["agent_icon"] = agent_icon
 templates.env.globals["map_icon"] = map_icon
 templates.env.globals["map_splash"] = map_splash
 templates.env.globals["headshot_url"] = headshot_url
+
+
+def asset_version() -> int:
+    # Cache-busting query param for style.css — browsers (and this preview
+    # tool) can be stubborn about revalidating a <link>-loaded stylesheet
+    # even when the bytes on disk have changed; a version query string
+    # sidesteps that entirely rather than depending on cache headers.
+    return int(os.path.getmtime(APP_DIR / "static" / "style.css"))
+
+
+templates.env.globals["asset_version"] = asset_version
 
 
 def get_conn():
@@ -103,6 +115,16 @@ def match_detail(request: Request, match_id: str):
 @app.get("/schedule", response_class=HTMLResponse)
 def schedule(request: Request):
     conn = get_conn()
-    data = queries.team_record(conn)
+    seasons = queries.schedule_by_season(conn)
     conn.close()
-    return templates.TemplateResponse("schedule.html", {"request": request, "active": "schedule", "by_season": data["by_season"]})
+    return templates.TemplateResponse("schedule.html", {"request": request, "active": "schedule", "seasons": seasons})
+
+
+@app.get("/schedule/{season_id}/{local_date}", response_class=HTMLResponse)
+def match_week_detail(request: Request, season_id: str, local_date: str):
+    conn = get_conn()
+    data = queries.match_week_detail(conn, season_id, local_date)
+    conn.close()
+    if data is None:
+        raise HTTPException(status_code=404, detail="Match week not found")
+    return templates.TemplateResponse("match_week_detail.html", {"request": request, "active": "schedule", **data})

@@ -134,7 +134,7 @@ thead th {
   color: var(--text-faint); font-weight: 600; padding: 10px 14px;
   background: var(--surface-2); border-bottom: 1px solid var(--border); white-space: nowrap;
 }
-thead th.num-col, tbody td.num-col { text-align: right; }
+thead th.num-col, tbody td.num-col { text-align: center; }
 tbody td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--text-dim); white-space: nowrap; }
 tbody tr:last-child td { border-bottom: none; }
 tbody tr.linkable:hover td { background: var(--surface-2); cursor: pointer; }
@@ -171,21 +171,22 @@ tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4
   border: 1px dashed var(--border); border-radius: 6px; text-align: center;
 }
 
-/* Player headshots (real photos) + fallback initials avatar */
+/* Player headshots (real photos) + fallback initials avatar — rounded
+   rectangle, matching the agent icons' shape rather than a circle. */
 .avatar {
-  width: 28px; height: 28px; border-radius: 50%; object-fit: cover;
+  width: 28px; height: 28px; border-radius: 6px; object-fit: cover;
   vertical-align: middle; margin-right: 8px; background: var(--surface-2);
   border: 1px solid var(--border);
 }
 .avatar-fallback {
-  width: 28px; height: 28px; border-radius: 50%;
+  width: 28px; height: 28px; border-radius: 6px;
   display: inline-flex; align-items: center; justify-content: center;
   vertical-align: middle; margin-right: 8px;
   background: var(--surface-2); border: 1px solid var(--border);
   color: var(--text-faint); font-size: 11px; font-weight: 700;
 }
-.avatar-lg { width: 72px; height: 72px; margin-right: 16px; }
-.avatar-fallback-lg { width: 72px; height: 72px; font-size: 24px; margin-right: 16px; }
+.avatar-lg { width: 72px; height: 72px; margin-right: 16px; border-radius: 14px; }
+.avatar-fallback-lg { width: 72px; height: 72px; font-size: 24px; margin-right: 16px; border-radius: 14px; }
 .player-header { display: flex; align-items: center; }
 
 /* Agent icons */
@@ -194,6 +195,23 @@ tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4
   vertical-align: middle; margin-right: 6px; background: var(--surface-2);
 }
 .agent-cell { display: flex; align-items: center; }
+
+/* Box score agent cell: icon only, no name (unlike agent-cell above, used
+   where the agent name should stay, e.g. Agent Pool / Match Log). */
+.agent-icon-only {
+  width: 26px; height: 26px; border-radius: 5px;
+  background: var(--surface-2); display: block;
+}
+.agent-cell-icon-only { display: flex; align-items: center; justify-content: center; }
+.agent-cell-multi { gap: 4px; }
+.agent-cell-multi .agent-icon-only { width: 24px; height: 24px; }
+
+/* Role/class icons (Duelist/Initiator/Controller/Sentinel) */
+.role-icon {
+  width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;
+  object-fit: contain; filter: opacity(0.85);
+}
+.role-cell { display: flex; align-items: center; }
 
 /* Map icons/splash */
 .map-icon {
@@ -220,6 +238,101 @@ table.vlr-table { min-width: 760px; }
   font-size: 13px;
   text-align: center;
 }
-.stat-chip.kda { min-width: 88px; font-weight: 500; }
+.stat-chip.kda {
+  width: 128px; font-weight: 500;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.kda-num { display: inline-block; width: 2.4ch; text-align: center; }
+.kda-sep { display: inline-block; width: 1.4ch; text-align: center; color: var(--text-faint); font-weight: 400; }
 .stat-chip.chip-pos { color: var(--win); }
 .stat-chip.chip-neg { color: var(--loss); }
+.stat-chip.sq {
+  width: 34px; height: 34px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.stat-chip.zero { opacity: 0.32; }
+
+/* Narrow non-bordered spacer column between stat groups in wide tables */
+th.col-gap, td.col-gap { padding: 0; width: 14px; min-width: 14px; }
+
+/* Schedule: collapsible season groups */
+tr.season-header { cursor: pointer; background: var(--surface-2); }
+tr.season-header:hover td { background: var(--surface-2); }
+tr.season-header td { font-weight: 700; letter-spacing: 0.03em; }
+.season-toggle {
+  display: inline-block; margin-right: 8px; color: var(--accent);
+  transition: transform 0.15s ease; transform: rotate(90deg);
+}
+.season-group.collapsed .season-toggle { transform: rotate(0deg); }
+.season-group.collapsed .week-row { display: none; }
+tr.week-row td:first-child { color: var(--text-faint); }
+
+/* Round-by-round timeline */
+.timeline-scroll { overflow-x: auto; margin-bottom: 20px; text-align: center; }
+.timeline-grid { display: inline-flex; flex-direction: column; gap: 6px; min-width: min-content; text-align: left; }
+.timeline-row { display: flex; align-items: center; gap: 4px; }
+.timeline-team-badge {
+  width: 26px; height: 26px; flex-shrink: 0; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-2); border: 1px solid var(--border);
+  overflow: hidden;
+}
+.timeline-team-badge img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
+.timeline-team-badge span { font-size: 10px; font-weight: 700; color: var(--text-dim); }
+.timeline-cell {
+  width: 26px; height: 26px; border-radius: 6px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.timeline-cell.side-atk { background: var(--loss-dim); border-color: var(--loss); color: var(--loss); }
+.timeline-cell.side-def { background: var(--win-dim); border-color: var(--win); color: var(--win); }
+.timeline-cell.empty { background: transparent; border-style: dashed; border-color: var(--border); opacity: 0.4; }
+.round-icon { width: 15px; height: 15px; display: block; object-fit: contain; }
+.timeline-gap { width: 14px; flex-shrink: 0; }
+.timeline-round-nums { padding-left: 30px; }
+.timeline-round-nums span {
+  display: inline-flex; width: 26px; justify-content: center;
+  font-size: 9.5px; color: var(--text-faint);
+}
+
+/* Match-detail tabs (Overview / Performance / Economy) */
+.tabs {
+  display: flex; gap: 4px; border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+.tab-btn {
+  padding: 10px 18px; font-size: 13px; font-weight: 700; letter-spacing: 0.02em;
+  color: var(--text-faint); background: none; border: none; cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  font-family: inherit;
+}
+.tab-btn:hover { color: var(--text-dim); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-panel.hidden { display: none; }
+
+/* Economy tab */
+.econ-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.econ-round-scroll { overflow-x: auto; }
+.econ-round-grid { display: inline-flex; flex-direction: column; gap: 2px; min-width: min-content; }
+.econ-round-row { display: flex; align-items: center; gap: 4px; }
+.econ-round-row.bank-row { color: var(--text-faint); font-size: 10px; }
+.econ-round-row.bank-row .econ-cell { justify-content: center; }
+.econ-label {
+  width: 30px; flex-shrink: 0; font-size: 10px; font-weight: 700; color: var(--text-faint);
+  text-align: right; padding-right: 4px;
+}
+.econ-cell {
+  width: 40px; height: 22px; flex-shrink: 0; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  background: var(--surface-2); color: var(--text-dim);
+}
+.econ-cell.won { background: var(--win-dim); color: var(--win); }
+.econ-cell.lost { background: var(--loss-dim); color: var(--loss); }
+.econ-cell.pistol { background: var(--surface-2); border: 1px solid var(--accent-dim); color: var(--accent); }
+.econ-gap { width: 10px; flex-shrink: 0; }
+.econ-legend { color: var(--text-faint); font-size: 12px; margin: 16px 0; display: flex; gap: 20px; flex-wrap: wrap; }
+.econ-round-heading {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-faint); margin: 24px 0 12px;
+}

@@ -15,6 +15,42 @@
   </span>
 {% endmacro %}
 
+{% macro role_cell(role) %}
+  {% set files = {"Duelist": "role-duelist.png", "Initiator": "role-initiator.webp", "Controller": "role-controller.webp", "Sentinel": "role-sentinel.webp"} %}
+  <span class="role-cell">
+    {% if role in files %}<img class="role-icon" src="/static/icons/{{ files[role] }}" alt="{{ role }}">{% endif %}
+    {{ role or "—" }}
+  </span>
+{% endmacro %}
+
+{# Box score variant: icon only, no agent name (agent_cell above keeps the
+   name — still used in Agent Pool / Match Log where the text is wanted). #}
+{% macro agent_cell_icon_only(agent) %}
+  {% set icon = agent_icon(agent) %}
+  <span class="agent-cell-icon-only">
+    {% if icon %}
+      <img class="agent-icon-only" src="{{ icon }}" alt="{{ agent or '' }}">
+    {% else %}
+      <span class="avatar-fallback">—</span>
+    {% endif %}
+  </span>
+{% endmacro %}
+
+{# Combined (match-week) box score variant: a player can play a different
+   agent on each map, so show one small icon per map instead of one agent. #}
+{% macro agent_cell_icons(agents) %}
+  <span class="agent-cell-icon-only agent-cell-multi">
+    {% for a in agents %}
+      {% set icon = agent_icon(a) %}
+      {% if icon %}
+        <img class="agent-icon-only" src="{{ icon }}" alt="{{ a }}">
+      {% else %}
+        <span class="avatar-fallback">—</span>
+      {% endif %}
+    {% endfor %}
+  </span>
+{% endmacro %}
+
 {% macro map_cell(map_name) %}
   {% set icon = map_icon(map_name) %}
   <span class="map-cell">
@@ -23,20 +59,31 @@
   </span>
 {% endmacro %}
 
-{% macro chip(value, diff=False) %}
-  {% if value is none %}
-    <span class="stat-chip">—</span>
+{% macro chip(value, diff=False, blank_zero=False, square=False) %}
+  {% set sq = " sq" if square else "" %}
+  {% if blank_zero and (value is none or value == 0) %}
+    <span class="stat-chip zero{{ sq }}"></span>
+  {% elif value is none %}
+    <span class="stat-chip{{ sq }}">—</span>
   {% elif diff %}
-    <span class="stat-chip {{ 'chip-pos' if value > 0 else ('chip-neg' if value < 0 else '') }}">{{ "+%d"|format(value) if value > 0 else value }}</span>
+    <span class="stat-chip{{ sq }} {{ 'chip-pos' if value > 0 else ('chip-neg' if value < 0 else '') }}">{{ "+%d"|format(value) if value > 0 else value }}</span>
   {% else %}
-    <span class="stat-chip">{{ value }}</span>
+    <span class="stat-chip{{ sq }}">{{ value }}</span>
   {% endif %}
 {% endmacro %}
 
-{# VLR-style compact box score: Player, ACS, K/D/A, +/-, KAST, ADR, HS%, FK, FD, +/- #}
-{% macro box_score_table(rows, clickable=True) %}
+{# VLR-style compact box score: Player, ACS, K/D/A, +/-, KAST, ADR, HS%, FK, FD, +/-
+   Fixed <colgroup> widths so WILD and Opponent box scores (two separate
+   <table> elements) line up vertically regardless of content length. #}
+{% macro box_score_table(rows, clickable=True, multi_agent=False) %}
 <div class="table-scroll">
   <table class="vlr-table">
+    <colgroup>
+      <col style="width:180px"><col style="width:{{ '92px' if multi_agent else '52px' }}">
+      <col style="width:56px"><col style="width:132px"><col style="width:52px">
+      <col style="width:56px"><col style="width:56px"><col style="width:56px">
+      <col style="width:46px"><col style="width:46px"><col style="width:52px">
+    </colgroup>
     <thead>
       <tr>
         <th>Player</th><th>Agent</th>
@@ -59,9 +106,13 @@
       <tr>
       {% endif %}
         <td class="name">{{ avatar(r.display_name, r.headshot_filename) }}{{ r.display_name }}</td>
-        <td>{{ agent_cell(r.agent) }}</td>
+        <td>{% if multi_agent %}{{ agent_cell_icons(r.agents) }}{% else %}{{ agent_cell_icon_only(r.agent) }}{% endif %}</td>
         <td class="num-col">{{ chip("%.0f"|format(r.acs) if r.acs is not none else None) }}</td>
-        <td class="num-col"><span class="stat-chip kda">{{ r.kills }} / {{ r.deaths }} / {{ r.assists }}</span></td>
+        <td class="num-col">
+          <span class="stat-chip kda">
+            <span class="kda-num">{{ r.kills }}</span><span class="kda-sep">/</span><span class="kda-num">{{ r.deaths }}</span><span class="kda-sep">/</span><span class="kda-num">{{ r.assists }}</span>
+          </span>
+        </td>
         <td class="num-col">{{ chip(r.kills - r.deaths, diff=True) }}</td>
         <td class="num-col">{{ chip("%.0f%%"|format(r.kast_pct) if r.kast_pct is not none else None) }}</td>
         <td class="num-col">{{ chip("%.0f"|format(r.adr) if r.adr is not none else None) }}</td>
@@ -74,4 +125,207 @@
     </tbody>
   </table>
 </div>
+{% endmacro %}
+
+{# Multi-kills/clutches/plants/defuses/econ table — shared by the per-match
+   Performance tab and the match-week Performance tab (combined totals). #}
+{% macro performance_table(rows, clickable=True) %}
+<div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Player</th>
+        <th class="num-col">2K</th><th class="num-col">3K</th><th class="num-col">4K</th><th class="num-col">5K</th><th class="num-col">Total</th>
+        <th class="num-col">1v1</th><th class="num-col">1v2</th><th class="num-col">1v3</th><th class="num-col">1v4</th><th class="num-col">1v5</th><th class="num-col">Total</th>
+        <th class="col-gap"></th>
+        <th class="num-col">PL</th><th class="num-col">DE</th><th class="num-col">ECON</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      {% set multi_total = (r.two_k or 0) + (r.three_k or 0) + (r.four_k or 0) + (r.five_k or 0) %}
+      {% set clutch_total = (r.clutch_1v1 or 0) + (r.clutch_1v2 or 0) + (r.clutch_1v3 or 0) + (r.clutch_1v4 or 0) + (r.clutch_1v5 or 0) %}
+      {% if clickable %}
+      <tr class="linkable" onclick="location.href='/players/{{ r.player_id }}'">
+      {% else %}
+      <tr>
+      {% endif %}
+        <td class="name">{{ avatar(r.display_name, r.headshot_filename) }}{{ r.display_name }}</td>
+        <td class="num-col">{{ chip(r.two_k, blank_zero=True, square=True) }}</td>
+        <td class="num-col">{{ chip(r.three_k, blank_zero=True, square=True) }}</td>
+        <td class="num-col">{{ chip(r.four_k, blank_zero=True, square=True) }}</td>
+        <td class="num-col">{{ chip(r.five_k, blank_zero=True, square=True) }}</td>
+        <td class="num-col">{{ chip(multi_total, blank_zero=True, square=True) }}</td>
+        <td class="num-col">{{ chip(r.clutch_1v1, blank_zero=True, square=True) }}</td>
+        <td class="num-col">{{ chip(r.clutch_1v2, blank_zero=True, square=True) }}</td>
+        <td class="num-col">{{ chip(r.clutch_1v3, blank_zero=True, square=True) }}</td>
+        <td class="num-col">{{ chip(r.clutch_1v4, blank_zero=True, square=True) }}</td>
+        <td class="num-col">{{ chip(r.clutch_1v5, blank_zero=True, square=True) }}</td>
+        <td class="num-col">{{ chip(clutch_total, blank_zero=True, square=True) }}</td>
+        <td class="col-gap"></td>
+        <td class="num-col">{{ chip(r.plants, blank_zero=True, square=True) }}</td>
+        <td class="num-col">{{ chip(r.defuses, blank_zero=True, square=True) }}</td>
+        <td class="num-col">{{ chip("%.0f"|format(r.econ) if r.econ is not none else None) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endmacro %}
+
+{% macro weapon_kills_table(weapon_kills) %}
+<div class="table-scroll">
+  <table>
+    <thead><tr><th>Player</th><th>Weapon</th><th class="num-col">Kills</th></tr></thead>
+    <tbody>
+      {% for w in weapon_kills %}
+      <tr>
+        <td class="name">{{ w.display_name }}</td>
+        <td>{{ w.weapon }}</td>
+        <td class="num-col num">{{ w.kill_count }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endmacro %}
+
+{# Buy-type summary + round-by-round loadout grid for one map's economy.
+   Shared by the per-match Economy tab and the match-week Economy tab
+   (rendered once per map there, since maps have different opponents and
+   round counts that can't be meaningfully merged into one grid). #}
+{% macro economy_section(economy, opponent_name) %}
+  {% set bucket_order = ["pistol", "eco", "semi_eco", "semi_buy", "full_buy"] %}
+  {% set bucket_label = {"pistol": "Pistol Won", "eco": "Eco (won)", "semi_eco": "$ (won)", "semi_buy": "$$ (won)", "full_buy": "$$$ (won)"} %}
+  {% set bucket_symbol = {"eco": "", "semi_eco": "$", "semi_buy": "$$", "full_buy": "$$$"} %}
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Team</th>
+          {% for b in bucket_order %}<th class="num-col">{{ bucket_label[b] }}</th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for label, summary in [("WILD", economy.wild_summary), (opponent_name or "Opponent", economy.enemy_summary)] %}
+        <tr>
+          <td class="name">{{ team_badge(label == "WILD", opponent_name) }}{{ label }}</td>
+          {% for b in bucket_order %}
+            <td class="num-col num">
+              {% if b == "pistol" %}{{ summary[b].won }}
+              {% else %}{{ summary[b].n }} ({{ summary[b].won }}){% endif %}
+            </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="econ-legend">
+    <span><strong>Eco:</strong> 0&ndash;5k</span>
+    <span><strong>$ Semi-eco:</strong> 5&ndash;10k</span>
+    <span><strong>$$ Semi-buy:</strong> 10&ndash;20k</span>
+    <span><strong>$$$ Full buy:</strong> 20k+</span>
+  </div>
+
+  <h3 class="econ-round-heading">Round-by-Round Economy</h3>
+  <div class="econ-round-scroll">
+    <div class="econ-round-grid">
+      <div class="econ-round-row bank-row">
+        <div class="econ-label">Bank</div>
+        {% for r in economy.rounds %}
+          <div class="econ-cell">{{ "%.1f"|format(r.wild.remaining / 1000) if r.wild else "—" }}k</div>
+          {% if r.label == 12 %}<div class="econ-gap"></div>{% endif %}
+        {% endfor %}
+      </div>
+      <div class="econ-round-row">
+        {{ team_badge(True, None) }}
+        {% for r in economy.rounds %}
+          {% set info = r.wild %}
+          <div class="econ-cell {{ 'pistol' if info and info.bucket == 'pistol' else ('won' if info and info.won else ('lost' if info else '')) }}">
+            {{ "P" if info and info.bucket == "pistol" else (bucket_symbol.get(info.bucket, "") if info else "") }}
+          </div>
+          {% if r.label == 12 %}<div class="econ-gap"></div>{% endif %}
+        {% endfor %}
+      </div>
+      <div class="econ-round-row">
+        {{ team_badge(False, opponent_name) }}
+        {% for r in economy.rounds %}
+          {% set info = r.enemy %}
+          <div class="econ-cell {{ 'pistol' if info and info.bucket == 'pistol' else ('won' if info and info.won else ('lost' if info else '')) }}">
+            {{ "P" if info and info.bucket == "pistol" else (bucket_symbol.get(info.bucket, "") if info else "") }}
+          </div>
+          {% if r.label == 12 %}<div class="econ-gap"></div>{% endif %}
+        {% endfor %}
+      </div>
+      <div class="econ-round-row bank-row">
+        <div class="econ-label">Bank</div>
+        {% for r in economy.rounds %}
+          <div class="econ-cell">{{ "%.1f"|format(r.enemy.remaining / 1000) if r.enemy else "—" }}k</div>
+          {% if r.label == 12 %}<div class="econ-gap"></div>{% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endmacro %}
+
+{# Round-result icon — real game icons the user provided (static/icons/,
+   white-on-transparent .webp), not hand-drawn. #}
+{% macro round_icon(result) %}
+  {% set file = {
+    "Elimination": "elimination.webp",
+    "Defuse": "defuse.webp",
+    "Detonate": "detonate.webp",
+    "Surrendered": "surrendered.webp",
+  }.get(result, "time.webp") %}
+  <img class="round-icon" src="/static/icons/{{ file }}" alt="{{ result }}">
+{% endmacro %}
+
+{% macro team_badge(is_wild, name) %}
+  <div class="timeline-team-badge" title="{{ 'WILD' if is_wild else (name or 'Opponent') }}">
+    {% if is_wild %}
+      <img src="/static/logo.png" alt="WILD">
+    {% else %}
+      <span>{{ (name or "?")[:2]|upper }}</span>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{# Round-by-round timeline: two rows (one per team), gap after round 12
+   (halftime) and after round 24 (before OT, if the match went there).
+   Cell color = which SIDE won that round (red=attackers, green=defenders),
+   not which team — matches the standard convention. Rounds beyond the
+   match's actual length (padded to 24 minimum in round_side.py) render as
+   empty dashed placeholders on both rows. #}
+{% macro round_timeline(timeline, opponent_name) %}
+{% if timeline %}
+<div class="timeline-scroll">
+  <div class="timeline-grid">
+    <div class="timeline-row timeline-round-nums">
+      {% for t in timeline %}
+        <span>{{ t.label }}</span>
+        {% if t.label == 12 or t.label == 24 %}<span class="timeline-gap"></span>{% endif %}
+      {% endfor %}
+    </div>
+    {% for team in ["wild", "enemy"] %}
+    <div class="timeline-row">
+      {{ team_badge(team == "wild", opponent_name) }}
+      {% for t in timeline %}
+        {% if t.winner is none and t.result is none %}
+          <div class="timeline-cell empty" title="Round {{ t.label }}"></div>
+        {% elif t.winner == team %}
+          <div class="timeline-cell {{ 'side-atk' if t.win_side == 'ATK' else ('side-def' if t.win_side == 'DEF' else '') }}" title="Round {{ t.label }}: {{ t.result }}">
+            {{ round_icon(t.result) }}
+          </div>
+        {% else %}
+          <div class="timeline-cell" title="Round {{ t.label }}"></div>
+        {% endif %}
+        {% if t.label == 12 or t.label == 24 %}<div class="timeline-gap"></div>{% endif %}
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
 {% endmacro %}

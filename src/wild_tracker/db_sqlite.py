@@ -28,6 +28,7 @@ _COLUMN_MIGRATIONS = [
     ("players", "nickname", "TEXT"),
     ("match_players", "acs", "REAL"),
     ("match_players", "kast_pct", "REAL"),
+    ("rounds", "result", "TEXT"),
 ]
 
 

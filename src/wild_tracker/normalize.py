@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from .agent_roles import agent_role
+
 
 def _get(d: dict | None, *path: str, default: Any = None) -> Any:
     cur: Any = d
@@ -115,6 +117,7 @@ def normalize_match(raw: dict, wild_premier_team_id: str, match_type: str | None
                 "player_id": puuid,
                 "team_id": label_to_stable_id.get(p.get("team_id")),
                 "agent": _get(p, "agent", "name"),
+                "role": agent_role(_get(p, "agent", "name")),
                 "score": _get(p, "stats", "score"),
                 "kills": _get(p, "stats", "kills"),
                 "deaths": _get(p, "stats", "deaths"),
@@ -156,6 +159,7 @@ def normalize_match(raw: dict, wild_premier_team_id: str, match_type: str | None
                 "round_number": round_number,
                 "winning_team_id": label_to_stable_id.get(r.get("winning_team")),
                 "side": None,
+                "result": r.get("result"),
                 "ceremony": r.get("ceremony"),
                 "plant_player_id": _get(r, "plant", "player", "puuid"),
                 "plant_site": _get(r, "plant", "site"),

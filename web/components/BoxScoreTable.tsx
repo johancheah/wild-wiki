@@ -1,38 +1,53 @@
 import Link from "next/link";
 import { Avatar } from "./Avatar";
-import { AgentCell } from "./AgentCell";
-import type { BoxScoreRow } from "@/lib/types";
+import { AgentCellIconOnly, MultiAgentCell } from "./AgentCellIconOnly";
+import { StatChip, KdaChip } from "./StatChip";
 
-function Chip({
-  value,
-  diff = false,
-}: {
-  value: number | string | null;
-  diff?: boolean;
-}) {
-  if (value === null || value === undefined) {
-    return <span className="stat-chip">—</span>;
-  }
-  if (diff && typeof value === "number") {
-    const cls = value > 0 ? "chip-pos" : value < 0 ? "chip-neg" : "";
-    const label = value > 0 ? `+${value}` : `${value}`;
-    return <span className={`stat-chip ${cls}`}>{label}</span>;
-  }
-  return <span className="stat-chip">{value}</span>;
-}
+export type BoxScoreTableRow = {
+  player_id: string;
+  display_name: string;
+  headshot_filename: string | null;
+  agent?: string | null;
+  agents?: (string | null)[];
+  acs: number | null;
+  kills: number;
+  deaths: number;
+  assists: number;
+  kast_pct: number | null;
+  adr: number | null;
+  hs_pct: number | null;
+  fk: number | null;
+  fd: number | null;
+};
 
 // VLR-style compact box score: Player, ACS, K/D/A, +/-, KAST, ADR, HS%, FK, FD, +/-
-// Mirrors src/wild_tracker/templates/macros.html::box_score_table exactly.
+// Mirrors src/wild_tracker/templates/macros.html::box_score_table exactly,
+// including the fixed <colgroup> widths so WILD/Opponent tables line up.
 export function BoxScoreTable({
   rows,
   clickable = true,
+  multiAgent = false,
 }: {
-  rows: BoxScoreRow[];
+  rows: BoxScoreTableRow[];
   clickable?: boolean;
+  multiAgent?: boolean;
 }) {
   return (
     <div className="table-scroll">
       <table className="vlr-table">
+        <colgroup>
+          <col style={{ width: 180 }} />
+          <col style={{ width: multiAgent ? 92 : 52 }} />
+          <col style={{ width: 56 }} />
+          <col style={{ width: 132 }} />
+          <col style={{ width: 52 }} />
+          <col style={{ width: 56 }} />
+          <col style={{ width: 56 }} />
+          <col style={{ width: 56 }} />
+          <col style={{ width: 46 }} />
+          <col style={{ width: 46 }} />
+          <col style={{ width: 52 }} />
+        </colgroup>
         <thead>
           <tr>
             <th>Player</th>
@@ -56,48 +71,37 @@ export function BoxScoreTable({
                 {r.display_name}
               </>
             );
-            const fkfd =
-              r.fk !== null && r.fd !== null ? r.fk - r.fd : null;
+            const fkfd = r.fk !== null && r.fd !== null ? r.fk - r.fd : null;
             return (
-              <tr key={r.player_id}>
-                <td className="name">
-                  {clickable ? (
-                    <Link href={`/players/${r.player_id}`}>{nameCell}</Link>
-                  ) : (
-                    nameCell
-                  )}
-                </td>
-                <td>
-                  <AgentCell agent={r.agent} />
+              <tr key={r.player_id} className={clickable ? "linkable" : ""}>
+                <td className="name">{clickable ? <Link href={`/players/${r.player_id}`}>{nameCell}</Link> : nameCell}</td>
+                <td>{multiAgent ? <MultiAgentCell agents={r.agents ?? []} /> : <AgentCellIconOnly agent={r.agent ?? null} />}</td>
+                <td className="num-col">
+                  <StatChip value={r.acs !== null ? Math.round(r.acs) : null} />
                 </td>
                 <td className="num-col">
-                  <Chip value={r.acs !== null ? Math.round(r.acs) : null} />
+                  <KdaChip kills={r.kills} deaths={r.deaths} assists={r.assists} />
                 </td>
                 <td className="num-col">
-                  <span className="stat-chip kda">
-                    {r.kills} / {r.deaths} / {r.assists}
-                  </span>
+                  <StatChip value={r.kills - r.deaths} diff />
                 </td>
                 <td className="num-col">
-                  <Chip value={r.kills - r.deaths} diff />
+                  <StatChip value={r.kast_pct !== null ? `${Math.round(r.kast_pct)}%` : null} />
                 </td>
                 <td className="num-col">
-                  <Chip value={r.kast_pct !== null ? `${Math.round(r.kast_pct)}%` : null} />
+                  <StatChip value={r.adr !== null ? Math.round(r.adr) : null} />
                 </td>
                 <td className="num-col">
-                  <Chip value={r.adr !== null ? Math.round(r.adr) : null} />
+                  <StatChip value={r.hs_pct !== null ? `${Math.round(r.hs_pct)}%` : null} />
                 </td>
                 <td className="num-col">
-                  <Chip value={r.hs_pct !== null ? `${Math.round(r.hs_pct)}%` : null} />
+                  <StatChip value={r.fk} />
                 </td>
                 <td className="num-col">
-                  <Chip value={r.fk} />
+                  <StatChip value={r.fd} />
                 </td>
                 <td className="num-col">
-                  <Chip value={r.fd} />
-                </td>
-                <td className="num-col">
-                  <Chip value={fkfd} diff />
+                  <StatChip value={fkfd} diff />
                 </td>
               </tr>
             );
