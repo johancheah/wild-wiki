@@ -1,18 +1,40 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { fetchTeamComps } from "@/lib/comps";
-import { MapCell } from "@/components/MapCell";
+import { mapSplash } from "@/lib/assets";
 import { AgentCellIconOnly } from "@/components/AgentCellIconOnly";
+import { MapSelect } from "@/components/MapSelect";
 
 export const revalidate = 0;
 
-export default async function TeamCompsPage() {
-  const comps = await fetchTeamComps(supabase);
+export default async function TeamCompsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ map?: string }>;
+}) {
+  const { map } = await searchParams;
+  const allComps = await fetchTeamComps(supabase);
+
+  const maps = [...new Set(allComps.map((c) => c.map))].sort();
+  const selectedMap = map && maps.includes(map) ? map : maps[0];
+  const comps = allComps.filter((c) => c.map === selectedMap);
+  const splash = mapSplash(selectedMap);
 
   return (
     <>
       <h1>Team Comps</h1>
-      <div className="subtitle">{comps.length} maps — the 5-agent composition WILD ran, one row per map.</div>
+
+      <MapSelect maps={maps} selected={selectedMap} />
+
+      {splash && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="map-splash-banner" src={splash} alt={selectedMap} />
+      )}
+
+      <div className="subtitle">
+        {comps.length} map{comps.length === 1 ? "" : "s"} played on {selectedMap} — the 5-agent composition WILD ran
+        each time.
+      </div>
 
       <div className="table-scroll">
         <table>
@@ -21,7 +43,6 @@ export default async function TeamCompsPage() {
               <th>Date</th>
               <th>Season</th>
               <th>Type</th>
-              <th>Map</th>
               <th>Opponent</th>
               <th>Result</th>
               <th className="num-col">Margin</th>
@@ -36,9 +57,6 @@ export default async function TeamCompsPage() {
                 </td>
                 <td className="num">{c.season_id ?? "—"}</td>
                 <td className="type-tag">{c.match_type ?? "—"}</td>
-                <td>
-                  <MapCell map={c.map} />
-                </td>
                 <td>{c.opponent ?? "—"}</td>
                 <td>
                   <span className={`pill ${c.result === "WIN" ? "win" : "loss"}`}>{c.result}</span>

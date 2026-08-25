@@ -3,13 +3,24 @@
 {% block title %}Team Comps — WILD Gaming{% endblock %}
 {% block content %}
 <h1>Team Comps</h1>
-<div class="subtitle">{{ comps|length }} maps — the 5-agent composition WILD ran, one row per map.</div>
+
+<div class="comps-map-select">
+  <select onchange="location.href='/comps?map=' + encodeURIComponent(this.value)">
+    {% for m in maps %}
+    <option value="{{ m }}" {{ "selected" if m == selected_map }}>{{ m }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+{% if splash %}<img class="map-splash-banner" src="{{ splash }}" alt="{{ selected_map }}">{% endif %}
+
+<div class="subtitle">{{ comps|length }} map{{ "" if comps|length == 1 else "s" }} played on {{ selected_map }} — the 5-agent composition WILD ran each time.</div>
 
 <div class="table-scroll">
   <table>
     <thead>
       <tr>
-        <th>Date</th><th>Season</th><th>Type</th><th>Map</th><th>Opponent</th><th>Result</th><th class="num-col">Margin</th><th>Composition</th>
+        <th>Date</th><th>Season</th><th>Type</th><th>Opponent</th><th>Result</th><th class="num-col">Margin</th><th>Composition</th>
       </tr>
     </thead>
     <tbody>
@@ -18,7 +29,6 @@
         <td>{{ c.date[:10] }}</td>
         <td class="num">{{ c.season_id or "—" }}</td>
         <td class="type-tag">{{ c.match_type or "—" }}</td>
-        <td>{{ ui.map_cell(c.map) }}</td>
         <td>{{ c.opponent or "—" }}</td>
         <td><span class="pill {{ 'win' if c.result == 'WIN' else 'loss' }}">{{ c.result }}</span></td>
         <td class="num-col num {{ 'margin-pos' if c.margin and c.margin > 0 else 'margin-neg' }}">{{ "+%d"|format(c.margin) if c.margin and c.margin > 0 else c.margin }}</td>

@@ -336,3 +336,12 @@ tr.week-row td:first-child { color: var(--text-faint); }
   font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--text-faint); margin: 24px 0 12px;
 }
+
+/* Team Comps: map selector */
+.comps-map-select { margin-bottom: 16px; }
+.comps-map-select select {
+  background: var(--surface-2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 12px; font-size: 13.5px; font-weight: 600;
+  font-family: inherit; cursor: pointer; min-width: 180px;
+}
+.comps-map-select select:hover { border-color: var(--accent-dim); }

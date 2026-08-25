@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
@@ -113,11 +114,21 @@ def match_detail(request: Request, match_id: str):
 
 
 @app.get("/comps", response_class=HTMLResponse)
-def team_comps(request: Request):
+def team_comps(request: Request, map: Optional[str] = None):
     conn = get_conn()
-    comps = queries.team_comps(conn)
+    all_comps = queries.team_comps(conn)
     conn.close()
-    return templates.TemplateResponse("team_comps.html", {"request": request, "active": "comps", "comps": comps})
+
+    maps = sorted({c["map"] for c in all_comps})
+    requested_map = map
+    selected_map = requested_map if requested_map in maps else (maps[0] if maps else None)
+    comps = [c for c in all_comps if c["map"] == selected_map]
+
+    return templates.TemplateResponse("team_comps.html", {
+        "request": request, "active": "comps",
+        "comps": comps, "maps": maps, "selected_map": selected_map,
+        "splash": map_splash(selected_map),
+    })
 
 
 @app.get("/schedule", response_class=HTMLResponse)
