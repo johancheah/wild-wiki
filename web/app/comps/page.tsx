@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { fetchTeamComps } from "@/lib/comps";
+import { fetchTeamComps, mapCompSummary } from "@/lib/comps";
 import { mapSplash } from "@/lib/assets";
 import { CompAgentIcon } from "@/components/CompAgentIcon";
+import { CompTooltip } from "@/components/CompTooltip";
+import { AgentCell } from "@/components/AgentCell";
 import { MapSelect } from "@/components/MapSelect";
 
 export const revalidate = 0;
@@ -19,6 +21,7 @@ export default async function TeamCompsPage({
   const selectedMap = map && maps.includes(map) ? map : maps[0];
   const comps = allComps.filter((c) => c.map === selectedMap);
   const splash = mapSplash(selectedMap);
+  const summary = mapCompSummary(comps);
 
   return (
     <>
@@ -30,6 +33,56 @@ export default async function TeamCompsPage({
         // eslint-disable-next-line @next/next/no-img-element
         <img className="map-splash-banner" src={splash} alt={selectedMap} />
       )}
+
+      <div className="stat-row">
+        <div className="stat">
+          <div className="label">Record</div>
+          <div className="value">
+            <span className="win">{summary.wins}</span>
+            <span className="of">&ndash;</span>
+            <span className="loss">{summary.losses}</span>
+          </div>
+        </div>
+        <div className="stat">
+          <div className="label">Win Rate</div>
+          <div className="value num">
+            {summary.winPct}
+            <span className="of">%</span>
+          </div>
+        </div>
+        <div className="stat">
+          <div className="label">Maps Played</div>
+          <div className="value num">{summary.total}</div>
+        </div>
+      </div>
+
+      <section>
+        <h2>Most Used Agents — {selectedMap}</h2>
+        <div className="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Agent</th>
+                <th className="num-col">Played</th>
+                <th className="num-col">W</th>
+                <th className="num-col">Win %</th>
+              </tr>
+            </thead>
+            <tbody>
+              {summary.agents.map((a) => (
+                <tr key={a.agent}>
+                  <td className="name">
+                    <AgentCell agent={a.agent} />
+                  </td>
+                  <td className="num-col num">{a.n}</td>
+                  <td className="num-col num win">{a.wins}</td>
+                  <td className="num-col num">{a.winPct}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <div className="subtitle">
         {comps.length} map{comps.length === 1 ? "" : "s"} played on {selectedMap} — the 5-agent composition WILD ran
@@ -70,6 +123,8 @@ export default async function TeamCompsPage({
           </tbody>
         </table>
       </div>
+
+      <CompTooltip />
     </>
   );
 }

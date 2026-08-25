@@ -14,6 +14,42 @@
 
 {% if splash %}<img class="map-splash-banner" src="{{ splash }}" alt="{{ selected_map }}">{% endif %}
 
+<div class="stat-row">
+  <div class="stat">
+    <div class="label">Record</div>
+    <div class="value"><span class="win">{{ summary.wins }}</span><span class="of">&ndash;</span><span class="loss">{{ summary.losses }}</span></div>
+  </div>
+  <div class="stat">
+    <div class="label">Win Rate</div>
+    <div class="value num">{{ summary.win_pct }}<span class="of">%</span></div>
+  </div>
+  <div class="stat">
+    <div class="label">Maps Played</div>
+    <div class="value num">{{ summary.total }}</div>
+  </div>
+</div>
+
+<section>
+  <h2>Most Used Agents — {{ selected_map }}</h2>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th>Agent</th><th class="num-col">Played</th><th class="num-col">W</th><th class="num-col">Win %</th></tr>
+      </thead>
+      <tbody>
+        {% for a in summary.agents %}
+        <tr>
+          <td class="name">{{ ui.agent_cell(a.agent) }}</td>
+          <td class="num-col num">{{ a.n }}</td>
+          <td class="num-col num win">{{ a.wins }}</td>
+          <td class="num-col num">{{ a.win_pct|round|int }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
 <div class="subtitle">{{ comps|length }} map{{ "" if comps|length == 1 else "s" }} played on {{ selected_map }} — the 5-agent composition WILD ran each time.</div>
 
 <div class="table-scroll">
@@ -39,4 +75,39 @@
     </tbody>
   </table>
 </div>
+
+<div id="comp-tooltip" class="comp-tooltip">
+  <img id="comp-tooltip-img" src="" alt="">
+  <span id="comp-tooltip-name"></span>
+</div>
+
+<script>
+  (function () {
+    var tooltip = document.getElementById("comp-tooltip");
+    var img = document.getElementById("comp-tooltip-img");
+    var name = document.getElementById("comp-tooltip-name");
+
+    document.querySelectorAll(".comp-agent[data-headshot]").forEach(function (el) {
+      el.addEventListener("mouseenter", function () {
+        img.src = el.dataset.headshot;
+        name.textContent = el.dataset.name;
+        tooltip.style.display = "flex";
+
+        var rect = el.getBoundingClientRect();
+        var tw = tooltip.offsetWidth;
+        var th = tooltip.offsetHeight;
+        var left = Math.max(8, Math.min(rect.left + rect.width / 2 - tw / 2, window.innerWidth - tw - 8));
+        var top = rect.bottom + 8;
+        if (top + th > window.innerHeight - 8) {
+          top = rect.top - th - 8;
+        }
+        tooltip.style.left = left + "px";
+        tooltip.style.top = top + "px";
+      });
+      el.addEventListener("mouseleave", function () {
+        tooltip.style.display = "none";
+      });
+    });
+  })();
+</script>
 {% endblock %}

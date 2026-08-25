@@ -347,6 +347,30 @@ def team_comps(conn: sqlite3.Connection) -> list[dict]:
     return comps
 
 
+def map_comp_summary(comps: list[dict]) -> dict:
+    """Win rate + most-used agents for one map's worth of team_comps() rows
+    (already filtered to a single map by the caller)."""
+    wins = sum(1 for c in comps if c["result"] == "WIN")
+    losses = sum(1 for c in comps if c["result"] == "LOSS")
+    total = len(comps)
+    win_pct = round(100 * wins / total, 1) if total else 0.0
+
+    agent_stats: dict[str, dict] = defaultdict(lambda: {"n": 0, "wins": 0})
+    for c in comps:
+        for a in c["agents"]:
+            stats = agent_stats[a["agent"]]
+            stats["n"] += 1
+            if c["result"] == "WIN":
+                stats["wins"] += 1
+
+    agents = [{"agent": agent, "n": s["n"], "wins": s["wins"],
+               "win_pct": round(100 * s["wins"] / s["n"], 0) if s["n"] else 0.0}
+              for agent, s in agent_stats.items()]
+    agents.sort(key=lambda a: a["n"], reverse=True)
+
+    return {"wins": wins, "losses": losses, "total": total, "win_pct": win_pct, "agents": agents}
+
+
 def match_list(conn: sqlite3.Connection) -> list[dict]:
     return [dict(r) for r in conn.execute("""
         SELECT m.match_id, m.date, m.season_id, m.match_type, m.map, m.result, m.margin, m.source,

@@ -96,3 +96,35 @@ export async function fetchTeamComps(supabase: SupabaseClient): Promise<TeamComp
   comps.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
   return comps;
 }
+
+export type MapCompSummary = {
+  wins: number;
+  losses: number;
+  total: number;
+  winPct: number;
+  agents: { agent: string; n: number; wins: number; winPct: number }[];
+};
+
+// Direct port of src/wild_tracker/queries.py::map_comp_summary.
+export function mapCompSummary(comps: TeamComp[]): MapCompSummary {
+  const wins = comps.filter((c) => c.result === "WIN").length;
+  const losses = comps.filter((c) => c.result === "LOSS").length;
+  const total = comps.length;
+  const winPct = total ? Math.round((100 * wins) / total * 10) / 10 : 0;
+
+  const agentStats = new Map<string, { n: number; wins: number }>();
+  for (const c of comps) {
+    for (const a of c.agents) {
+      const stats = agentStats.get(a.agent) ?? { n: 0, wins: 0 };
+      stats.n += 1;
+      if (c.result === "WIN") stats.wins += 1;
+      agentStats.set(a.agent, stats);
+    }
+  }
+
+  const agents = [...agentStats.entries()]
+    .map(([agent, s]) => ({ agent, n: s.n, wins: s.wins, winPct: s.n ? Math.round((100 * s.wins) / s.n) : 0 }))
+    .sort((a, b) => b.n - a.n);
+
+  return { wins, losses, total, winPct, agents };
+}

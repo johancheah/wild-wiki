@@ -41,16 +41,11 @@
    `gap_before` flag from queries.py::team_comps), with a hover preview of
    the player who played that agent that map. #}
 {% macro comp_agent(a) %}
-  <span class="comp-agent{{ ' comp-agent-gap' if a.gap_before }}">
-    {% set icon = agent_icon(a.agent) %}
+  {% set icon = agent_icon(a.agent) %}
+  {% set hs = headshot_url(a.headshot_filename) %}
+  <span class="comp-agent{{ ' comp-agent-gap' if a.gap_before }}"
+    {% if hs %}data-headshot="{{ hs }}" data-name="{{ a.display_name }}"{% endif %}>
     {% if icon %}<img class="agent-icon-only" src="{{ icon }}" alt="{{ a.agent or '' }}">{% endif %}
-    {% set hs = headshot_url(a.headshot_filename) %}
-    {% if hs %}
-    <span class="comp-agent-preview">
-      <img src="{{ hs }}" alt="{{ a.display_name }}">
-      <span class="comp-agent-preview-name">{{ a.display_name }}</span>
-    </span>
-    {% endif %}
   </span>
 {% endmacro %}
 

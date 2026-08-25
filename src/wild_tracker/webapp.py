@@ -123,10 +123,11 @@ def team_comps(request: Request, map: Optional[str] = None):
     requested_map = map
     selected_map = requested_map if requested_map in maps else (maps[0] if maps else None)
     comps = [c for c in all_comps if c["map"] == selected_map]
+    summary = queries.map_comp_summary(comps)
 
     return templates.TemplateResponse("team_comps.html", {
         "request": request, "active": "comps",
-        "comps": comps, "maps": maps, "selected_map": selected_map,
+        "comps": comps, "maps": maps, "selected_map": selected_map, "summary": summary,
         "splash": map_splash(selected_map),
     })
 
