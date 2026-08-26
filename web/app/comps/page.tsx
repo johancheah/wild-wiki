@@ -2,7 +2,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { fetchTeamComps, mapCompSummary } from "@/lib/comps";
 import { mapSplash } from "@/lib/assets";
-import { CompAgentIcon } from "@/components/CompAgentIcon";
+import { CompRow } from "@/components/CompRow";
 import { CompTooltip } from "@/components/CompTooltip";
 import { AgentCell } from "@/components/AgentCell";
 import { MapSelect } from "@/components/MapSelect";
@@ -112,11 +112,7 @@ export default async function TeamCompsPage({
                   {c.margin && c.margin > 0 ? `+${c.margin}` : c.margin}
                 </td>
                 <td>
-                  <span className="agent-cell-icon-only agent-cell-multi">
-                    {c.agents.map((a, i) => (
-                      <CompAgentIcon key={i} a={a} />
-                    ))}
-                  </span>
+                  <CompRow agents={c.agents} />
                 </td>
               </tr>
             ))}

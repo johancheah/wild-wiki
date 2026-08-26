@@ -346,9 +346,14 @@ tr.week-row td:first-child { color: var(--text-faint); }
 }
 .comps-map-select select:hover { border-color: var(--accent-dim); }
 
-/* Team Comps: role-grouped composition icons with a hover headshot preview */
+/* Team Comps: composition row as 4 fixed-width role slots (Controller/
+   Initiator/Sentinel/Duelist) rather than per-icon margins — fixed slot
+   widths are what keep every row's leftmost/rightmost icon aligned to the
+   same columns regardless of which roles a given comp actually used. */
+.comp-row { display: inline-grid; grid-template-columns: repeat(4, 56px); column-gap: 14px; align-items: center; }
+.comp-role-slot { display: flex; gap: 4px; }
+.comp-role-slot .agent-icon-only { width: 24px; height: 24px; }
 .comp-agent { display: inline-flex; }
-.comp-agent.comp-agent-gap { margin-left: 14px; }
 
 /* Singleton hover tooltip (position:fixed, positioned via JS in
    team_comps.html) — lives outside any scrolling container so it's never

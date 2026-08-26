@@ -36,16 +36,30 @@
   </span>
 {% endmacro %}
 
-{# Team Comps composition icon: agent icon, grouped by role (a small gap
-   before the first icon of a new role group, via the pre-computed
-   `gap_before` flag from queries.py::team_comps), with a hover preview of
-   the player who played that agent that map. #}
+{# Team Comps composition icon: agent icon, with a hover preview of the
+   player who played that agent that map. #}
 {% macro comp_agent(a) %}
   {% set icon = agent_icon(a.agent) %}
   {% set hs = headshot_url(a.headshot_filename) %}
-  <span class="comp-agent{{ ' comp-agent-gap' if a.gap_before }}"
+  <span class="comp-agent"
     {% if hs %}data-headshot="{{ hs }}" data-name="{{ a.display_name }}"{% endif %}>
     {% if icon %}<img class="agent-icon-only" src="{{ icon }}" alt="{{ a.agent or '' }}">{% endif %}
+  </span>
+{% endmacro %}
+
+{# Team Comps composition row: one fixed-width slot per role
+   (Controller/Initiator/Sentinel/Duelist), each holding however many of
+   that role appear (usually 0 or 1, occasionally 2). Fixed slot widths —
+   not per-icon margins — are what makes every row's leftmost and
+   rightmost icon line up in the same columns regardless of which roles a
+   given comp actually used. #}
+{% macro comp_row(agents) %}
+  <span class="comp-row">
+    {% for role in ["Controller", "Initiator", "Sentinel", "Duelist"] %}
+    <span class="comp-role-slot">
+      {% for a in agents if a.role == role %}{{ comp_agent(a) }}{% endfor %}
+    </span>
+    {% endfor %}
   </span>
 {% endmacro %}
 
