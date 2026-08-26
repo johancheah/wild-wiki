@@ -37,29 +37,28 @@
 {% endmacro %}
 
 {# Team Comps composition icon: agent icon, with a hover preview of the
-   player who played that agent that map. #}
+   player who played that agent that map. `comp-agent-gap` gets a fixed
+   margin-left when this icon starts a new role group, so the gap between
+   classes is always the same pixel value rather than however much empty
+   space happened to be left in a fixed-width slot. #}
 {% macro comp_agent(a) %}
   {% set icon = agent_icon(a.agent) %}
   {% set hs = headshot_url(a.headshot_filename) %}
-  <span class="comp-agent"
+  <span class="comp-agent{{ ' comp-agent-gap' if a.gap_before }}"
     {% if hs %}data-headshot="{{ hs }}" data-name="{{ a.display_name }}"{% endif %}>
     {% if icon %}<img class="agent-icon-only" src="{{ icon }}" alt="{{ a.agent or '' }}">{% endif %}
   </span>
 {% endmacro %}
 
-{# Team Comps composition row: one fixed-width slot per role
-   (Controller/Initiator/Sentinel/Duelist), each holding however many of
-   that role appear (usually 0 or 1, occasionally 2). Fixed slot widths —
-   not per-icon margins — are what makes every row's leftmost and
-   rightmost icon line up in the same columns regardless of which roles a
-   given comp actually used. #}
+{# Team Comps composition row: fixed-width box (see .comp-row in
+   style.css) so every row occupies the same total width regardless of a
+   given comp's actual role mix — icons are left-aligned inside it with
+   consistent gaps (small within a role, larger between roles), so any
+   slack from a less role-diverse comp just becomes trailing whitespace
+   rather than shifting the row's own width. #}
 {% macro comp_row(agents) %}
   <span class="comp-row">
-    {% for role in ["Controller", "Initiator", "Sentinel", "Duelist"] %}
-    <span class="comp-role-slot">
-      {% for a in agents if a.role == role %}{{ comp_agent(a) }}{% endfor %}
-    </span>
-    {% endfor %}
+    {% for a in agents %}{{ comp_agent(a) }}{% endfor %}
   </span>
 {% endmacro %}
 

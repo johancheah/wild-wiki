@@ -13,6 +13,7 @@ export type CompAgent = {
   player_id: string;
   headshot_filename: string | null;
   display_name: string;
+  gap_before: boolean;
 };
 
 export type TeamComp = {
@@ -69,12 +70,13 @@ export async function fetchTeamComps(supabase: SupabaseClient): Promise<TeamComp
       return roleDiff !== 0 ? roleDiff : (a.agent ?? "").localeCompare(b.agent ?? "");
     });
 
-    const agents: CompAgent[] = wildRows.map((r) => ({
+    const agents: CompAgent[] = wildRows.map((r, i) => ({
       agent: r.agent,
       role: r.role,
       player_id: r.player_id,
       headshot_filename: r.headshot_filename,
       display_name: r.display_name,
+      gap_before: i > 0 && r.role !== wildRows[i - 1].role,
     }));
 
     comps.push({

@@ -310,12 +310,12 @@ def team_comps(conn: sqlite3.Connection) -> list[dict]:
     only needs match_players.agent/role (present for both API and
     spreadsheet rows) grouped by match, not the derived-stats layer. Each
     agent entry also carries the player's headshot, for a hover preview of
-    who played it. Agents are pre-sorted by role (Controller/Initiator/
-    Sentinel/Duelist, then agent name) so the template can group same-role
-    icons together without recomputing it, but the actual role-slot layout
-    (macros.html::comp_row) filters by role directly rather than relying on
-    this order — the sort here just keeps multi-of-a-role sub-ordering
-    deterministic."""
+    who played it, and a `gap_before` flag so the template can apply a
+    fixed, consistent visual gap at each role boundary (Controller/
+    Initiator/Sentinel/Duelist) — a real pixel value, not the leftover
+    space in a fixed-width slot (which varied with how many agents shared
+    a role), while the row itself still renders in a fixed-width box so
+    every row's total composition width stays identical."""
     rows = conn.execute("""
         SELECT m.match_id, m.date, m.season_id, m.match_type, m.map, m.result, m.margin, m.source,
           t.name AS opponent, mp.agent, mp.role,
@@ -345,6 +345,8 @@ def team_comps(conn: sqlite3.Connection) -> list[dict]:
     comps.sort(key=lambda m: m["date"], reverse=True)
     for m in comps:
         m["agents"].sort(key=lambda a: (_ROLE_ORDER.get(a["role"], 99), a["agent"] or ""))
+        for i, a in enumerate(m["agents"]):
+            a["gap_before"] = i > 0 and a["role"] != m["agents"][i - 1]["role"]
     return comps
 
 
