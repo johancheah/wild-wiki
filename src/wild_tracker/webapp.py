@@ -70,6 +70,14 @@ def get_conn():
 
 
 @app.get("/", response_class=HTMLResponse)
+def home(request: Request):
+    conn = get_conn()
+    data = queries.home_page_data(conn)
+    conn.close()
+    return templates.TemplateResponse("home.html", {"request": request, "active": "home", **data})
+
+
+@app.get("/team", response_class=HTMLResponse)
 def team_stats(request: Request):
     conn = get_conn()
     data = queries.team_record(conn)

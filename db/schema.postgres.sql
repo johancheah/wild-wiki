@@ -34,6 +34,16 @@ CREATE TABLE IF NOT EXISTS season_schedule (
     end_date    TEXT
 );
 
+-- Singleton row (id always 1) for the homepage's "Upcoming Match" header —
+-- manually curated, see set_upcoming_match.py (db/schema.sql has the full
+-- rationale for why this isn't pulled live from the HenrikDev API).
+CREATE TABLE IF NOT EXISTS upcoming_match (
+    id          INTEGER PRIMARY KEY CHECK (id = 1),
+    map         TEXT,
+    note        TEXT,
+    updated_at  TEXT
+);
+
 -- season_id is NOT a foreign key into season_schedule: it's populated
 -- straight from the API's metadata.season on ingest, while season_schedule
 -- (week labels/date ranges) is separately curated by you. Enforcing the FK

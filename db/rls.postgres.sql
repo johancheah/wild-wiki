@@ -14,7 +14,7 @@ BEGIN
         SELECT unnest(ARRAY[
             'teams', 'players', 'season_schedule', 'matches', 'match_players',
             'derived_player_match_stats', 'match_player_weapon_kills',
-            'rounds', 'kill_events', 'round_player_stats'
+            'rounds', 'kill_events', 'round_player_stats', 'upcoming_match'
         ])
     LOOP
         EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% block title %}WILD Gaming{% endblock %}
+{% block content %}
+
+<section>
+  <h2>Upcoming Match</h2>
+  {% if upcoming %}
+    {% set splash = map_splash(upcoming.map) %}
+    <div class="upcoming-card">
+      {% if splash %}<img class="upcoming-card-bg" src="{{ splash }}" alt="{{ upcoming.map }}">{% endif %}
+      <div class="upcoming-card-content">
+        <div class="upcoming-card-label">Next Map</div>
+        <div class="upcoming-card-map">{{ ui.map_cell(upcoming.map) }}</div>
+        {% if upcoming.note %}<div class="upcoming-card-note">{{ upcoming.note }}</div>{% endif %}
+      </div>
+    </div>
+  {% else %}
+    <div class="empty-note">No upcoming match set yet — run <code>set_upcoming_match.py</code> once the next map is known (Premier doesn't publish this via the API in a way we can trust — see PLAN.md).</div>
+  {% endif %}
+</section>
+
+{% if latest %}
+{% set m = latest.match %}
+{% set wild_rows = latest.box_score|selectattr("is_wild_player")|list|sort(attribute="acs", reverse=True) %}
+<section>
+  <h2>Latest Result</h2>
+  {% set splash = map_splash(m.map) %}
+  {% if splash %}<img class="map-splash-banner" src="{{ splash }}" alt="{{ m.map }}">{% endif %}
+  <h1 style="cursor:pointer;" onclick="location.href='/matches/{{ m.match_id }}'">
+    {{ m.map }}
+    <span class="pill {{ 'win' if m.result == 'WIN' else 'loss' }}" style="vertical-align: middle;">{{ m.result }}</span>
+  </h1>
+  <div class="subtitle">
+    {{ m.date[:10] }} &middot; {{ m.season_id or "—" }} &middot; {{ m.match_type or "—" }}
+    {% if m.opponent_name %} &middot; vs {{ m.opponent_name }} ({{ m.opponent_tag }}){% endif %}
+    &middot; margin {{ "+%d"|format(m.margin) if m.margin and m.margin > 0 else m.margin }}
+  </div>
+  {{ ui.box_score_table(wild_rows, clickable=True) }}
+  <a class="back-link" href="/matches/{{ m.match_id }}">View full match &rarr;</a>
+</section>
+{% endif %}
+
+{% endblock %}

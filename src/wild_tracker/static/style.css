@@ -224,6 +224,24 @@ tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4
   border: 1px solid var(--border); margin-bottom: 20px; display: block;
 }
 
+/* Homepage: upcoming-match hero card */
+.upcoming-card {
+  position: relative; height: 180px; border-radius: 8px; overflow: hidden;
+  border: 1px solid var(--border); margin-bottom: 8px;
+}
+.upcoming-card-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.upcoming-card-content {
+  position: relative; height: 100%; display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 20px 24px; background: linear-gradient(0deg, rgba(12,15,19,0.92) 0%, rgba(12,15,19,0.35) 60%, rgba(12,15,19,0.05) 100%);
+}
+.upcoming-card-label {
+  font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent); font-weight: 700; margin-bottom: 6px;
+}
+.upcoming-card-map { font-size: 24px; font-weight: 800; letter-spacing: 0.02em; color: var(--text); }
+.upcoming-card-map .map-icon { width: 30px; height: 30px; }
+.upcoming-card-note { color: var(--text-dim); font-size: 13.5px; margin-top: 6px; }
+
 /* VLR-style box score: each stat in its own chip */
 table.vlr-table { min-width: 760px; }
 .stat-chip {

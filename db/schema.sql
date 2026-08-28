@@ -30,6 +30,18 @@ CREATE TABLE IF NOT EXISTS season_schedule (
     end_date    TEXT
 );
 
+-- Singleton row (id always 1) for the homepage's "Upcoming Match" header.
+-- HenrikDev's premier/seasons endpoint returns a season's 7 weekly maps but
+-- not team-specific scheduling (every event's date field is an unset
+-- placeholder, and the array order doesn't match WILD's actual play order),
+-- so this is manually curated instead of pulled live — see set_upcoming_match.py.
+CREATE TABLE IF NOT EXISTS upcoming_match (
+    id          INTEGER PRIMARY KEY CHECK (id = 1),
+    map         TEXT,
+    note        TEXT,
+    updated_at  TEXT
+);
+
 -- season_id is NOT a foreign key into season_schedule: it's populated
 -- straight from the API's metadata.season on ingest, while season_schedule
 -- (week labels/date ranges) is separately curated by you. Enforcing the FK

@@ -66,6 +66,21 @@ def team_record(conn: sqlite3.Connection) -> dict:
     return {"overall": overall, "by_map": by_map, "by_season": by_season, "by_type": by_type}
 
 
+def home_page_data(conn: sqlite3.Connection) -> dict:
+    """Homepage: manually-curated upcoming-match header (see
+    set_upcoming_match.py — HenrikDev's premier/seasons endpoint doesn't
+    reliably give a team-specific "next map") plus the most recent match's
+    full result, reusing match_detail() so the same box score/timeline the
+    match page shows can render here too."""
+    upcoming = conn.execute("SELECT map, note, updated_at FROM upcoming_match WHERE id = 1").fetchone()
+    upcoming = dict(upcoming) if upcoming and upcoming["map"] else None
+
+    latest_row = conn.execute("SELECT match_id FROM matches ORDER BY date DESC LIMIT 1").fetchone()
+    latest = match_detail(conn, latest_row["match_id"]) if latest_row else None
+
+    return {"upcoming": upcoming, "latest": latest}
+
+
 def player_career_list(conn: sqlite3.Connection) -> list[dict]:
     return [dict(r) for r in conn.execute("""
         SELECT
