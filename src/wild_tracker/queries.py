@@ -101,12 +101,13 @@ def player_career_list(conn: sqlite3.Connection, stage: str | None = None) -> li
           COUNT(*) AS matches_played,
           SUM(v.kills) AS kills, SUM(v.deaths) AS deaths, SUM(v.assists) AS assists,
           ROUND(SUM(v.kills) * 1.0 / NULLIF(SUM(v.deaths), 0), 2) AS kd,
+          ROUND(SUM(v.acs * v.rounds_played) * 1.0 / NULLIF(SUM(v.rounds_played), 0), 1) AS acs,
           ROUND(SUM(v.adr * v.rounds_played) * 1.0 / NULLIF(SUM(v.rounds_played), 0), 1) AS adr,
           ROUND(SUM(v.hs_pct * v.rounds_played) * 1.0 / NULLIF(SUM(v.rounds_played), 0), 1) AS hs_pct,
           SUM(v.two_k) AS two_k, SUM(v.three_k) AS three_k, SUM(v.four_k) AS four_k, SUM(v.five_k) AS five_k,
-          SUM(v.clutch_1v1 + v.clutch_1v2 + v.clutch_1v3 + v.clutch_1v4 + v.clutch_1v5) AS clutches,
+          SUM(COALESCE(v.clutch_1v1, 0) + COALESCE(v.clutch_1v2, 0) + COALESCE(v.clutch_1v3, 0) + COALESCE(v.clutch_1v4, 0) + COALESCE(v.clutch_1v5, 0)) AS clutches,
           SUM(v.plants) AS plants, SUM(v.defuses) AS defuses,
-          ROUND(AVG(v.econ), 1) AS econ
+          ROUND(AVG(v.econ), 0) AS econ
         FROM v_wild_player_match_stats v
         JOIN players p ON p.player_id = v.player_id
         {where}
@@ -172,7 +173,7 @@ def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:
         SELECT match_id, date, map, season_id, match_type, match_result, margin,
           agent, kills, deaths, assists, adr, hs_pct,
           two_k, three_k, four_k, five_k,
-          (clutch_1v1 + clutch_1v2 + clutch_1v3 + clutch_1v4 + clutch_1v5) AS clutches,
+          (COALESCE(clutch_1v1, 0) + COALESCE(clutch_1v2, 0) + COALESCE(clutch_1v3, 0) + COALESCE(clutch_1v4, 0) + COALESCE(clutch_1v5, 0)) AS clutches,
           econ, match_source
         FROM v_wild_player_match_stats WHERE player_id = ?
         ORDER BY date DESC

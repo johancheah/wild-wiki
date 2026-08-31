@@ -23,6 +23,7 @@ type BoxScoreStatRow = {
   deaths: number;
   assists: number;
   rounds_played: number | null;
+  acs: number | null;
   adr: number | null;
   hs_pct: number | null;
   two_k: number | null;
@@ -55,6 +56,7 @@ export async function fetchPlayerCareer(supabase: SupabaseClient, stage: string 
     deaths: number;
     assists: number;
     roundsPlayed: number;
+    acsWeighted: number;
     adrWeighted: number;
     hsWeighted: number;
     two_k: number;
@@ -82,6 +84,7 @@ export async function fetchPlayerCareer(supabase: SupabaseClient, stage: string 
         deaths: 0,
         assists: 0,
         roundsPlayed: 0,
+        acsWeighted: 0,
         adrWeighted: 0,
         hsWeighted: 0,
         two_k: 0,
@@ -102,6 +105,7 @@ export async function fetchPlayerCareer(supabase: SupabaseClient, stage: string 
     acc.deaths += r.deaths ?? 0;
     acc.assists += r.assists ?? 0;
     acc.roundsPlayed += rp;
+    acc.acsWeighted += (r.acs ?? 0) * rp;
     acc.adrWeighted += (r.adr ?? 0) * rp;
     acc.hsWeighted += (r.hs_pct ?? 0) * rp;
     acc.two_k += r.two_k ?? 0;
@@ -124,6 +128,7 @@ export async function fetchPlayerCareer(supabase: SupabaseClient, stage: string 
     headshot_filename: acc.headshot_filename,
     display_name: acc.display_name,
     matches_played: acc.matches_played,
+    acs: acc.roundsPlayed ? Math.round((acc.acsWeighted / acc.roundsPlayed) * 10) / 10 : null,
     kills: acc.kills,
     deaths: acc.deaths,
     assists: acc.assists,
@@ -137,7 +142,7 @@ export async function fetchPlayerCareer(supabase: SupabaseClient, stage: string 
     clutches: acc.clutches,
     plants: acc.plants,
     defuses: acc.defuses,
-    econ: acc.econN ? Math.round((acc.econSum / acc.econN) * 10) / 10 : null,
+    econ: acc.econN ? Math.round(acc.econSum / acc.econN) : null,
   }));
 
   players.sort((a, b) => b.kills - a.kills);

@@ -2,11 +2,24 @@ from __future__ import annotations
 
 import argparse
 import logging
+import re
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import openpyxl
+
+# Python's fromisoformat (pre-3.11) only accepts 3- or 6-digit fractional
+# seconds — the API has been observed emitting other lengths (e.g. 1 digit,
+# confirmed 2026-08-31). Pad/truncate to exactly 6 (microseconds) so any
+# length parses — same fix as queries.py::_local_date.
+_FRACTIONAL_SECONDS_RE = re.compile(r"\.(\d+)")
+
+
+def _parse_api_date(date_str: str) -> datetime:
+    normalized = date_str.replace("Z", "+00:00")
+    normalized = _FRACTIONAL_SECONDS_RE.sub(lambda m: "." + m.group(1).ljust(6, "0")[:6], normalized)
+    return datetime.fromisoformat(normalized)
 
 # The spreadsheet's Date column is a local (US Eastern) date with no time
 # component; the API's `date` is a UTC timestamp. Evening matches roll over
@@ -92,7 +105,7 @@ def existing_api_match_keys(conn) -> set[tuple[str, str, int]]:
     cur = conn.execute("SELECT date, map, margin FROM matches WHERE source = 'api'")
     keys = set()
     for row in cur.fetchall():
-        utc_dt = datetime.fromisoformat(row["date"].replace("Z", "+00:00"))
+        utc_dt = _parse_api_date(row["date"])
         local_date = utc_dt.astimezone(TEAM_TZ).date().isoformat()
         keys.add((local_date, row["map"], row["margin"]))
     return keys
@@ -186,21 +199,28 @@ def run_import(xlsx_path: Path) -> None:
                 "kast_pct": as_pct(r["kast_pct"]),
             })
 
+            # A blank spreadsheet cell means "zero of this," not "unknown" —
+            # store 0 rather than NULL, otherwise SQL's SUM(a+b+c+d+e) style
+            # aggregates (e.g. queries.py's clutch totals) silently drop the
+            # whole row whenever any one of the five clutch columns is NULL,
+            # undercounting spreadsheet-era stats (found 2026-08-31: metro's
+            # career clutch total was reading 12, not the real ~34+, because
+            # nearly every spreadsheet row had 4 of 5 clutch columns NULL).
             upsert(conn, "derived_player_match_stats", {
                 "match_id": match_id,
                 "player_id": player_id,
                 "source": "spreadsheet_manual",
-                "two_k": r["two_k"],
-                "three_k": r["three_k"],
-                "four_k": r["four_k"],
-                "five_k": r["five_k"],
-                "clutch_1v1": r["1v1"],
-                "clutch_1v2": r["1v2"],
-                "clutch_1v3": r["1v3"],
-                "clutch_1v4": r["1v4"],
-                "clutch_1v5": r["1v5"],
-                "plants": r["pl"],
-                "defuses": r["de"],
+                "two_k": r["two_k"] or 0,
+                "three_k": r["three_k"] or 0,
+                "four_k": r["four_k"] or 0,
+                "five_k": r["five_k"] or 0,
+                "clutch_1v1": r["1v1"] or 0,
+                "clutch_1v2": r["1v2"] or 0,
+                "clutch_1v3": r["1v3"] or 0,
+                "clutch_1v4": r["1v4"] or 0,
+                "clutch_1v5": r["1v5"] or 0,
+                "plants": r["pl"] or 0,
+                "defuses": r["de"] or 0,
                 "econ": r["econ"],
             })
 

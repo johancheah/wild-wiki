@@ -15,6 +15,7 @@ type Column = {
 const COLUMNS: Column[] = [
   { key: "player", label: "Player", type: "string", value: (p) => p.display_name },
   { key: "mp", label: "MP", type: "num", value: (p) => p.matches_played },
+  { key: "acs", label: "ACS", type: "num", value: (p) => p.acs },
   { key: "kills", label: "Kills", type: "num", value: (p) => p.kills },
   { key: "deaths", label: "Deaths", type: "num", value: (p) => p.deaths },
   { key: "assists", label: "Assists", type: "num", value: (p) => p.assists },
@@ -84,15 +85,16 @@ export function PlayersTable({ players }: { players: PlayerCareer[] }) {
                 </Link>
               </td>
               <td className="num-col num">{p.matches_played}</td>
+              <td className="num-col num">{p.acs !== null ? Math.round(p.acs) : "—"}</td>
               <td className="num-col num">{p.kills}</td>
               <td className="num-col num">{p.deaths}</td>
               <td className="num-col num">{p.assists}</td>
-              <td className="num-col num">{p.kd ?? "—"}</td>
+              <td className="num-col num">{p.kd !== null ? p.kd.toFixed(2) : "—"}</td>
               <td className="num-col num">{p.adr ?? "—"}</td>
               <td className="num-col num">{p.hs_pct !== null ? `${p.hs_pct}%` : "—"}</td>
               <td className="num-col num">{(p.two_k ?? 0) + (p.three_k ?? 0) + (p.four_k ?? 0) + (p.five_k ?? 0)}</td>
               <td className="num-col num">{p.clutches ?? 0}</td>
-              <td className="num-col num">{p.econ ?? "—"}</td>
+              <td className="num-col num">{p.econ !== null ? Math.round(p.econ) : "—"}</td>
             </tr>
           ))}
         </tbody>

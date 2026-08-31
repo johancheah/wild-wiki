@@ -57,6 +57,7 @@ export type PlayerCareer = {
   headshot_filename: string | null;
   display_name: string;
   matches_played: number;
+  acs: number | null;
   kills: number;
   deaths: number;
   assists: number;

@@ -89,7 +89,7 @@ SELECT
     ROUND((SUM(v.adr * v.rounds_played) * 1.0 / NULLIF(SUM(v.rounds_played), 0))::numeric, 1) AS adr,
     ROUND((SUM(v.hs_pct * v.rounds_played) * 1.0 / NULLIF(SUM(v.rounds_played), 0))::numeric, 1) AS hs_pct,
     SUM(v.two_k) AS two_k, SUM(v.three_k) AS three_k, SUM(v.four_k) AS four_k, SUM(v.five_k) AS five_k,
-    SUM(v.clutch_1v1 + v.clutch_1v2 + v.clutch_1v3 + v.clutch_1v4 + v.clutch_1v5) AS clutches,
+    SUM(COALESCE(v.clutch_1v1, 0) + COALESCE(v.clutch_1v2, 0) + COALESCE(v.clutch_1v3, 0) + COALESCE(v.clutch_1v4, 0) + COALESCE(v.clutch_1v5, 0)) AS clutches,
     SUM(v.plants) AS plants, SUM(v.defuses) AS defuses,
     ROUND(AVG(v.econ)::numeric, 1) AS econ
 FROM v_wild_player_match_stats v
