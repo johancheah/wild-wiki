@@ -1,17 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { BoxScoreTable } from "@/components/BoxScoreTable";
-import { PerformanceTable } from "@/components/PerformanceTable";
-import { WeaponMatrixTable } from "@/components/WeaponMatrixTable";
-import { RoundTimeline } from "@/components/RoundTimeline";
-import { EconomySection } from "@/components/EconomySection";
-import { Tabs } from "@/components/Tabs";
+import { MatchTabs } from "@/components/MatchTabs";
 import { mapSplash } from "@/lib/assets";
-import { computeMatchTimeline } from "@/lib/timeline";
-import { computeMatchEconomy } from "@/lib/economy";
-import { fetchWeaponMatrix } from "@/lib/weapons";
-import type { BoxScoreRow, MatchRow } from "@/lib/types";
+import { fetchMatchFullDetail } from "@/lib/matchDetail";
 
 export const revalidate = 0;
 
@@ -22,29 +14,12 @@ export default async function MatchDetailPage({
 }) {
   const { id } = await params;
 
-  const [{ data: matchRows }, { data: boxScoreRows }] = await Promise.all([
-    supabase.from("v_match_row").select("*").eq("match_id", id),
-    supabase.from("v_match_box_score").select("*").eq("match_id", id),
-  ]);
+  const detail = await fetchMatchFullDetail(supabase, id);
+  if (!detail) notFound();
 
-  const match = (matchRows as MatchRow[] | null)?.[0];
-  if (!match) notFound();
-
-  const boxScore = (boxScoreRows ?? []) as BoxScoreRow[];
-
-  const wildRows = boxScore.filter((r) => r.is_wild_player).sort((a, b) => (b.acs ?? 0) - (a.acs ?? 0));
-  const enemyRows = boxScore.filter((r) => !r.is_wild_player).sort((a, b) => (b.acs ?? 0) - (a.acs ?? 0));
-
-  const timeline =
-    match.team_id && match.enemy_team_id
-      ? await computeMatchTimeline(supabase, id, match.team_id, match.enemy_team_id)
-      : [];
-  const economy = match.team_id && match.enemy_team_id
-    ? await computeMatchEconomy(supabase, id, match.team_id, match.enemy_team_id)
-    : null;
-  const weapons = match.team_id ? await fetchWeaponMatrix(supabase, id, match.team_id) : null;
-
+  const { match, wildRows, enemyRows, timeline, economy, weapons } = detail;
   const splash = mapSplash(match.map);
+  const economies = economy ? [{ map: match.map, opponent: match.opponent_name, economy }] : null;
 
   return (
     <>
@@ -75,71 +50,13 @@ export default async function MatchDetailPage({
         </span>
       </div>
 
-      <RoundTimeline timeline={timeline} opponentName={match.opponent_name} />
-
-      <Tabs
-        tabs={[
-          {
-            id: "overview",
-            label: "Overview",
-            content: (
-              <>
-                <section>
-                  <h2>WILD Box Score</h2>
-                  <BoxScoreTable rows={wildRows} clickable />
-                </section>
-                {enemyRows.length > 0 ? (
-                  <section>
-                    <h2>Opponent Box Score</h2>
-                    <BoxScoreTable rows={enemyRows} clickable={false} />
-                  </section>
-                ) : (
-                  <div className="empty-note">
-                    This match was imported from the legacy spreadsheet, which never recorded opponent identity or
-                    individual opponent stats — only the final score (see PLAN.md §5.5).
-                  </div>
-                )}
-              </>
-            ),
-          },
-          {
-            id: "performance",
-            label: "Performance",
-            content: (
-              <section>
-                <h2>Multi-Kills, Clutches &amp; Utility — WILD</h2>
-                <PerformanceTable rows={wildRows} clickable />
-              </section>
-            ),
-          },
-          ...(weapons
-            ? [
-                {
-                  id: "weapons",
-                  label: "Weapons",
-                  content: (
-                    <section>
-                      <h2>Weapon Kills — WILD</h2>
-                      <WeaponMatrixTable matrix={weapons} />
-                    </section>
-                  ),
-                },
-              ]
-            : []),
-          ...(economy
-            ? [
-                {
-                  id: "economy",
-                  label: "Economy",
-                  content: (
-                    <section>
-                      <EconomySection economy={economy} opponentName={match.opponent_name} />
-                    </section>
-                  ),
-                },
-              ]
-            : []),
-        ]}
+      <MatchTabs
+        wildRows={wildRows}
+        enemyRows={enemyRows}
+        weapons={weapons}
+        economies={economies}
+        timeline={timeline}
+        opponentName={match.opponent_name}
       />
     </>
   );

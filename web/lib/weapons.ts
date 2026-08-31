@@ -68,3 +68,38 @@ export async function fetchWeaponMatrix(
   const playersOut = [...byPlayer.values()].sort((a, b) => b.total - a.total);
   return { weapons, players: playersOut };
 }
+
+// Sums a list of per-match weapon matrices into one combined matrix — the
+// match-week Overall tab's Weapons view. Mirrors
+// src/wild_tracker/queries.py::_merge_weapon_matrices.
+export function mergeWeaponMatrices(matrices: (WeaponMatrix | null)[]): WeaponMatrix | null {
+  const weaponTotals = new Map<string, number>();
+  const byPlayer = new Map<string, WeaponMatrixPlayer>();
+
+  for (const wm of matrices) {
+    if (!wm) continue;
+    for (const p of wm.players) {
+      if (!byPlayer.has(p.player_id)) {
+        byPlayer.set(p.player_id, {
+          player_id: p.player_id,
+          display_name: p.display_name,
+          headshot_filename: p.headshot_filename,
+          kills_by_weapon: {},
+          total: 0,
+        });
+      }
+      const dest = byPlayer.get(p.player_id)!;
+      for (const [weapon, count] of Object.entries(p.kills_by_weapon)) {
+        dest.kills_by_weapon[weapon] = (dest.kills_by_weapon[weapon] ?? 0) + count;
+        dest.total += count;
+        weaponTotals.set(weapon, (weaponTotals.get(weapon) ?? 0) + count);
+      }
+    }
+  }
+
+  if (byPlayer.size === 0) return null;
+
+  const weapons = [...weaponTotals.keys()].sort((a, b) => weaponTotals.get(b)! - weaponTotals.get(a)!);
+  const playersOut = [...byPlayer.values()].sort((a, b) => b.total - a.total);
+  return { weapons, players: playersOut };
+}

@@ -231,21 +231,63 @@
 </div>
 {% endmacro %}
 
-{% macro weapon_kills_table(weapon_kills) %}
-<div class="table-scroll">
-  <table>
-    <thead><tr><th>Player</th><th>Weapon</th><th class="num-col">Kills</th></tr></thead>
-    <tbody>
-      {% for w in weapon_kills %}
-      <tr>
-        <td class="name">{{ w.display_name }}</td>
-        <td>{{ w.weapon }}</td>
-        <td class="num-col num">{{ w.kill_count }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+{# Standard set of match-scoped tabs: Overview / Performance / Weapons /
+   Economy — shared by the single-match page and each nested tab group on
+   the match-week page (Overall + one per map), so every box score / weapon
+   matrix / economy grid on the site is rendered by the exact same markup.
+   `group` must be unique on the page (used to scope tab-button clicks and
+   panel ids so multiple tab groups can be nested without colliding). #}
+{% macro match_tabs(group, wild_rows, enemy_rows=None, weapons=None, economies=None, box_title="WILD Box Score", multi_agent=False, subtitle=None, timeline=None, opponent_name=None) %}
+  {% if timeline %}{{ round_timeline(timeline, opponent_name) }}{% endif %}
+  <div class="tabs" data-group="{{ group }}">
+    <button class="tab-btn active" data-tab="overview" data-group="{{ group }}">Overview</button>
+    <button class="tab-btn" data-tab="performance" data-group="{{ group }}">Performance</button>
+    {% if weapons %}<button class="tab-btn" data-tab="weapons" data-group="{{ group }}">Weapons</button>{% endif %}
+    {% if economies %}<button class="tab-btn" data-tab="economy" data-group="{{ group }}">Economy</button>{% endif %}
+  </div>
+
+  <div id="tab-{{ group }}-overview" class="tab-panel" data-group="{{ group }}">
+    <section>
+      <h2>{{ box_title }}</h2>
+      {% if subtitle %}<div class="subtitle" style="margin-top:-8px;">{{ subtitle }}</div>{% endif %}
+      {{ box_score_table(wild_rows, clickable=True, multi_agent=multi_agent) }}
+    </section>
+    {% if enemy_rows %}
+    <section>
+      <h2>Opponent Box Score</h2>
+      {{ box_score_table(enemy_rows, clickable=False) }}
+    </section>
+    {% elif enemy_rows is not none %}
+    <div class="empty-note">This match was imported from the legacy spreadsheet, which never recorded opponent identity or individual opponent stats — only the final score (see PLAN.md §5.5).</div>
+    {% endif %}
+  </div>
+
+  <div id="tab-{{ group }}-performance" class="tab-panel hidden" data-group="{{ group }}">
+    <section>
+      <h2>Multi-Kills, Clutches &amp; Utility — WILD</h2>
+      {{ performance_table(wild_rows, clickable=True) }}
+    </section>
+  </div>
+
+  {% if weapons %}
+  <div id="tab-{{ group }}-weapons" class="tab-panel hidden" data-group="{{ group }}">
+    <section>
+      <h2>Weapon Kills — WILD</h2>
+      {{ weapon_matrix_table(weapons) }}
+    </section>
+  </div>
+  {% endif %}
+
+  {% if economies %}
+  <div id="tab-{{ group }}-economy" class="tab-panel hidden" data-group="{{ group }}">
+    {% for e in economies %}
+    <section>
+      <h2>{{ e.map }} vs {{ e.opponent or "Opponent" }}</h2>
+      {{ economy_section(e.economy, e.opponent) }}
+    </section>
+    {% endfor %}
+  </div>
+  {% endif %}
 {% endmacro %}
 
 {# Buy-type summary + round-by-round loadout grid for one map's economy.

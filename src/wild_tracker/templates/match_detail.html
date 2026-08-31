@@ -18,64 +18,7 @@
 
 {% set wild_rows = box_score|selectattr("is_wild_player")|list|sort(attribute="acs", reverse=True) %}
 {% set enemy_rows = box_score|rejectattr("is_wild_player")|list|sort(attribute="acs", reverse=True) %}
+{% set economies = [{"map": match.map, "opponent": match.opponent_name, "economy": economy}] if economy else None %}
 
-{{ ui.round_timeline(timeline, match.opponent_name) }}
-
-<div class="tabs">
-  <button class="tab-btn active" data-tab="overview">Overview</button>
-  <button class="tab-btn" data-tab="performance">Performance</button>
-  {% if weapons %}<button class="tab-btn" data-tab="weapons">Weapons</button>{% endif %}
-  {% if economy %}<button class="tab-btn" data-tab="economy">Economy</button>{% endif %}
-</div>
-
-<div id="tab-overview" class="tab-panel">
-  <section>
-    <h2>WILD Box Score</h2>
-    {{ ui.box_score_table(wild_rows, clickable=True) }}
-  </section>
-
-  {% if enemy_rows %}
-  <section>
-    <h2>Opponent Box Score</h2>
-    {{ ui.box_score_table(enemy_rows, clickable=False) }}
-  </section>
-  {% else %}
-  <div class="empty-note">This match was imported from the legacy spreadsheet, which never recorded opponent identity or individual opponent stats — only the final score (see PLAN.md §5.5).</div>
-  {% endif %}
-</div>
-
-<div id="tab-performance" class="tab-panel hidden">
-  <section>
-    <h2>Multi-Kills, Clutches &amp; Utility — WILD</h2>
-    {{ ui.performance_table(wild_rows, clickable=True) }}
-  </section>
-</div>
-
-{% if weapons %}
-<div id="tab-weapons" class="tab-panel hidden">
-  <section>
-    <h2>Weapon Kills — WILD</h2>
-    {{ ui.weapon_matrix_table(weapons) }}
-  </section>
-</div>
-{% endif %}
-
-{% if economy %}
-<div id="tab-economy" class="tab-panel hidden">
-  <section>
-    {{ ui.economy_section(economy, match.opponent_name) }}
-  </section>
-</div>
-{% endif %}
-
-<script>
-  document.querySelectorAll(".tab-btn").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      document.querySelectorAll(".tab-btn").forEach(function (b) { b.classList.remove("active"); });
-      document.querySelectorAll(".tab-panel").forEach(function (p) { p.classList.add("hidden"); });
-      btn.classList.add("active");
-      document.getElementById("tab-" + btn.dataset.tab).classList.remove("hidden");
-    });
-  });
-</script>
+{{ ui.match_tabs(group="m", wild_rows=wild_rows, enemy_rows=enemy_rows, weapons=weapons, economies=economies, timeline=timeline, opponent_name=match.opponent_name) }}
 {% endblock %}

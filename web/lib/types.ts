@@ -101,10 +101,3 @@ export type MatchRow = {
   opponent_tag: string | null;
 };
 
-export type WeaponKillRow = {
-  player_id: string;
-  riot_name: string;
-  display_name: string;
-  weapon: string;
-  kill_count: number;
-};

@@ -31,53 +31,40 @@
   </div>
 </section>
 
-<div class="tabs">
-  <button class="tab-btn active" data-tab="overview">Overview</button>
-  <button class="tab-btn" data-tab="performance">Performance</button>
-  {% if economies %}<button class="tab-btn" data-tab="economy">Economy</button>{% endif %}
-</div>
-
-<div id="tab-overview" class="tab-panel">
-  <section>
-    <h2>Combined Box Score — WILD</h2>
-    <div class="subtitle" style="margin-top:-8px;">Stats summed/averaged across all {{ week.maps|length }} map{{ 's' if week.maps|length != 1 }} this week (ADR/HS%/ACS/KAST weighted by rounds played, not simple per-map averages).</div>
-    {{ ui.box_score_table(combined_box_score, clickable=True, multi_agent=True) }}
-  </section>
-</div>
-
-<div id="tab-performance" class="tab-panel hidden">
-  <section>
-    <h2>Multi-Kills, Clutches &amp; Utility — Combined</h2>
-    {{ ui.performance_table(combined_box_score, clickable=True) }}
-  </section>
-
-  {% if weapon_kills %}
-  <section>
-    <h2>Weapon Kills — Combined</h2>
-    {{ ui.weapon_kills_table(weapon_kills) }}
-  </section>
-  {% endif %}
-</div>
-
-{% if economies %}
-<div id="tab-economy" class="tab-panel hidden">
-  {% for e in economies %}
-  <section>
-    <h2>{{ e.map }} vs {{ e.opponent or "Opponent" }}</h2>
-    {{ ui.economy_section(e.economy, e.opponent) }}
-  </section>
+<div class="tabs" data-group="week">
+  <button class="tab-btn active" data-tab="overall" data-group="week">Overall</button>
+  {% for md in maps_detail %}
+  <button class="tab-btn" data-tab="map{{ loop.index }}" data-group="week">Map {{ loop.index }}</button>
   {% endfor %}
 </div>
-{% endif %}
 
-<script>
-  document.querySelectorAll(".tab-btn").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      document.querySelectorAll(".tab-btn").forEach(function (b) { b.classList.remove("active"); });
-      document.querySelectorAll(".tab-panel").forEach(function (p) { p.classList.add("hidden"); });
-      btn.classList.add("active");
-      document.getElementById("tab-" + btn.dataset.tab).classList.remove("hidden");
-    });
-  });
-</script>
+<div id="tab-week-overall" class="tab-panel" data-group="week">
+  {{ ui.match_tabs(
+       group="overall",
+       wild_rows=combined_box_score,
+       weapons=combined_weapons,
+       economies=economies,
+       box_title="Combined Box Score — WILD",
+       multi_agent=True,
+       subtitle="Stats summed/averaged across all " ~ week.maps|length ~ " map" ~ ("s" if week.maps|length != 1) ~ " this week (ADR/HS%/ACS/KAST weighted by rounds played, not simple per-map averages)."
+     ) }}
+</div>
+
+{% for md in maps_detail %}
+{% set d = md.detail %}
+{% set wild_rows = d.box_score|selectattr("is_wild_player")|list|sort(attribute="acs", reverse=True) %}
+{% set enemy_rows = d.box_score|rejectattr("is_wild_player")|list|sort(attribute="acs", reverse=True) %}
+{% set map_economies = [{"map": md.map, "opponent": md.opponent, "economy": d.economy}] if d.economy else None %}
+<div id="tab-week-map{{ loop.index }}" class="tab-panel hidden" data-group="week">
+  {{ ui.match_tabs(
+       group="map" ~ loop.index,
+       wild_rows=wild_rows,
+       enemy_rows=enemy_rows,
+       weapons=d.weapons,
+       economies=map_economies,
+       timeline=d.timeline,
+       opponent_name=md.opponent
+     ) }}
+</div>
+{% endfor %}
 {% endblock %}

@@ -1,15 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { fetchMatchWeekByKey, fetchCombinedBoxScore, fetchCombinedWeaponKills } from "@/lib/schedule";
-import { computeMatchEconomy } from "@/lib/economy";
-import { BoxScoreTable } from "@/components/BoxScoreTable";
-import { PerformanceTable } from "@/components/PerformanceTable";
-import { WeaponKillsTable } from "@/components/WeaponKillsTable";
-import { EconomySection } from "@/components/EconomySection";
+import { fetchMatchWeekByKey, fetchCombinedBoxScore } from "@/lib/schedule";
+import { fetchMatchFullDetail } from "@/lib/matchDetail";
+import { mergeWeaponMatrices } from "@/lib/weapons";
+import { MatchTabs, type MatchTabsEconomyEntry } from "@/components/MatchTabs";
 import { MapCell } from "@/components/MapCell";
 import { Tabs } from "@/components/Tabs";
-import type { MatchEconomy } from "@/lib/economy";
 
 export const revalidate = 0;
 
@@ -25,22 +22,18 @@ export default async function MatchWeekDetailPage({
 
   const matchIds = week.maps.map((m) => m.match_id);
 
-  const [combinedBoxScore, weaponKills] = await Promise.all([
+  const [combinedBoxScore, mapDetails] = await Promise.all([
     fetchCombinedBoxScore(supabase, matchIds),
-    fetchCombinedWeaponKills(supabase, matchIds),
+    Promise.all(week.maps.map((m) => fetchMatchFullDetail(supabase, m.match_id))),
   ]);
 
-  const economies: { map: string; opponent: string | null; economy: MatchEconomy }[] = [];
-  for (const m of week.maps) {
-    const { data: matchRow } = await supabase
-      .from("matches")
-      .select("team_id, enemy_team_id")
-      .eq("match_id", m.match_id)
-      .single();
-    if (!matchRow?.team_id) continue;
-    const economy = await computeMatchEconomy(supabase, m.match_id, matchRow.team_id, matchRow.enemy_team_id);
-    if (economy) economies.push({ map: m.map, opponent: m.opponent, economy });
-  }
+  const combinedWeapons = mergeWeaponMatrices(mapDetails.map((d) => d?.weapons ?? null));
+
+  const economies: MatchTabsEconomyEntry[] = [];
+  week.maps.forEach((m, i) => {
+    const d = mapDetails[i];
+    if (d?.economy) economies.push({ map: m.map, opponent: m.opponent, economy: d.economy });
+  });
 
   return (
     <>
@@ -103,57 +96,40 @@ export default async function MatchWeekDetailPage({
       <Tabs
         tabs={[
           {
-            id: "overview",
-            label: "Overview",
+            id: "overall",
+            label: "Overall",
             content: (
-              <section>
-                <h2>Combined Box Score — WILD</h2>
-                <div className="subtitle" style={{ marginTop: -8 }}>
-                  Stats summed/averaged across all {week.maps.length} map{week.maps.length !== 1 ? "s" : ""} this week
-                  (ADR/HS%/ACS/KAST weighted by rounds played, not simple per-map averages).
-                </div>
-                <BoxScoreTable rows={combinedBoxScore} clickable multiAgent />
-              </section>
+              <MatchTabs
+                wildRows={combinedBoxScore}
+                weapons={combinedWeapons}
+                economies={economies}
+                boxTitle="Combined Box Score — WILD"
+                multiAgent
+                subtitle={`Stats summed/averaged across all ${week.maps.length} map${
+                  week.maps.length !== 1 ? "s" : ""
+                } this week (ADR/HS%/ACS/KAST weighted by rounds played, not simple per-map averages).`}
+              />
             ),
           },
-          {
-            id: "performance",
-            label: "Performance",
-            content: (
-              <>
-                <section>
-                  <h2>Multi-Kills, Clutches &amp; Utility — Combined</h2>
-                  <PerformanceTable rows={combinedBoxScore} clickable />
-                </section>
-                {weaponKills.length > 0 && (
-                  <section>
-                    <h2>Weapon Kills — Combined</h2>
-                    <WeaponKillsTable rows={weaponKills} />
-                  </section>
-                )}
-              </>
-            ),
-          },
-          ...(economies.length > 0
-            ? [
-                {
-                  id: "economy",
-                  label: "Economy",
-                  content: (
-                    <>
-                      {economies.map((e) => (
-                        <section key={e.map + (e.opponent ?? "")}>
-                          <h2>
-                            {e.map} vs {e.opponent ?? "Opponent"}
-                          </h2>
-                          <EconomySection economy={e.economy} opponentName={e.opponent} />
-                        </section>
-                      ))}
-                    </>
-                  ),
-                },
-              ]
-            : []),
+          ...week.maps.map((m, i) => {
+            const d = mapDetails[i];
+            return {
+              id: `map${i + 1}`,
+              label: `Map ${i + 1}`,
+              content: d ? (
+                <MatchTabs
+                  wildRows={d.wildRows}
+                  enemyRows={d.enemyRows}
+                  weapons={d.weapons}
+                  economies={d.economy ? [{ map: m.map, opponent: m.opponent, economy: d.economy }] : null}
+                  timeline={d.timeline}
+                  opponentName={m.opponent}
+                />
+              ) : (
+                <div className="empty-note">This map&apos;s data could not be loaded.</div>
+              ),
+            };
+          }),
         ]}
       />
     </>

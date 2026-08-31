@@ -304,29 +304,29 @@ def match_week_detail(conn: sqlite3.Connection, season_id: str, local_date: str)
     for row in combined_box_score:
         row["agents"] = [agent_by_player_match[row["player_id"]].get(mid) for mid in match_ids]
 
-    weapon_kills = [dict(r) for r in conn.execute(f"""
-        SELECT w.player_id, COALESCE(p.nickname, p.riot_name) AS display_name,
-          w.weapon, SUM(w.kill_count) AS kill_count
-        FROM match_player_weapon_kills w JOIN players p ON p.player_id = w.player_id
-        WHERE w.match_id IN ({placeholders})
-        GROUP BY w.player_id, w.weapon
-        ORDER BY kill_count DESC
-    """, match_ids).fetchall()]
-
+    # Per-map full detail (box score, weapons matrix, economy, timeline) —
+    # reused as-is to drive each map's own Overview/Performance/Weapons/
+    # Economy tabs, so a map's box score on the week page is byte-for-byte
+    # the same rendering as its own /matches/{id} page.
+    maps_detail = []
+    weapon_matrices = []
     economies = []
     for m in week["maps"]:
-        match_row = conn.execute(
-            "SELECT team_id, enemy_team_id FROM matches WHERE match_id = ?", (m["match_id"],)
-        ).fetchone()
-        if not match_row or not match_row["team_id"]:
+        detail = match_detail(conn, m["match_id"])
+        if detail is None:
             continue
-        econ = match_economy(conn, m["match_id"], match_row["team_id"], match_row["enemy_team_id"])
-        if econ:
-            economies.append({"map": m["map"], "opponent": m["opponent"], "match_id": m["match_id"], "economy": econ})
+        maps_detail.append({"map": m["map"], "opponent": m["opponent"], "match_id": m["match_id"], "detail": detail})
+        if detail["weapons"]:
+            weapon_matrices.append(detail["weapons"])
+        if detail["economy"]:
+            economies.append({"map": m["map"], "opponent": m["opponent"], "match_id": m["match_id"], "economy": detail["economy"]})
+
+    combined_weapons = _merge_weapon_matrices(weapon_matrices)
 
     return {
         "week": week, "combined_box_score": combined_box_score,
-        "weapon_kills": weapon_kills, "economies": economies,
+        "combined_weapons": combined_weapons, "economies": economies,
+        "maps_detail": maps_detail,
     }
 
 
@@ -440,6 +440,30 @@ def weapon_matrix(conn: sqlite3.Connection, match_id: str, wild_team_id: str) ->
         p["kills_by_weapon"][r["weapon"]] = r["kill_count"]
         p["total"] += r["kill_count"]
 
+    weapons = sorted(weapon_totals, key=lambda w: weapon_totals[w], reverse=True)
+    player_rows = sorted(players.values(), key=lambda p: p["total"], reverse=True)
+    return {"weapons": weapons, "players": player_rows}
+
+
+def _merge_weapon_matrices(matrices: list[dict]) -> dict | None:
+    """Sums a list of per-match weapon_matrix() results into one combined
+    matrix, for the match-week Overall tab's Weapons view."""
+    weapon_totals: dict[str, int] = defaultdict(int)
+    players: dict[str, dict] = {}
+    for wm in matrices:
+        if not wm:
+            continue
+        for p in wm["players"]:
+            dest = players.setdefault(p["player_id"], {
+                "player_id": p["player_id"], "display_name": p["display_name"],
+                "headshot_filename": p["headshot_filename"], "kills_by_weapon": {}, "total": 0,
+            })
+            for weapon, count in p["kills_by_weapon"].items():
+                dest["kills_by_weapon"][weapon] = dest["kills_by_weapon"].get(weapon, 0) + count
+                dest["total"] += count
+                weapon_totals[weapon] += count
+    if not players:
+        return None
     weapons = sorted(weapon_totals, key=lambda w: weapon_totals[w], reverse=True)
     player_rows = sorted(players.values(), key=lambda p: p["total"], reverse=True)
     return {"weapons": weapons, "players": player_rows}
