@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Avatar } from "./Avatar";
+import { AgentCellIconOnly } from "./AgentCellIconOnly";
 import type { H2hMatrix } from "@/lib/h2h";
 
 const VARIANTS = [
@@ -33,7 +34,7 @@ export function H2hTable({ h2h }: { h2h: H2hMatrix }) {
               {h2h.enemy_players.map((e) => (
                 <th key={e.player_id}>
                   <div className="h2h-col-head">
-                    <Avatar displayName={e.display_name} headshotFilename={e.headshot_filename} size="sm" />
+                    <AgentCellIconOnly agent={e.agent} />
                     <span>{e.display_name}</span>
                   </div>
                 </th>
@@ -45,6 +46,7 @@ export function H2hTable({ h2h }: { h2h: H2hMatrix }) {
               <tr key={row.player_id}>
                 <td className="name">
                   <Avatar displayName={row.display_name} headshotFilename={row.headshot_filename} />
+                  <AgentCellIconOnly agent={row.agent} />
                   {row.display_name}
                 </td>
                 {row.cells.map((cell, i) => (

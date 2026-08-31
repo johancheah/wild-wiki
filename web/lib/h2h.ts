@@ -8,8 +8,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // kill_events, so this returns null for those.
 
 export type H2hCell = { k: number; d: number; diff: number };
-export type H2hRow = { player_id: string; display_name: string; headshot_filename: string | null; cells: H2hCell[] };
-export type H2hEnemyPlayer = { player_id: string; display_name: string; headshot_filename: string | null };
+export type H2hRow = {
+  player_id: string;
+  display_name: string;
+  headshot_filename: string | null;
+  agent: string | null;
+  cells: H2hCell[];
+};
+export type H2hEnemyPlayer = { player_id: string; display_name: string; headshot_filename: string | null; agent: string | null };
 
 export type H2hMatrix = {
   enemy_players: H2hEnemyPlayer[];
@@ -27,7 +33,7 @@ export async function fetchH2hMatrix(
   if (!enemyTeamId) return null;
 
   const [{ data: matchPlayers }, { data: players }, { data: killsData }] = await Promise.all([
-    supabase.from("match_players").select("player_id, team_id").eq("match_id", matchId),
+    supabase.from("match_players").select("player_id, team_id, agent").eq("match_id", matchId),
     supabase.from("players").select("player_id, riot_name, nickname, headshot_filename"),
     supabase
       .from("kill_events")
@@ -41,6 +47,8 @@ export async function fetchH2hMatrix(
   for (const p of players ?? []) {
     playerInfo.set(p.player_id, { display_name: p.nickname ?? p.riot_name, headshot_filename: p.headshot_filename });
   }
+  const agentByPlayer = new Map<string, string | null>();
+  for (const mp of matchPlayers ?? []) agentByPlayer.set(mp.player_id, mp.agent ?? null);
 
   const wildIds = new Set((matchPlayers ?? []).filter((mp) => mp.team_id === wildTeamId).map((mp) => mp.player_id));
   const enemyIds = new Set((matchPlayers ?? []).filter((mp) => mp.team_id === enemyTeamId).map((mp) => mp.player_id));
@@ -103,6 +111,7 @@ export async function fetchH2hMatrix(
         player_id: wid,
         display_name: info?.display_name ?? "?",
         headshot_filename: info?.headshot_filename ?? null,
+        agent: agentByPlayer.get(wid) ?? null,
         cells: rowCells,
       };
     });
@@ -110,7 +119,12 @@ export async function fetchH2hMatrix(
 
   const enemyPlayers: H2hEnemyPlayer[] = enemyOrder.map((eid) => {
     const info = playerInfo.get(eid);
-    return { player_id: eid, display_name: info?.display_name ?? "?", headshot_filename: info?.headshot_filename ?? null };
+    return {
+      player_id: eid,
+      display_name: info?.display_name ?? "?",
+      headshot_filename: info?.headshot_filename ?? null,
+      agent: agentByPlayer.get(eid) ?? null,
+    };
   });
 
   return {

@@ -320,7 +320,7 @@
             {% for e in h2h.enemy_players %}
             <th>
               <div class="h2h-col-head">
-                {{ avatar(e.display_name, e.headshot_filename, size="sm") }}
+                {{ agent_cell_icon_only(e.agent) }}
                 <span>{{ e.display_name }}</span>
               </div>
             </th>
@@ -330,7 +330,11 @@
         <tbody>
           {% for row in h2h.variants[variant_key] %}
           <tr>
-            <td class="name">{{ avatar(row.display_name, row.headshot_filename) }}{{ row.display_name }}</td>
+            <td class="name">
+              {{ avatar(row.display_name, row.headshot_filename) }}
+              {{ agent_cell_icon_only(row.agent) }}
+              {{ row.display_name }}
+            </td>
             {% for cell in row.cells %}
             <td>
               <div class="h2h-cell">

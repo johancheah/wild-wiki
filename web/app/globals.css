@@ -307,10 +307,12 @@ table.performance-table th.col-gap, table.performance-table td.col-gap { width: 
 .h2h-toggle { margin: 0 0 14px; }
 table.h2h-table th, table.h2h-table td { text-align: center; padding: 8px 12px; }
 table.h2h-table td.name, table.h2h-table th:first-child { text-align: left; }
+table.h2h-table td.name { display: flex; align-items: center; gap: 6px; }
 .h2h-col-head {
   display: flex; flex-direction: column; align-items: center; gap: 5px;
   font-size: 12px; font-weight: 600; color: var(--text-dim);
 }
+.h2h-col-head .agent-icon-only { width: 22px; height: 22px; }
 .h2h-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .h2h-kd {
   display: inline-flex; border-radius: 5px; overflow: hidden;
@@ -370,7 +372,7 @@ tr.week-row td:first-child { color: var(--text-faint); }
 
 /* Match-detail tabs (Overview / Performance / Economy) */
 .tabs {
-  display: flex; gap: 4px; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: center; gap: 4px; border-bottom: 1px solid var(--border);
   margin-bottom: 24px;
 }
 .tab-btn {

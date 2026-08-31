@@ -506,12 +506,12 @@ def h2h_matrix(conn: sqlite3.Connection, match_id: str, wild_team_id: str, enemy
         return None
 
     wild_players = conn.execute("""
-        SELECT mp.player_id, COALESCE(p.nickname, p.riot_name) AS display_name, p.headshot_filename
+        SELECT mp.player_id, COALESCE(p.nickname, p.riot_name) AS display_name, p.headshot_filename, mp.agent
         FROM match_players mp JOIN players p ON p.player_id = mp.player_id
         WHERE mp.match_id = ? AND mp.team_id = ?
     """, (match_id, wild_team_id)).fetchall()
     enemy_players = conn.execute("""
-        SELECT mp.player_id, COALESCE(p.nickname, p.riot_name) AS display_name, p.headshot_filename
+        SELECT mp.player_id, COALESCE(p.nickname, p.riot_name) AS display_name, p.headshot_filename, mp.agent
         FROM match_players mp JOIN players p ON p.player_id = mp.player_id
         WHERE mp.match_id = ? AND mp.team_id = ?
     """, (match_id, enemy_team_id)).fetchall()
@@ -571,7 +571,7 @@ def h2h_matrix(conn: sqlite3.Connection, match_id: str, wild_team_id: str, enemy
                 row_cells.append({"k": c["k"], "d": c["d"], "diff": c["k"] - c["d"]})
             rows.append({
                 "player_id": w["player_id"], "display_name": w["display_name"],
-                "headshot_filename": w["headshot_filename"], "cells": row_cells,
+                "headshot_filename": w["headshot_filename"], "agent": w["agent"], "cells": row_cells,
             })
         return rows
 
