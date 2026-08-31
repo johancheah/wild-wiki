@@ -1,11 +1,21 @@
 import agentsData from "../public/agents.json";
 import mapsData from "../public/maps.json";
+import weaponsData from "../public/weapons.json";
 
 type AgentAsset = { icon: string; bust: string; killfeed: string };
 type MapAsset = { icon: string; splash: string };
+type WeaponAsset = { icon: string };
 
 const agents = agentsData as Record<string, AgentAsset>;
 const maps = mapsData as Record<string, MapAsset>;
+const weapons = weaponsData as Record<string, WeaponAsset>;
+
+// Ability-kills (e.g. "Blade Storm") show up in the same kill data as real
+// weapons but have no weapon icon — returns null, same "no icon, just
+// text" convention as every other missing-icon case.
+export function weaponIcon(weapon: string | null | undefined): string | null {
+  return weapon ? weapons[weapon]?.icon ?? null : null;
+}
 
 export function agentIcon(agent: string | null | undefined): string | null {
   return agent ? agents[agent]?.icon ?? null : null;

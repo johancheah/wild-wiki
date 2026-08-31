@@ -24,7 +24,7 @@ export type PerformanceRow = {
 export function PerformanceTable({ rows, clickable = true }: { rows: PerformanceRow[]; clickable?: boolean }) {
   return (
     <div className="table-scroll">
-      <table>
+      <table className="performance-table">
         <thead>
           <tr>
             <th>Player</th>

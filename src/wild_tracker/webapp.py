@@ -26,10 +26,18 @@ templates = Jinja2Templates(directory=APP_DIR / "templates")
 # resilient to that external service being down.
 AGENT_ASSETS: dict = json.loads((APP_DIR / "static" / "agents.json").read_text())
 MAP_ASSETS: dict = json.loads((APP_DIR / "static" / "maps.json").read_text())
+WEAPON_ASSETS: dict = json.loads((APP_DIR / "static" / "weapons.json").read_text())
 
 
 def agent_icon(agent_name: str | None) -> str | None:
     return AGENT_ASSETS.get(agent_name, {}).get("icon") if agent_name else None
+
+
+def weapon_icon(weapon_name: str | None) -> str | None:
+    # Ability-kills (e.g. "Blade Storm") show up in the same kill_events
+    # data as real weapons but have no weapon icon — falls through to None,
+    # same "no icon, just text" convention as every other missing-icon case.
+    return WEAPON_ASSETS.get(weapon_name, {}).get("icon") if weapon_name else None
 
 
 def map_icon(map_name: str | None) -> str | None:
@@ -50,6 +58,7 @@ templates.env.globals["agent_icon"] = agent_icon
 templates.env.globals["map_icon"] = map_icon
 templates.env.globals["map_splash"] = map_splash
 templates.env.globals["headshot_url"] = headshot_url
+templates.env.globals["weapon_icon"] = weapon_icon
 
 
 def asset_version() -> int:

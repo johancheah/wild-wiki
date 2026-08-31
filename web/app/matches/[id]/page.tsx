@@ -3,14 +3,15 @@ import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { BoxScoreTable } from "@/components/BoxScoreTable";
 import { PerformanceTable } from "@/components/PerformanceTable";
-import { WeaponKillsTable } from "@/components/WeaponKillsTable";
+import { WeaponMatrixTable } from "@/components/WeaponMatrixTable";
 import { RoundTimeline } from "@/components/RoundTimeline";
 import { EconomySection } from "@/components/EconomySection";
 import { Tabs } from "@/components/Tabs";
 import { mapSplash } from "@/lib/assets";
 import { computeMatchTimeline } from "@/lib/timeline";
 import { computeMatchEconomy } from "@/lib/economy";
-import type { BoxScoreRow, MatchRow, WeaponKillRow } from "@/lib/types";
+import { fetchWeaponMatrix } from "@/lib/weapons";
+import type { BoxScoreRow, MatchRow } from "@/lib/types";
 
 export const revalidate = 0;
 
@@ -21,17 +22,15 @@ export default async function MatchDetailPage({
 }) {
   const { id } = await params;
 
-  const [{ data: matchRows }, { data: boxScoreRows }, { data: weaponRows }] = await Promise.all([
+  const [{ data: matchRows }, { data: boxScoreRows }] = await Promise.all([
     supabase.from("v_match_row").select("*").eq("match_id", id),
     supabase.from("v_match_box_score").select("*").eq("match_id", id),
-    supabase.from("v_match_weapon_kills").select("*").eq("match_id", id).order("kill_count", { ascending: false }),
   ]);
 
   const match = (matchRows as MatchRow[] | null)?.[0];
   if (!match) notFound();
 
   const boxScore = (boxScoreRows ?? []) as BoxScoreRow[];
-  const weaponKills = (weaponRows ?? []) as WeaponKillRow[];
 
   const wildRows = boxScore.filter((r) => r.is_wild_player).sort((a, b) => (b.acs ?? 0) - (a.acs ?? 0));
   const enemyRows = boxScore.filter((r) => !r.is_wild_player).sort((a, b) => (b.acs ?? 0) - (a.acs ?? 0));
@@ -43,6 +42,7 @@ export default async function MatchDetailPage({
   const economy = match.team_id && match.enemy_team_id
     ? await computeMatchEconomy(supabase, id, match.team_id, match.enemy_team_id)
     : null;
+  const weapons = match.team_id ? await fetchWeaponMatrix(supabase, id, match.team_id) : null;
 
   const splash = mapSplash(match.map);
 
@@ -106,20 +106,26 @@ export default async function MatchDetailPage({
             id: "performance",
             label: "Performance",
             content: (
-              <>
-                <section>
-                  <h2>Multi-Kills, Clutches &amp; Utility — WILD</h2>
-                  <PerformanceTable rows={wildRows} clickable />
-                </section>
-                {weaponKills.length > 0 && (
-                  <section>
-                    <h2>Weapon Kills</h2>
-                    <WeaponKillsTable rows={weaponKills} />
-                  </section>
-                )}
-              </>
+              <section>
+                <h2>Multi-Kills, Clutches &amp; Utility — WILD</h2>
+                <PerformanceTable rows={wildRows} clickable />
+              </section>
             ),
           },
+          ...(weapons
+            ? [
+                {
+                  id: "weapons",
+                  label: "Weapons",
+                  content: (
+                    <section>
+                      <h2>Weapon Kills — WILD</h2>
+                      <WeaponMatrixTable matrix={weapons} />
+                    </section>
+                  ),
+                },
+              ]
+            : []),
           ...(economy
             ? [
                 {

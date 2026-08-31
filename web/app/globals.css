@@ -280,6 +280,19 @@ table.vlr-table { min-width: 760px; }
 /* Narrow non-bordered spacer column between stat groups in wide tables */
 th.col-gap, td.col-gap { padding: 0; width: 14px; min-width: 14px; }
 
+/* Performance tab: tighter padding + smaller squares than the base table/
+   chip rules so the full 14-column stat table fits without a side scroll
+   at normal viewport widths (the default 14px cell padding alone would add
+   ~390px across this many columns). */
+table.performance-table { min-width: 0; }
+table.performance-table th, table.performance-table td { padding: 8px 5px; }
+table.performance-table .stat-chip.sq { width: 26px; height: 26px; }
+table.performance-table th.col-gap, table.performance-table td.col-gap { width: 10px; min-width: 10px; }
+
+/* Weapons tab: player-by-weapon kill matrix */
+table.weapon-matrix-table th, table.weapon-matrix-table td { padding: 8px 6px; }
+.weapon-col-icon { width: 22px; height: 22px; object-fit: contain; display: block; margin: 0 auto; }
+
 /* Schedule: collapsible season groups */
 tr.season-header { cursor: pointer; background: var(--surface-2); }
 tr.season-header:hover td { background: var(--surface-2); }

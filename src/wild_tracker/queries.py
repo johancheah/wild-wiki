@@ -412,6 +412,39 @@ def match_list(conn: sqlite3.Connection) -> list[dict]:
     """).fetchall()]
 
 
+def weapon_matrix(conn: sqlite3.Connection, match_id: str, wild_team_id: str) -> dict | None:
+    """WILD-only weapon-kills matrix for the match's Weapons tab: one row
+    per player, one column per weapon actually used, sorted by total kills
+    descending on both axes. Opponent weapon kills aren't tracked here —
+    the Weapons tab is about WILD's own loadout usage, same scope as the
+    Performance tab."""
+    rows = conn.execute("""
+        SELECT w.player_id, COALESCE(p.nickname, p.riot_name) AS display_name, p.headshot_filename,
+          w.weapon, w.kill_count
+        FROM match_player_weapon_kills w
+        JOIN players p ON p.player_id = w.player_id
+        JOIN match_players mp ON mp.match_id = w.match_id AND mp.player_id = w.player_id
+        WHERE w.match_id = ? AND mp.team_id = ?
+    """, (match_id, wild_team_id)).fetchall()
+    if not rows:
+        return None
+
+    weapon_totals: dict[str, int] = defaultdict(int)
+    players: dict[str, dict] = {}
+    for r in rows:
+        weapon_totals[r["weapon"]] += r["kill_count"]
+        p = players.setdefault(r["player_id"], {
+            "player_id": r["player_id"], "display_name": r["display_name"],
+            "headshot_filename": r["headshot_filename"], "kills_by_weapon": {}, "total": 0,
+        })
+        p["kills_by_weapon"][r["weapon"]] = r["kill_count"]
+        p["total"] += r["kill_count"]
+
+    weapons = sorted(weapon_totals, key=lambda w: weapon_totals[w], reverse=True)
+    player_rows = sorted(players.values(), key=lambda p: p["total"], reverse=True)
+    return {"weapons": weapons, "players": player_rows}
+
+
 def match_detail(conn: sqlite3.Connection, match_id: str) -> dict | None:
     match_row = conn.execute("""
         SELECT m.*, t.name AS opponent_name, t.tag AS opponent_tag
@@ -441,10 +474,11 @@ def match_detail(conn: sqlite3.Connection, match_id: str) -> dict | None:
         timeline = compute_match_timeline(conn, match_id, match["team_id"], match["enemy_team_id"])
 
     economy = match_economy(conn, match_id, match["team_id"], match["enemy_team_id"]) if match["team_id"] else None
+    weapons = weapon_matrix(conn, match_id, match["team_id"]) if match["team_id"] else None
 
     return {
         "match": match, "box_score": box_score, "weapon_kills": weapon_kills,
-        "timeline": timeline, "economy": economy,
+        "timeline": timeline, "economy": economy, "weapons": weapons,
     }
 
 

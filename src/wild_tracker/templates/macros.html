@@ -157,7 +157,7 @@
    Performance tab and the match-week Performance tab (combined totals). #}
 {% macro performance_table(rows, clickable=True) %}
 <div class="table-scroll">
-  <table>
+  <table class="performance-table">
     <thead>
       <tr>
         <th>Player</th>
@@ -192,6 +192,38 @@
         <td class="num-col">{{ chip(r.plants, blank_zero=True, square=True) }}</td>
         <td class="num-col">{{ chip(r.defuses, blank_zero=True, square=True) }}</td>
         <td class="num-col">{{ chip("%.0f"|format(r.econ) if r.econ is not none else None) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endmacro %}
+
+{# WILD-only weapon-kills matrix: players down the side, weapons across the
+   top (real weapon icons where available — ability-kills like "Blade Storm"
+   fall back to text, same missing-icon convention as everywhere else),
+   kill count per cell. #}
+{% macro weapon_matrix_table(weapons) %}
+<div class="table-scroll">
+  <table class="weapon-matrix-table">
+    <thead>
+      <tr>
+        <th>Player</th>
+        {% for w in weapons.weapons %}
+        {% set icon = weapon_icon(w) %}
+        <th class="num-col" title="{{ w }}">
+          {% if icon %}<img class="weapon-col-icon" src="{{ icon }}" alt="{{ w }}">{% else %}{{ w }}{% endif %}
+        </th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in weapons.players %}
+      <tr class="linkable" onclick="location.href='/players/{{ p.player_id }}'">
+        <td class="name">{{ avatar(p.display_name, p.headshot_filename) }}{{ p.display_name }}</td>
+        {% for w in weapons.weapons %}
+        <td class="num-col">{{ chip(p.kills_by_weapon[w] if w in p.kills_by_weapon else None, blank_zero=True, square=True) }}</td>
+        {% endfor %}
       </tr>
       {% endfor %}
     </tbody>

@@ -24,6 +24,7 @@
 <div class="tabs">
   <button class="tab-btn active" data-tab="overview">Overview</button>
   <button class="tab-btn" data-tab="performance">Performance</button>
+  {% if weapons %}<button class="tab-btn" data-tab="weapons">Weapons</button>{% endif %}
   {% if economy %}<button class="tab-btn" data-tab="economy">Economy</button>{% endif %}
 </div>
 
@@ -48,14 +49,16 @@
     <h2>Multi-Kills, Clutches &amp; Utility — WILD</h2>
     {{ ui.performance_table(wild_rows, clickable=True) }}
   </section>
-
-  {% if weapon_kills %}
-  <section>
-    <h2>Weapon Kills</h2>
-    {{ ui.weapon_kills_table(weapon_kills) }}
-  </section>
-  {% endif %}
 </div>
+
+{% if weapons %}
+<div id="tab-weapons" class="tab-panel hidden">
+  <section>
+    <h2>Weapon Kills — WILD</h2>
+    {{ ui.weapon_matrix_table(weapons) }}
+  </section>
+</div>
+{% endif %}
 
 {% if economy %}
 <div id="tab-economy" class="tab-panel hidden">
