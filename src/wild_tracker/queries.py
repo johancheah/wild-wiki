@@ -412,11 +412,37 @@ def match_list(conn: sqlite3.Connection) -> list[dict]:
     """).fetchall()]
 
 
+# Weapons tab column order: category first (rifles -> snipers -> heavy ->
+# shotguns -> SMGs -> pistols -> melee), kills descending within a category.
+# Ability-kills (e.g. "Blade Storm") aren't real weapons so they're never in
+# this map — anything not listed falls into the trailing abilities/ults
+# group instead.
+_WEAPON_CATEGORY_ORDER: dict[str, int] = {
+    "Bulldog": 0, "Guardian": 0, "Phantom": 0, "Vandal": 0,
+    "Marshal": 1, "Outlaw": 1, "Operator": 1,
+    "Ares": 2, "Odin": 2,
+    "Bucky": 3, "Judge": 3,
+    "Stinger": 4, "Spectre": 4,
+    "Classic": 5, "Shorty": 5, "Frenzy": 5, "Ghost": 5, "Sheriff": 5,
+    "Melee": 6,
+}
+_WEAPON_ABILITY_RANK = 7
+
+
+def _sort_weapons(weapon_totals: dict[str, int]) -> list[str]:
+    return sorted(
+        weapon_totals,
+        key=lambda w: (_WEAPON_CATEGORY_ORDER.get(w, _WEAPON_ABILITY_RANK), -weapon_totals[w]),
+    )
+
+
 def weapon_matrix(conn: sqlite3.Connection, match_id: str, wild_team_id: str) -> dict | None:
     """WILD-only weapon-kills matrix for the match's Weapons tab: one row
-    per player, one column per weapon actually used, sorted by total kills
-    descending on both axes. Opponent weapon kills aren't tracked here —
-    the Weapons tab is about WILD's own loadout usage, same scope as the
+    per player, one column per weapon actually used — columns ordered
+    rifles -> snipers -> heavy -> shotguns -> SMGs -> pistols -> melee ->
+    abilities/ults, kills descending within each category; rows sorted by
+    total kills descending. Opponent weapon kills aren't tracked here — the
+    Weapons tab is about WILD's own loadout usage, same scope as the
     Performance tab."""
     rows = conn.execute("""
         SELECT w.player_id, COALESCE(p.nickname, p.riot_name) AS display_name, p.headshot_filename,
@@ -440,7 +466,7 @@ def weapon_matrix(conn: sqlite3.Connection, match_id: str, wild_team_id: str) ->
         p["kills_by_weapon"][r["weapon"]] = r["kill_count"]
         p["total"] += r["kill_count"]
 
-    weapons = sorted(weapon_totals, key=lambda w: weapon_totals[w], reverse=True)
+    weapons = _sort_weapons(weapon_totals)
     player_rows = sorted(players.values(), key=lambda p: p["total"], reverse=True)
     return {"weapons": weapons, "players": player_rows}
 
@@ -464,7 +490,7 @@ def _merge_weapon_matrices(matrices: list[dict]) -> dict | None:
                 weapon_totals[weapon] += count
     if not players:
         return None
-    weapons = sorted(weapon_totals, key=lambda w: weapon_totals[w], reverse=True)
+    weapons = _sort_weapons(weapon_totals)
     player_rows = sorted(players.values(), key=lambda p: p["total"], reverse=True)
     return {"weapons": weapons, "players": player_rows}
 

@@ -18,6 +18,32 @@ export type WeaponMatrix = {
   players: WeaponMatrixPlayer[];
 };
 
+// Weapons tab column order: category first (rifles -> snipers -> heavy ->
+// shotguns -> SMGs -> pistols -> melee), kills descending within a
+// category. Ability-kills (e.g. "Blade Storm") aren't real weapons so
+// they're never in this map — anything not listed falls into the trailing
+// abilities/ults group instead. Mirrors
+// src/wild_tracker/queries.py::_WEAPON_CATEGORY_ORDER.
+const WEAPON_CATEGORY_ORDER: Record<string, number> = {
+  Bulldog: 0, Guardian: 0, Phantom: 0, Vandal: 0,
+  Marshal: 1, Outlaw: 1, Operator: 1,
+  Ares: 2, Odin: 2,
+  Bucky: 3, Judge: 3,
+  Stinger: 4, Spectre: 4,
+  Classic: 5, Shorty: 5, Frenzy: 5, Ghost: 5, Sheriff: 5,
+  Melee: 6,
+};
+const WEAPON_ABILITY_RANK = 7;
+
+function sortWeapons(weaponTotals: Map<string, number>): string[] {
+  return [...weaponTotals.keys()].sort((a, b) => {
+    const rankA = WEAPON_CATEGORY_ORDER[a] ?? WEAPON_ABILITY_RANK;
+    const rankB = WEAPON_CATEGORY_ORDER[b] ?? WEAPON_ABILITY_RANK;
+    if (rankA !== rankB) return rankA - rankB;
+    return weaponTotals.get(b)! - weaponTotals.get(a)!;
+  });
+}
+
 export async function fetchWeaponMatrix(
   supabase: SupabaseClient,
   matchId: string,
@@ -64,7 +90,7 @@ export async function fetchWeaponMatrix(
 
   if (byPlayer.size === 0) return null;
 
-  const weapons = [...weaponTotals.keys()].sort((a, b) => weaponTotals.get(b)! - weaponTotals.get(a)!);
+  const weapons = sortWeapons(weaponTotals);
   const playersOut = [...byPlayer.values()].sort((a, b) => b.total - a.total);
   return { weapons, players: playersOut };
 }
@@ -99,7 +125,7 @@ export function mergeWeaponMatrices(matrices: (WeaponMatrix | null)[]): WeaponMa
 
   if (byPlayer.size === 0) return null;
 
-  const weapons = [...weaponTotals.keys()].sort((a, b) => weaponTotals.get(b)! - weaponTotals.get(a)!);
+  const weapons = sortWeapons(weaponTotals);
   const playersOut = [...byPlayer.values()].sort((a, b) => b.total - a.total);
   return { weapons, players: playersOut };
 }
