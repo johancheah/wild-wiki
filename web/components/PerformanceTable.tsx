@@ -62,34 +62,34 @@ export function PerformanceTable({ rows, clickable = true }: { rows: Performance
                   {clickable ? <Link href={`/players/${r.player_id}`}>{nameCell}</Link> : nameCell}
                 </td>
                 <td className="num-col">
-                  <StatChip value={r.two_k} blankZero square />
+                  <StatChip value={r.two_k} blankZero square level={1} />
                 </td>
                 <td className="num-col">
-                  <StatChip value={r.three_k} blankZero square />
+                  <StatChip value={r.three_k} blankZero square level={2} />
                 </td>
                 <td className="num-col">
-                  <StatChip value={r.four_k} blankZero square />
+                  <StatChip value={r.four_k} blankZero square level={3} />
                 </td>
                 <td className="num-col">
-                  <StatChip value={r.five_k} blankZero square />
+                  <StatChip value={r.five_k} blankZero square level={4} />
                 </td>
                 <td className="num-col">
                   <StatChip value={multiTotal} blankZero square />
                 </td>
                 <td className="num-col">
-                  <StatChip value={r.clutch_1v1} blankZero square />
+                  <StatChip value={r.clutch_1v1} blankZero square level={1} />
                 </td>
                 <td className="num-col">
-                  <StatChip value={r.clutch_1v2} blankZero square />
+                  <StatChip value={r.clutch_1v2} blankZero square level={2} />
                 </td>
                 <td className="num-col">
-                  <StatChip value={r.clutch_1v3} blankZero square />
+                  <StatChip value={r.clutch_1v3} blankZero square level={3} />
                 </td>
                 <td className="num-col">
-                  <StatChip value={r.clutch_1v4} blankZero square />
+                  <StatChip value={r.clutch_1v4} blankZero square level={4} />
                 </td>
                 <td className="num-col">
-                  <StatChip value={r.clutch_1v5} blankZero square />
+                  <StatChip value={r.clutch_1v5} blankZero square level={5} />
                 </td>
                 <td className="num-col">
                   <StatChip value={clutchTotal} blankZero square />

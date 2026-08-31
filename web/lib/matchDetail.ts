@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { computeMatchTimeline, type TimelineEntry } from "./timeline";
 import { computeMatchEconomy, type MatchEconomy } from "./economy";
 import { fetchWeaponMatrix, type WeaponMatrix } from "./weapons";
+import { fetchH2hMatrix, type H2hMatrix } from "./h2h";
 import type { BoxScoreRow, MatchRow } from "./types";
 
 // Direct port of src/wild_tracker/queries.py::match_detail — one full match's
@@ -16,6 +17,7 @@ export type MatchFullDetail = {
   timeline: TimelineEntry[];
   economy: MatchEconomy | null;
   weapons: WeaponMatrix | null;
+  h2h: H2hMatrix | null;
 };
 
 export async function fetchMatchFullDetail(supabase: SupabaseClient, matchId: string): Promise<MatchFullDetail | null> {
@@ -39,6 +41,7 @@ export async function fetchMatchFullDetail(supabase: SupabaseClient, matchId: st
     ? await computeMatchEconomy(supabase, matchId, match.team_id, match.enemy_team_id ?? "")
     : null;
   const weapons = match.team_id ? await fetchWeaponMatrix(supabase, matchId, match.team_id) : null;
+  const h2h = match.team_id ? await fetchH2hMatrix(supabase, matchId, match.team_id, match.enemy_team_id) : null;
 
-  return { match, wildRows, enemyRows, timeline, economy, weapons };
+  return { match, wildRows, enemyRows, timeline, economy, weapons, h2h };
 }

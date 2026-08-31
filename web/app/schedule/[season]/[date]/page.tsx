@@ -124,6 +124,7 @@ export default async function MatchWeekDetailPage({
                   economies={d.economy ? [{ map: m.map, opponent: m.opponent, economy: d.economy }] : null}
                   timeline={d.timeline}
                   opponentName={m.opponent}
+                  h2h={d.h2h}
                 />
               ) : (
                 <div className="empty-note">This map&apos;s data could not be loaded.</div>

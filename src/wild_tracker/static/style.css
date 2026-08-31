@@ -194,6 +194,8 @@ tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4
 }
 .avatar-lg { width: 72px; height: 72px; margin-right: 16px; border-radius: 14px; }
 .avatar-fallback-lg { width: 72px; height: 72px; font-size: 24px; margin-right: 16px; border-radius: 14px; }
+.avatar-sm { width: 22px; height: 22px; margin-right: 0; border-radius: 5px; }
+.avatar-fallback-sm { width: 22px; height: 22px; margin-right: 0; border-radius: 5px; font-size: 9px; }
 .player-header { display: flex; align-items: center; }
 
 /* Agent icons */
@@ -277,6 +279,16 @@ table.vlr-table { min-width: 760px; }
 }
 .stat-chip.zero { opacity: 0.32; }
 
+/* Performance tab multi-kill / clutch cells: intensity scales with rarity
+   (2K/1v1 = subtlest, 5K/1v5 = brightest), all shades of the WILD accent
+   green so the highlight stays on-brand instead of introducing a new
+   blue/purple scale. */
+.stat-chip.chip-lvl-1 { background: rgba(169, 241, 79, 0.14); color: var(--accent); }
+.stat-chip.chip-lvl-2 { background: rgba(169, 241, 79, 0.26); color: var(--accent); }
+.stat-chip.chip-lvl-3 { background: rgba(169, 241, 79, 0.40); color: var(--accent); font-weight: 700; }
+.stat-chip.chip-lvl-4 { background: rgba(169, 241, 79, 0.65); color: #0d1607; font-weight: 700; }
+.stat-chip.chip-lvl-5 { background: var(--accent); color: #0d1607; font-weight: 700; }
+
 /* Narrow non-bordered spacer column between stat groups in wide tables */
 th.col-gap, td.col-gap { padding: 0; width: 14px; min-width: 14px; }
 
@@ -288,6 +300,29 @@ table.performance-table { min-width: 0; }
 table.performance-table th, table.performance-table td { padding: 8px 5px; }
 table.performance-table .stat-chip.sq { width: 26px; height: 26px; }
 table.performance-table th.col-gap, table.performance-table td.col-gap { width: 10px; min-width: 10px; }
+
+/* Performance tab: head-to-head kill/death grid (WILD rows x opponent
+   columns), plus the All/First/Op Kills segmented toggle above it. */
+.h2h-block { margin-bottom: 28px; }
+.h2h-toggle { margin: 0 0 14px; }
+table.h2h-table th, table.h2h-table td { text-align: center; padding: 8px 12px; }
+table.h2h-table td.name, table.h2h-table th:first-child { text-align: left; }
+.h2h-col-head {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 600; color: var(--text-dim);
+}
+.h2h-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.h2h-kd {
+  display: inline-flex; border-radius: 5px; overflow: hidden;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+  font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13px;
+}
+.h2h-kd span { padding: 4px 10px; min-width: 14px; }
+.h2h-kd .h2h-k { background: rgba(169, 241, 79, 0.24); color: var(--accent); }
+.h2h-kd .h2h-d { background: var(--surface-2); color: var(--text-dim); }
+.h2h-diff { font-size: 11px; font-weight: 700; color: var(--text-faint); }
+.h2h-diff.chip-pos { color: var(--win); }
+.h2h-diff.chip-neg { color: var(--loss); }
 
 /* Weapons tab: player-by-weapon kill matrix */
 table.weapon-matrix-table th, table.weapon-matrix-table td { padding: 8px 6px; }
@@ -328,7 +363,7 @@ tr.week-row td:first-child { color: var(--text-faint); }
 .round-icon { width: 15px; height: 15px; display: block; object-fit: contain; }
 .timeline-gap { width: 14px; flex-shrink: 0; }
 .timeline-round-nums { padding-left: 30px; }
-.timeline-round-nums span {
+.timeline-round-nums span:not(.timeline-gap) {
   display: inline-flex; width: 26px; justify-content: center;
   font-size: 9.5px; color: var(--text-faint);
 }

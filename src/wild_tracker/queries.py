@@ -469,6 +469,92 @@ def _merge_weapon_matrices(matrices: list[dict]) -> dict | None:
     return {"weapons": weapons, "players": player_rows}
 
 
+def h2h_matrix(conn: sqlite3.Connection, match_id: str, wild_team_id: str, enemy_team_id: str | None) -> dict | None:
+    """Head-to-head kill/death grid for the match's Performance tab — one
+    row per WILD player, one column per opponent player, kills scored on
+    that opponent vs deaths taken from them. Three variants computed from
+    the same kill_events pull: all kills, first-kill-of-round only, and
+    Operator kills only. API-sourced matches only — spreadsheet imports
+    have no kill_events, so this returns None for those."""
+    if not enemy_team_id:
+        return None
+
+    wild_players = conn.execute("""
+        SELECT mp.player_id, COALESCE(p.nickname, p.riot_name) AS display_name, p.headshot_filename
+        FROM match_players mp JOIN players p ON p.player_id = mp.player_id
+        WHERE mp.match_id = ? AND mp.team_id = ?
+    """, (match_id, wild_team_id)).fetchall()
+    enemy_players = conn.execute("""
+        SELECT mp.player_id, COALESCE(p.nickname, p.riot_name) AS display_name, p.headshot_filename
+        FROM match_players mp JOIN players p ON p.player_id = mp.player_id
+        WHERE mp.match_id = ? AND mp.team_id = ?
+    """, (match_id, enemy_team_id)).fetchall()
+    if not wild_players or not enemy_players:
+        return None
+
+    kills = conn.execute("""
+        SELECT round_number, event_index, killer_id, victim_id, weapon
+        FROM kill_events WHERE match_id = ? ORDER BY round_number, event_index
+    """, (match_id,)).fetchall()
+    if not kills:
+        return None
+
+    wild_ids = {r["player_id"] for r in wild_players}
+    enemy_ids = {r["player_id"] for r in enemy_players}
+
+    first_kill_keys = set()
+    seen_rounds = set()
+    for k in kills:
+        if k["round_number"] not in seen_rounds:
+            seen_rounds.add(k["round_number"])
+            first_kill_keys.add((k["round_number"], k["event_index"]))
+
+    def build(filter_fn):
+        totals: dict[str, int] = defaultdict(int)
+        cells: dict[str, dict[str, dict]] = {
+            w["player_id"]: {e["player_id"]: {"k": 0, "d": 0} for e in enemy_players} for w in wild_players
+        }
+        for k in kills:
+            if not filter_fn(k):
+                continue
+            killer, victim = k["killer_id"], k["victim_id"]
+            if killer in wild_ids and victim in enemy_ids:
+                cells[killer][victim]["k"] += 1
+                totals[killer] += 1
+            elif killer in enemy_ids and victim in wild_ids:
+                cells[victim][killer]["d"] += 1
+        return cells, totals
+
+    all_cells, all_totals = build(lambda k: True)
+    first_cells, _ = build(lambda k: (k["round_number"], k["event_index"]) in first_kill_keys)
+    op_cells, _ = build(lambda k: k["weapon"] == "Operator")
+
+    wild_order = sorted(wild_players, key=lambda w: all_totals.get(w["player_id"], 0), reverse=True)
+    enemy_totals: dict[str, int] = defaultdict(int)
+    for w_cells in all_cells.values():
+        for eid, c in w_cells.items():
+            enemy_totals[eid] += c["k"]
+    enemy_order = sorted(enemy_players, key=lambda e: enemy_totals.get(e["player_id"], 0), reverse=True)
+
+    def rows_for(cells):
+        rows = []
+        for w in wild_order:
+            row_cells = []
+            for e in enemy_order:
+                c = cells[w["player_id"]][e["player_id"]]
+                row_cells.append({"k": c["k"], "d": c["d"], "diff": c["k"] - c["d"]})
+            rows.append({
+                "player_id": w["player_id"], "display_name": w["display_name"],
+                "headshot_filename": w["headshot_filename"], "cells": row_cells,
+            })
+        return rows
+
+    return {
+        "enemy_players": [dict(e) for e in enemy_order],
+        "variants": {"all": rows_for(all_cells), "first": rows_for(first_cells), "op": rows_for(op_cells)},
+    }
+
+
 def match_detail(conn: sqlite3.Connection, match_id: str) -> dict | None:
     match_row = conn.execute("""
         SELECT m.*, t.name AS opponent_name, t.tag AS opponent_tag
@@ -499,10 +585,11 @@ def match_detail(conn: sqlite3.Connection, match_id: str) -> dict | None:
 
     economy = match_economy(conn, match_id, match["team_id"], match["enemy_team_id"]) if match["team_id"] else None
     weapons = weapon_matrix(conn, match_id, match["team_id"]) if match["team_id"] else None
+    h2h = h2h_matrix(conn, match_id, match["team_id"], match["enemy_team_id"]) if match["team_id"] else None
 
     return {
         "match": match, "box_score": box_score, "weapon_kills": weapon_kills,
-        "timeline": timeline, "economy": economy, "weapons": weapons,
+        "timeline": timeline, "economy": economy, "weapons": weapons, "h2h": h2h,
     }
 
 

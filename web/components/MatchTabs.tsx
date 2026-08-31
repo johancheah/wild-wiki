@@ -3,10 +3,12 @@ import { PerformanceTable, type PerformanceRow } from "./PerformanceTable";
 import { WeaponMatrixTable } from "./WeaponMatrixTable";
 import { EconomySection } from "./EconomySection";
 import { RoundTimeline } from "./RoundTimeline";
+import { H2hTable } from "./H2hTable";
 import { Tabs } from "./Tabs";
 import type { WeaponMatrix } from "@/lib/weapons";
 import type { MatchEconomy } from "@/lib/economy";
 import type { TimelineEntry } from "@/lib/timeline";
+import type { H2hMatrix } from "@/lib/h2h";
 
 export type MatchTabsRow = BoxScoreTableRow & PerformanceRow;
 
@@ -27,6 +29,7 @@ export function MatchTabs({
   subtitle,
   timeline,
   opponentName,
+  h2h,
 }: {
   wildRows: MatchTabsRow[];
   enemyRows?: MatchTabsRow[] | null;
@@ -37,6 +40,7 @@ export function MatchTabs({
   subtitle?: string;
   timeline?: TimelineEntry[];
   opponentName?: string | null;
+  h2h?: H2hMatrix | null;
 }) {
   return (
     <>
@@ -75,10 +79,18 @@ export function MatchTabs({
             id: "performance",
             label: "Performance",
             content: (
-              <section>
-                <h2>Multi-Kills, Clutches &amp; Utility — WILD</h2>
-                <PerformanceTable rows={wildRows} clickable />
-              </section>
+              <>
+                {h2h && (
+                  <section>
+                    <h2>Head-to-Head Kills</h2>
+                    <H2hTable h2h={h2h} />
+                  </section>
+                )}
+                <section>
+                  <h2>Multi-Kills, Clutches &amp; Utility — WILD</h2>
+                  <PerformanceTable rows={wildRows} clickable />
+                </section>
+              </>
             ),
           },
           ...(weapons

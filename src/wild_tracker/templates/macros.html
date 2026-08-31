@@ -85,8 +85,9 @@
   </span>
 {% endmacro %}
 
-{% macro chip(value, diff=False, blank_zero=False, square=False) %}
+{% macro chip(value, diff=False, blank_zero=False, square=False, level=0) %}
   {% set sq = " sq" if square else "" %}
+  {% set lvl = " chip-lvl-" ~ level if level and value else "" %}
   {% if blank_zero and (value is none or value == 0) %}
     <span class="stat-chip zero{{ sq }}"></span>
   {% elif value is none %}
@@ -94,7 +95,7 @@
   {% elif diff %}
     <span class="stat-chip{{ sq }} {{ 'chip-pos' if value > 0 else ('chip-neg' if value < 0 else '') }}">{{ "+%d"|format(value) if value > 0 else value }}</span>
   {% else %}
-    <span class="stat-chip{{ sq }}">{{ value }}</span>
+    <span class="stat-chip{{ sq }}{{ lvl }}">{{ value }}</span>
   {% endif %}
 {% endmacro %}
 
@@ -177,16 +178,16 @@
       <tr>
       {% endif %}
         <td class="name">{{ avatar(r.display_name, r.headshot_filename) }}{{ r.display_name }}</td>
-        <td class="num-col">{{ chip(r.two_k, blank_zero=True, square=True) }}</td>
-        <td class="num-col">{{ chip(r.three_k, blank_zero=True, square=True) }}</td>
-        <td class="num-col">{{ chip(r.four_k, blank_zero=True, square=True) }}</td>
-        <td class="num-col">{{ chip(r.five_k, blank_zero=True, square=True) }}</td>
+        <td class="num-col">{{ chip(r.two_k, blank_zero=True, square=True, level=1) }}</td>
+        <td class="num-col">{{ chip(r.three_k, blank_zero=True, square=True, level=2) }}</td>
+        <td class="num-col">{{ chip(r.four_k, blank_zero=True, square=True, level=3) }}</td>
+        <td class="num-col">{{ chip(r.five_k, blank_zero=True, square=True, level=4) }}</td>
         <td class="num-col">{{ chip(multi_total, blank_zero=True, square=True) }}</td>
-        <td class="num-col">{{ chip(r.clutch_1v1, blank_zero=True, square=True) }}</td>
-        <td class="num-col">{{ chip(r.clutch_1v2, blank_zero=True, square=True) }}</td>
-        <td class="num-col">{{ chip(r.clutch_1v3, blank_zero=True, square=True) }}</td>
-        <td class="num-col">{{ chip(r.clutch_1v4, blank_zero=True, square=True) }}</td>
-        <td class="num-col">{{ chip(r.clutch_1v5, blank_zero=True, square=True) }}</td>
+        <td class="num-col">{{ chip(r.clutch_1v1, blank_zero=True, square=True, level=1) }}</td>
+        <td class="num-col">{{ chip(r.clutch_1v2, blank_zero=True, square=True, level=2) }}</td>
+        <td class="num-col">{{ chip(r.clutch_1v3, blank_zero=True, square=True, level=3) }}</td>
+        <td class="num-col">{{ chip(r.clutch_1v4, blank_zero=True, square=True, level=4) }}</td>
+        <td class="num-col">{{ chip(r.clutch_1v5, blank_zero=True, square=True, level=5) }}</td>
         <td class="num-col">{{ chip(clutch_total, blank_zero=True, square=True) }}</td>
         <td class="col-gap"></td>
         <td class="num-col">{{ chip(r.plants, blank_zero=True, square=True) }}</td>
@@ -237,7 +238,7 @@
    matrix / economy grid on the site is rendered by the exact same markup.
    `group` must be unique on the page (used to scope tab-button clicks and
    panel ids so multiple tab groups can be nested without colliding). #}
-{% macro match_tabs(group, wild_rows, enemy_rows=None, weapons=None, economies=None, box_title="WILD Box Score", multi_agent=False, subtitle=None, timeline=None, opponent_name=None) %}
+{% macro match_tabs(group, wild_rows, enemy_rows=None, weapons=None, economies=None, box_title="WILD Box Score", multi_agent=False, subtitle=None, timeline=None, opponent_name=None, h2h=None) %}
   {% if timeline %}{{ round_timeline(timeline, opponent_name) }}{% endif %}
   <div class="tabs" data-group="{{ group }}">
     <button class="tab-btn active" data-tab="overview" data-group="{{ group }}">Overview</button>
@@ -263,6 +264,12 @@
   </div>
 
   <div id="tab-{{ group }}-performance" class="tab-panel hidden" data-group="{{ group }}">
+    {% if h2h %}
+    <section>
+      <h2>Head-to-Head Kills</h2>
+      {{ h2h_table(h2h, group) }}
+    </section>
+    {% endif %}
     <section>
       <h2>Multi-Kills, Clutches &amp; Utility — WILD</h2>
       {{ performance_table(wild_rows, clickable=True) }}
@@ -288,6 +295,58 @@
     {% endfor %}
   </div>
   {% endif %}
+{% endmacro %}
+
+{# WILD-vs-opponent head-to-head kill/death grid: one row per WILD player,
+   one column per opponent player. Three toggleable variants (all kills /
+   first-kill-of-round / Operator kills) share one segmented control,
+   reusing the same data-group tab-toggle pattern as the page's main tabs
+   (scoped under "h2h-{group}" so it doesn't collide with them). #}
+{% macro h2h_table(h2h, group) %}
+{% set hg = "h2h-" ~ group %}
+<div class="h2h-block">
+  <div class="tabs h2h-toggle" data-group="{{ hg }}">
+    <button class="tab-btn active" data-tab="all" data-group="{{ hg }}">All Kills</button>
+    <button class="tab-btn" data-tab="first" data-group="{{ hg }}">First Kills</button>
+    <button class="tab-btn" data-tab="op" data-group="{{ hg }}">Op Kills</button>
+  </div>
+  {% for variant_key in ["all", "first", "op"] %}
+  <div id="tab-{{ hg }}-{{ variant_key }}" class="tab-panel {{ '' if variant_key == 'all' else 'hidden' }}" data-group="{{ hg }}">
+    <div class="table-scroll">
+      <table class="h2h-table">
+        <thead>
+          <tr>
+            <th></th>
+            {% for e in h2h.enemy_players %}
+            <th>
+              <div class="h2h-col-head">
+                {{ avatar(e.display_name, e.headshot_filename, size="sm") }}
+                <span>{{ e.display_name }}</span>
+              </div>
+            </th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in h2h.variants[variant_key] %}
+          <tr>
+            <td class="name">{{ avatar(row.display_name, row.headshot_filename) }}{{ row.display_name }}</td>
+            {% for cell in row.cells %}
+            <td>
+              <div class="h2h-cell">
+                <span class="h2h-kd"><span class="h2h-k">{{ cell.k }}</span><span class="h2h-d">{{ cell.d }}</span></span>
+                <span class="h2h-diff {{ 'chip-pos' if cell.diff > 0 else ('chip-neg' if cell.diff < 0 else '') }}">{{ "+%d"|format(cell.diff) if cell.diff > 0 else cell.diff }}</span>
+              </div>
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
+</div>
 {% endmacro %}
 
 {# Buy-type summary + round-by-round loadout grid for one map's economy.

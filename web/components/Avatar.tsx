@@ -7,7 +7,7 @@ export function Avatar({
 }: {
   displayName: string;
   headshotFilename: string | null;
-  size?: "lg";
+  size?: "lg" | "sm";
 }) {
   const url = headshotUrl(headshotFilename);
   const sizeClass = size ? ` avatar-${size}` : "";
