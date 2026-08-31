@@ -86,11 +86,16 @@ def team_stats(request: Request):
 
 
 @app.get("/players", response_class=HTMLResponse)
-def player_list(request: Request):
+def player_list(request: Request, stage: Optional[str] = None):
     conn = get_conn()
-    players = queries.player_career_list(conn)
+    stages = queries.stage_list(conn)
+    selected_stage = stage if stage in stages else None
+    players = queries.player_career_list(conn, selected_stage)
     conn.close()
-    return templates.TemplateResponse("players.html", {"request": request, "active": "players", "players": players})
+    return templates.TemplateResponse("players.html", {
+        "request": request, "active": "players",
+        "players": players, "stages": stages, "selected_stage": selected_stage,
+    })
 
 
 @app.get("/players/{player_id}", response_class=HTMLResponse)

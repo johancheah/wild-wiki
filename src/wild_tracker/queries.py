@@ -81,8 +81,20 @@ def home_page_data(conn: sqlite3.Connection) -> dict:
     return {"upcoming": upcoming, "latest": latest}
 
 
-def player_career_list(conn: sqlite3.Connection) -> list[dict]:
-    return [dict(r) for r in conn.execute("""
+def stage_list(conn: sqlite3.Connection) -> list[str]:
+    """Distinct season/stage ids (e.g. "E11A5"), most recent first — same
+    ordering convention as schedule.html."""
+    rows = conn.execute("""
+        SELECT season_id, MIN(date) AS first_date FROM matches
+        WHERE season_id IS NOT NULL GROUP BY season_id ORDER BY first_date DESC
+    """).fetchall()
+    return [r["season_id"] for r in rows]
+
+
+def player_career_list(conn: sqlite3.Connection, stage: str | None = None) -> list[dict]:
+    where = "WHERE v.season_id = ?" if stage else ""
+    params = (stage,) if stage else ()
+    return [dict(r) for r in conn.execute(f"""
         SELECT
           p.player_id, p.riot_name, p.riot_tag, p.headshot_filename,
           COALESCE(p.nickname, p.riot_name) AS display_name,
@@ -97,9 +109,10 @@ def player_career_list(conn: sqlite3.Connection) -> list[dict]:
           ROUND(AVG(v.econ), 1) AS econ
         FROM v_wild_player_match_stats v
         JOIN players p ON p.player_id = v.player_id
+        {where}
         GROUP BY p.player_id
         ORDER BY kills DESC
-    """).fetchall()]
+    """, params).fetchall()]
 
 
 def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:

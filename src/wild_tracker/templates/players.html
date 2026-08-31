@@ -3,23 +3,37 @@
 {% block title %}Player Stats — WILD Gaming{% endblock %}
 {% block content %}
 <h1>Player Stats</h1>
-<div class="subtitle">Career totals across all {{ players|length }} tracked roster members. Click a player for match log + agent pool.</div>
+
+<div class="comps-map-select">
+  <select onchange="location.href = this.value ? '/players?stage=' + encodeURIComponent(this.value) : '/players'">
+    <option value="" {{ "selected" if not selected_stage }}>All Stages</option>
+    {% for s in stages %}
+    <option value="{{ s }}" {{ "selected" if s == selected_stage }}>{{ s }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<div class="subtitle">
+  {% if selected_stage %}Career totals for {{ selected_stage }} across {{ players|length }} roster members who played that stage.
+  {% else %}Career totals across all {{ players|length }} tracked roster members.{% endif %}
+  Click a player for match log + agent pool. Click a column header to sort.
+</div>
 
 <div class="table-scroll">
-  <table>
+  <table id="players-table" class="sortable-table">
     <thead>
       <tr>
-        <th>Player</th>
-        <th class="num-col">MP</th>
-        <th class="num-col">Kills</th>
-        <th class="num-col">Deaths</th>
-        <th class="num-col">Assists</th>
-        <th class="num-col">K/D</th>
-        <th class="num-col">ADR</th>
-        <th class="num-col">HS%</th>
-        <th class="num-col">Multi-K</th>
-        <th class="num-col">Clutches</th>
-        <th class="num-col">ECON</th>
+        <th data-sort-type="string">Player</th>
+        <th class="num-col" data-sort-type="num">MP</th>
+        <th class="num-col" data-sort-type="num">Kills</th>
+        <th class="num-col" data-sort-type="num">Deaths</th>
+        <th class="num-col" data-sort-type="num">Assists</th>
+        <th class="num-col" data-sort-type="num">K/D</th>
+        <th class="num-col" data-sort-type="num">ADR</th>
+        <th class="num-col" data-sort-type="num">HS%</th>
+        <th class="num-col" data-sort-type="num">Multi-K</th>
+        <th class="num-col" data-sort-type="num">Clutches</th>
+        <th class="num-col" data-sort-type="num">ECON</th>
       </tr>
     </thead>
     <tbody>
@@ -41,4 +55,45 @@
     </tbody>
   </table>
 </div>
+
+<script>
+  (function () {
+    var table = document.getElementById("players-table");
+    if (!table) return;
+    var headers = table.querySelectorAll("thead th");
+    var tbody = table.querySelector("tbody");
+    var state = { col: null, dir: 1 };
+
+    function cellValue(td, type) {
+      var text = td.textContent.trim();
+      if (type === "string") return text.toLowerCase();
+      var n = parseFloat(text.replace("%", "").replace(/[—-]/g, "").trim());
+      return isNaN(n) ? null : n;
+    }
+
+    headers.forEach(function (th, i) {
+      th.addEventListener("click", function () {
+        var type = th.dataset.sortType || "num";
+        var dir = state.col === i ? -state.dir : type === "string" ? 1 : -1;
+        state = { col: i, dir: dir };
+
+        headers.forEach(function (h) { h.classList.remove("sort-asc", "sort-desc"); });
+        th.classList.add(dir === 1 ? "sort-asc" : "sort-desc");
+
+        var rows = Array.prototype.slice.call(tbody.querySelectorAll("tr"));
+        rows.sort(function (a, b) {
+          var av = cellValue(a.children[i], type);
+          var bv = cellValue(b.children[i], type);
+          if (av === null && bv === null) return 0;
+          if (av === null) return 1;
+          if (bv === null) return -1;
+          if (av < bv) return -1 * dir;
+          if (av > bv) return 1 * dir;
+          return 0;
+        });
+        rows.forEach(function (r) { tbody.appendChild(r); });
+      });
+    });
+  })();
+</script>
 {% endblock %}
