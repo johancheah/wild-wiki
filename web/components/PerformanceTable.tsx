@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Avatar } from "./Avatar";
 import { StatChip } from "./StatChip";
+import type { EventRounds, EventRoundKey } from "@/lib/eventRounds";
 
 export type PerformanceRow = {
   player_id: string;
@@ -20,8 +21,26 @@ export type PerformanceRow = {
   econ: number | null;
 };
 
+// Builds the hover-tooltip text for a multi-kill/clutch cell from its list
+// of round numbers, e.g. "Round 4" or "Rounds 4, 9, 12" — undefined when
+// there are no rounds, so StatChip just omits the title. Mirrors
+// macros.html::_rounds_title.
+function roundsTitle(rounds: number[] | undefined): string | undefined {
+  if (!rounds || rounds.length === 0) return undefined;
+  return `${rounds.length === 1 ? "Round" : "Rounds"} ${rounds.join(", ")}`;
+}
+
 // Mirrors src/wild_tracker/templates/macros.html::performance_table.
-export function PerformanceTable({ rows, clickable = true }: { rows: PerformanceRow[]; clickable?: boolean }) {
+export function PerformanceTable({
+  rows,
+  clickable = true,
+  eventRounds,
+}: {
+  rows: PerformanceRow[];
+  clickable?: boolean;
+  eventRounds?: EventRounds;
+}) {
+  const roundsFor = (playerId: string, key: EventRoundKey) => roundsTitle(eventRounds?.[playerId]?.[key]);
   return (
     <div className="table-scroll">
       <table className="performance-table">
@@ -62,34 +81,34 @@ export function PerformanceTable({ rows, clickable = true }: { rows: Performance
                   {clickable ? <Link href={`/players/${r.player_id}`}>{nameCell}</Link> : nameCell}
                 </td>
                 <td className="num-col">
-                  <StatChip value={r.two_k} blankZero square level={1} />
+                  <StatChip value={r.two_k} blankZero square level={1} title={roundsFor(r.player_id, "two_k")} />
                 </td>
                 <td className="num-col">
-                  <StatChip value={r.three_k} blankZero square level={2} />
+                  <StatChip value={r.three_k} blankZero square level={2} title={roundsFor(r.player_id, "three_k")} />
                 </td>
                 <td className="num-col">
-                  <StatChip value={r.four_k} blankZero square level={3} />
+                  <StatChip value={r.four_k} blankZero square level={3} title={roundsFor(r.player_id, "four_k")} />
                 </td>
                 <td className="num-col">
-                  <StatChip value={r.five_k} blankZero square level={4} />
+                  <StatChip value={r.five_k} blankZero square level={4} title={roundsFor(r.player_id, "five_k")} />
                 </td>
                 <td className="num-col">
                   <StatChip value={multiTotal} blankZero square />
                 </td>
                 <td className="num-col">
-                  <StatChip value={r.clutch_1v1} blankZero square level={1} />
+                  <StatChip value={r.clutch_1v1} blankZero square level={1} title={roundsFor(r.player_id, "clutch_1v1")} />
                 </td>
                 <td className="num-col">
-                  <StatChip value={r.clutch_1v2} blankZero square level={2} />
+                  <StatChip value={r.clutch_1v2} blankZero square level={2} title={roundsFor(r.player_id, "clutch_1v2")} />
                 </td>
                 <td className="num-col">
-                  <StatChip value={r.clutch_1v3} blankZero square level={3} />
+                  <StatChip value={r.clutch_1v3} blankZero square level={3} title={roundsFor(r.player_id, "clutch_1v3")} />
                 </td>
                 <td className="num-col">
-                  <StatChip value={r.clutch_1v4} blankZero square level={4} />
+                  <StatChip value={r.clutch_1v4} blankZero square level={4} title={roundsFor(r.player_id, "clutch_1v4")} />
                 </td>
                 <td className="num-col">
-                  <StatChip value={r.clutch_1v5} blankZero square level={5} />
+                  <StatChip value={r.clutch_1v5} blankZero square level={5} title={roundsFor(r.player_id, "clutch_1v5")} />
                 </td>
                 <td className="num-col">
                   <StatChip value={clutchTotal} blankZero square />

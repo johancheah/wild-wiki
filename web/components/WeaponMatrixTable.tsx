@@ -20,7 +20,7 @@ export function WeaponMatrixTable({ matrix }: { matrix: WeaponMatrix }) {
                 <th className="num-col" key={w} title={w}>
                   {icon ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img className="weapon-col-icon" src={icon} alt={w} />
+                    <img className="weapon-col-icon" src={icon} alt={w} title={w} />
                   ) : (
                     w
                   )}

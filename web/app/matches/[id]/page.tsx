@@ -17,7 +17,7 @@ export default async function MatchDetailPage({
   const detail = await fetchMatchFullDetail(supabase, id);
   if (!detail) notFound();
 
-  const { match, wildRows, enemyRows, timeline, economy, weapons, h2h } = detail;
+  const { match, wildRows, enemyRows, timeline, economy, weapons, h2h, eventRounds } = detail;
   const splash = mapSplash(match.map);
   const economies = economy ? [{ map: match.map, opponent: match.opponent_name, economy }] : null;
 
@@ -58,6 +58,7 @@ export default async function MatchDetailPage({
         timeline={timeline}
         opponentName={match.opponent_name}
         h2h={h2h}
+        eventRounds={eventRounds}
       />
     </>
   );

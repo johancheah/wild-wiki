@@ -20,5 +20,5 @@
 {% set enemy_rows = box_score|rejectattr("is_wild_player")|list|sort(attribute="acs", reverse=True) %}
 {% set economies = [{"map": match.map, "opponent": match.opponent_name, "economy": economy}] if economy else None %}
 
-{{ ui.match_tabs(group="m", wild_rows=wild_rows, enemy_rows=enemy_rows, weapons=weapons, economies=economies, timeline=timeline, opponent_name=match.opponent_name, h2h=h2h) }}
+{{ ui.match_tabs(group="m", wild_rows=wild_rows, enemy_rows=enemy_rows, weapons=weapons, economies=economies, timeline=timeline, opponent_name=match.opponent_name, h2h=h2h, event_rounds=event_rounds) }}
 {% endblock %}

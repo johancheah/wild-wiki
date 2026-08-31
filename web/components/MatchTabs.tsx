@@ -9,6 +9,7 @@ import type { WeaponMatrix } from "@/lib/weapons";
 import type { MatchEconomy } from "@/lib/economy";
 import type { TimelineEntry } from "@/lib/timeline";
 import type { H2hMatrix } from "@/lib/h2h";
+import type { EventRounds } from "@/lib/eventRounds";
 
 export type MatchTabsRow = BoxScoreTableRow & PerformanceRow;
 
@@ -30,6 +31,7 @@ export function MatchTabs({
   timeline,
   opponentName,
   h2h,
+  eventRounds,
 }: {
   wildRows: MatchTabsRow[];
   enemyRows?: MatchTabsRow[] | null;
@@ -41,6 +43,7 @@ export function MatchTabs({
   timeline?: TimelineEntry[];
   opponentName?: string | null;
   h2h?: H2hMatrix | null;
+  eventRounds?: EventRounds;
 }) {
   return (
     <>
@@ -88,7 +91,7 @@ export function MatchTabs({
                 )}
                 <section>
                   <h2>Multi-Kills, Clutches &amp; Utility — WILD</h2>
-                  <PerformanceTable rows={wildRows} clickable />
+                  <PerformanceTable rows={wildRows} clickable eventRounds={eventRounds} />
                 </section>
               </>
             ),

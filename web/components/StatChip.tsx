@@ -5,12 +5,14 @@ export function StatChip({
   blankZero = false,
   square = false,
   level = 0,
+  title,
 }: {
   value: number | string | null;
   diff?: boolean;
   blankZero?: boolean;
   square?: boolean;
   level?: number;
+  title?: string;
 }) {
   const sq = square ? " sq" : "";
   const lvl = level && value ? ` chip-lvl-${level}` : "";
@@ -25,7 +27,11 @@ export function StatChip({
     const label = value > 0 ? `+${value}` : `${value}`;
     return <span className={`stat-chip${sq} ${cls}`}>{label}</span>;
   }
-  return <span className={`stat-chip${sq}${lvl}`}>{value}</span>;
+  return (
+    <span className={`stat-chip${sq}${lvl}`} title={title || undefined}>
+      {value}
+    </span>
+  );
 }
 
 // K/D/A split into fixed-width slots so digits align vertically down the

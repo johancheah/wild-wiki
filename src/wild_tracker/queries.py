@@ -581,6 +581,72 @@ def h2h_matrix(conn: sqlite3.Connection, match_id: str, wild_team_id: str, enemy
     }
 
 
+def multi_kill_clutch_rounds(conn: sqlite3.Connection, match_id: str, wild_team_id: str | None) -> dict[str, dict[str, list[int]]]:
+    """Per-WILD-player round numbers (1-indexed, matching the round
+    timeline's labels) where each multi-kill / clutch stat in the
+    Performance tab actually happened — powers the hover tooltip on those
+    cells. Same derivation as derive.py::compute_multi_kills/
+    compute_clutches, just keeping the round list instead of only the
+    count. API-sourced matches only (needs kill_events); returns {} for
+    spreadsheet-sourced matches, so those cells just show no tooltip."""
+    if not wild_team_id:
+        return {}
+
+    kill_rows = conn.execute("""
+        SELECT round_number, killer_id, COUNT(*) AS n
+        FROM kill_events WHERE match_id = ? AND killer_id IS NOT NULL
+        GROUP BY round_number, killer_id
+    """, (match_id,)).fetchall()
+    if not kill_rows:
+        return {}
+
+    result: dict[str, dict[str, list[int]]] = defaultdict(lambda: {
+        "two_k": [], "three_k": [], "four_k": [], "five_k": [],
+        "clutch_1v1": [], "clutch_1v2": [], "clutch_1v3": [], "clutch_1v4": [], "clutch_1v5": [],
+    })
+    for r in kill_rows:
+        label, n = r["round_number"] + 1, r["n"]
+        if n == 2:
+            result[r["killer_id"]]["two_k"].append(label)
+        elif n == 3:
+            result[r["killer_id"]]["three_k"].append(label)
+        elif n == 4:
+            result[r["killer_id"]]["four_k"].append(label)
+        elif n >= 5:
+            result[r["killer_id"]]["five_k"].append(label)
+
+    player_team = {
+        row["player_id"]: row["team_id"]
+        for row in conn.execute("SELECT player_id, team_id FROM match_players WHERE match_id = ?", (match_id,)).fetchall()
+    }
+    wild_players = {pid for pid, tid in player_team.items() if tid == wild_team_id}
+    enemy_players = {pid for pid, tid in player_team.items() if tid != wild_team_id}
+
+    for rd in conn.execute("SELECT round_number, winning_team_id FROM rounds WHERE match_id = ?", (match_id,)).fetchall():
+        round_number, winning_team_id = rd["round_number"], rd["winning_team_id"]
+        kills = conn.execute("""
+            SELECT killer_id, victim_id FROM kill_events
+            WHERE match_id = ? AND round_number = ? ORDER BY time_in_round_ms ASC
+        """, (match_id, round_number)).fetchall()
+
+        wild_alive, enemy_alive = set(wild_players), set(enemy_players)
+        clutch_survivor, clutch_n = None, None
+        for k in kills:
+            victim = k["victim_id"]
+            if victim in wild_alive:
+                wild_alive.discard(victim)
+            elif victim in enemy_alive:
+                enemy_alive.discard(victim)
+            if clutch_survivor is None and len(wild_alive) == 1 and len(enemy_alive) >= 1:
+                clutch_survivor = next(iter(wild_alive))
+                clutch_n = len(enemy_alive)
+
+        if clutch_survivor is not None and winning_team_id == wild_team_id:
+            result[clutch_survivor][f"clutch_1v{min(clutch_n, 5)}"].append(round_number + 1)
+
+    return result
+
+
 def match_detail(conn: sqlite3.Connection, match_id: str) -> dict | None:
     match_row = conn.execute("""
         SELECT m.*, t.name AS opponent_name, t.tag AS opponent_tag
@@ -612,10 +678,12 @@ def match_detail(conn: sqlite3.Connection, match_id: str) -> dict | None:
     economy = match_economy(conn, match_id, match["team_id"], match["enemy_team_id"]) if match["team_id"] else None
     weapons = weapon_matrix(conn, match_id, match["team_id"]) if match["team_id"] else None
     h2h = h2h_matrix(conn, match_id, match["team_id"], match["enemy_team_id"]) if match["team_id"] else None
+    event_rounds = multi_kill_clutch_rounds(conn, match_id, match["team_id"])
 
     return {
         "match": match, "box_score": box_score, "weapon_kills": weapon_kills,
         "timeline": timeline, "economy": economy, "weapons": weapons, "h2h": h2h,
+        "event_rounds": event_rounds,
     }
 
 

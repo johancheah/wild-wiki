@@ -85,7 +85,7 @@
   </span>
 {% endmacro %}
 
-{% macro chip(value, diff=False, blank_zero=False, square=False, level=0) %}
+{% macro chip(value, diff=False, blank_zero=False, square=False, level=0, title=None) %}
   {% set sq = " sq" if square else "" %}
   {% set lvl = " chip-lvl-" ~ level if level and value else "" %}
   {% if blank_zero and (value is none or value == 0) %}
@@ -94,6 +94,8 @@
     <span class="stat-chip{{ sq }}">—</span>
   {% elif diff %}
     <span class="stat-chip{{ sq }} {{ 'chip-pos' if value > 0 else ('chip-neg' if value < 0 else '') }}">{{ "+%d"|format(value) if value > 0 else value }}</span>
+  {% elif title %}
+    <span class="stat-chip{{ sq }}{{ lvl }}" title="{{ title }}">{{ value }}</span>
   {% else %}
     <span class="stat-chip{{ sq }}{{ lvl }}">{{ value }}</span>
   {% endif %}
@@ -156,7 +158,12 @@
 
 {# Multi-kills/clutches/plants/defuses/econ table — shared by the per-match
    Performance tab and the match-week Performance tab (combined totals). #}
-{% macro performance_table(rows, clickable=True) %}
+{# Builds the hover-tooltip text for a multi-kill/clutch cell from its list
+   of round numbers, e.g. "Round 4" or "Rounds 4, 9, 12" — empty string
+   (falsy) when there are no rounds, so chip() just omits the title. #}
+{% macro _rounds_title(rounds) %}{% if rounds %}{{ "Round" if rounds|length == 1 else "Rounds" }} {{ rounds|join(', ') }}{% endif %}{% endmacro %}
+
+{% macro performance_table(rows, clickable=True, event_rounds=None) %}
 <div class="table-scroll">
   <table class="performance-table">
     <thead>
@@ -172,22 +179,23 @@
       {% for r in rows %}
       {% set multi_total = (r.two_k or 0) + (r.three_k or 0) + (r.four_k or 0) + (r.five_k or 0) %}
       {% set clutch_total = (r.clutch_1v1 or 0) + (r.clutch_1v2 or 0) + (r.clutch_1v3 or 0) + (r.clutch_1v4 or 0) + (r.clutch_1v5 or 0) %}
+      {% set er = event_rounds.get(r.player_id, {}) if event_rounds else {} %}
       {% if clickable %}
       <tr class="linkable" onclick="location.href='/players/{{ r.player_id }}'">
       {% else %}
       <tr>
       {% endif %}
         <td class="name">{{ avatar(r.display_name, r.headshot_filename) }}{{ r.display_name }}</td>
-        <td class="num-col">{{ chip(r.two_k, blank_zero=True, square=True, level=1) }}</td>
-        <td class="num-col">{{ chip(r.three_k, blank_zero=True, square=True, level=2) }}</td>
-        <td class="num-col">{{ chip(r.four_k, blank_zero=True, square=True, level=3) }}</td>
-        <td class="num-col">{{ chip(r.five_k, blank_zero=True, square=True, level=4) }}</td>
+        <td class="num-col">{{ chip(r.two_k, blank_zero=True, square=True, level=1, title=_rounds_title(er.get('two_k'))) }}</td>
+        <td class="num-col">{{ chip(r.three_k, blank_zero=True, square=True, level=2, title=_rounds_title(er.get('three_k'))) }}</td>
+        <td class="num-col">{{ chip(r.four_k, blank_zero=True, square=True, level=3, title=_rounds_title(er.get('four_k'))) }}</td>
+        <td class="num-col">{{ chip(r.five_k, blank_zero=True, square=True, level=4, title=_rounds_title(er.get('five_k'))) }}</td>
         <td class="num-col">{{ chip(multi_total, blank_zero=True, square=True) }}</td>
-        <td class="num-col">{{ chip(r.clutch_1v1, blank_zero=True, square=True, level=1) }}</td>
-        <td class="num-col">{{ chip(r.clutch_1v2, blank_zero=True, square=True, level=2) }}</td>
-        <td class="num-col">{{ chip(r.clutch_1v3, blank_zero=True, square=True, level=3) }}</td>
-        <td class="num-col">{{ chip(r.clutch_1v4, blank_zero=True, square=True, level=4) }}</td>
-        <td class="num-col">{{ chip(r.clutch_1v5, blank_zero=True, square=True, level=5) }}</td>
+        <td class="num-col">{{ chip(r.clutch_1v1, blank_zero=True, square=True, level=1, title=_rounds_title(er.get('clutch_1v1'))) }}</td>
+        <td class="num-col">{{ chip(r.clutch_1v2, blank_zero=True, square=True, level=2, title=_rounds_title(er.get('clutch_1v2'))) }}</td>
+        <td class="num-col">{{ chip(r.clutch_1v3, blank_zero=True, square=True, level=3, title=_rounds_title(er.get('clutch_1v3'))) }}</td>
+        <td class="num-col">{{ chip(r.clutch_1v4, blank_zero=True, square=True, level=4, title=_rounds_title(er.get('clutch_1v4'))) }}</td>
+        <td class="num-col">{{ chip(r.clutch_1v5, blank_zero=True, square=True, level=5, title=_rounds_title(er.get('clutch_1v5'))) }}</td>
         <td class="num-col">{{ chip(clutch_total, blank_zero=True, square=True) }}</td>
         <td class="col-gap"></td>
         <td class="num-col">{{ chip(r.plants, blank_zero=True, square=True) }}</td>
@@ -213,7 +221,7 @@
         {% for w in weapons.weapons %}
         {% set icon = weapon_icon(w) %}
         <th class="num-col" title="{{ w }}">
-          {% if icon %}<img class="weapon-col-icon" src="{{ icon }}" alt="{{ w }}">{% else %}{{ w }}{% endif %}
+          {% if icon %}<img class="weapon-col-icon" src="{{ icon }}" alt="{{ w }}" title="{{ w }}">{% else %}{{ w }}{% endif %}
         </th>
         {% endfor %}
       </tr>
@@ -238,7 +246,7 @@
    matrix / economy grid on the site is rendered by the exact same markup.
    `group` must be unique on the page (used to scope tab-button clicks and
    panel ids so multiple tab groups can be nested without colliding). #}
-{% macro match_tabs(group, wild_rows, enemy_rows=None, weapons=None, economies=None, box_title="WILD Box Score", multi_agent=False, subtitle=None, timeline=None, opponent_name=None, h2h=None) %}
+{% macro match_tabs(group, wild_rows, enemy_rows=None, weapons=None, economies=None, box_title="WILD Box Score", multi_agent=False, subtitle=None, timeline=None, opponent_name=None, h2h=None, event_rounds=None) %}
   {% if timeline %}{{ round_timeline(timeline, opponent_name) }}{% endif %}
   <div class="tabs" data-group="{{ group }}">
     <button class="tab-btn active" data-tab="overview" data-group="{{ group }}">Overview</button>
@@ -272,7 +280,7 @@
     {% endif %}
     <section>
       <h2>Multi-Kills, Clutches &amp; Utility — WILD</h2>
-      {{ performance_table(wild_rows, clickable=True) }}
+      {{ performance_table(wild_rows, clickable=True, event_rounds=event_rounds) }}
     </section>
   </div>
 
