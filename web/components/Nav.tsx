@@ -73,7 +73,7 @@ export function Nav() {
                 setDropdownOpen((o) => !o);
               }}
             >
-              <Avatar displayName={player.display_name} headshotFilename={player.headshot_filename} size="sm" />
+              <Avatar displayName={player.display_name} headshotFilename={player.headshot_filename} />
               <span className="nav-player-name">{player.display_name}</span>
               <span className="nav-player-caret">▾</span>
             </button>
@@ -85,7 +85,7 @@ export function Nav() {
                   className={p.player_id === player.player_id ? "active" : ""}
                   onClick={() => setDropdownOpen(false)}
                 >
-                  <Avatar displayName={p.display_name} headshotFilename={p.headshot_filename} size="sm" />
+                  <Avatar displayName={p.display_name} headshotFilename={p.headshot_filename} />
                   {p.display_name}
                 </Link>
               ))}
