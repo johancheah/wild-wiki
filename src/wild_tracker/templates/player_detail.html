@@ -72,7 +72,7 @@
         <tr>
           <th>Role</th><th class="num-col">Maps</th><th class="num-col">% of Maps</th>
           <th class="num-col">W</th><th class="num-col">Win %</th>
-          <th class="num-col">ACS</th><th class="num-col">ADR</th><th class="num-col">K/D</th><th class="num-col">FK:FD</th>
+          <th class="num-col">ACS</th><th class="num-col">K/D</th><th class="num-col">ADR</th><th class="num-col">KAST</th><th class="num-col">FK:FD</th>
         </tr>
       </thead>
       <tbody>
@@ -84,9 +84,10 @@
           <td class="num-col num win">{{ r.wins }}</td>
           <td class="num-col num">{{ "%.0f"|format(100.0 * r.wins / r.n) }}%</td>
           <td class="num-col num">{{ "%.0f"|format(r.acs) if r.acs is not none else "—" }}</td>
+          <td class="num-col num">{{ "%.2f"|format(r.kd) if r.kd is not none else "—" }}</td>
           <td class="num-col num">{{ "%.0f"|format(r.adr) if r.adr is not none else "—" }}</td>
-          <td class="num-col num">{{ r.kd if r.kd is not none else "—" }}</td>
-          <td class="num-col num">{{ r.fkfd if r.fkfd is not none else "—" }}</td>
+          <td class="num-col num">{{ "%.0f"|format(r.kast_pct) if r.kast_pct is not none else "—" }}%</td>
+          <td class="num-col num">{{ "%.2f"|format(r.fkfd) if r.fkfd is not none else "—" }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -101,7 +102,7 @@
       <thead>
         <tr>
           <th>Agent</th><th class="num-col">Played</th><th class="num-col">W</th><th class="num-col">Win %</th>
-          <th class="num-col">ACS</th><th class="num-col">ADR</th><th class="num-col">K/D</th><th class="num-col">FK:FD</th>
+          <th class="num-col">ACS</th><th class="num-col">K/D</th><th class="num-col">ADR</th><th class="num-col">KAST</th><th class="num-col">FK:FD</th>
         </tr>
       </thead>
       <tbody>
@@ -112,9 +113,10 @@
           <td class="num-col num win">{{ a.wins }}</td>
           <td class="num-col num">{{ "%.0f"|format(100.0 * a.wins / a.n) }}%</td>
           <td class="num-col num">{{ "%.0f"|format(a.acs) if a.acs is not none else "—" }}</td>
+          <td class="num-col num">{{ "%.2f"|format(a.kd) if a.kd is not none else "—" }}</td>
           <td class="num-col num">{{ "%.0f"|format(a.adr) if a.adr is not none else "—" }}</td>
-          <td class="num-col num">{{ a.kd if a.kd is not none else "—" }}</td>
-          <td class="num-col num">{{ a.fkfd if a.fkfd is not none else "—" }}</td>
+          <td class="num-col num">{{ "%.0f"|format(a.kast_pct) if a.kast_pct is not none else "—" }}%</td>
+          <td class="num-col num">{{ "%.2f"|format(a.fkfd) if a.fkfd is not none else "—" }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -124,19 +126,7 @@
 
 <section>
   <h2>Weapon Stats</h2>
-  <div class="table-scroll">
-    <table>
-      <thead><tr><th>Weapon</th><th class="num-col">Kills</th></tr></thead>
-      <tbody>
-        {% for w in weapons %}
-        <tr>
-          <td class="name">{{ ui.weapon_cell(w.weapon) }}</td>
-          <td class="num-col num">{{ w.kills }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+  {{ ui.weapon_buy_grid(weapon_grid) }}
 </section>
 
 </div>

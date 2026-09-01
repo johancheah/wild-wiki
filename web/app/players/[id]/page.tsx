@@ -9,15 +9,33 @@ import { MatchLogTable } from "@/components/MatchLogTable";
 import { PlayerHeaderSync } from "@/components/PlayerHeaderSync";
 import { PlayerSwitcher } from "@/components/PlayerSwitcher";
 import { Tabs } from "@/components/Tabs";
-import { fetchPlayerWeaponTotals } from "@/lib/weapons";
-import { weaponIcon } from "@/lib/assets";
+import { WeaponBuyGrid } from "@/components/WeaponBuyGrid";
+import { fetchPlayerWeaponGrid } from "@/lib/weapons";
 import type { PlayerCareer, MatchPlayerStats } from "@/lib/types";
 import type { NavPlayer } from "@/lib/PlayerHeaderContext";
 
 export const revalidate = 0;
 
-type AgentPool = { agent: string; n: number; wins: number; kd: number | null; acs: number | null; adr: number | null; fkfd: number | null };
-type RoleBreakdown = { role: string; n: number; wins: number; kd: number | null; acs: number | null; adr: number | null; fkfd: number | null };
+type AgentPool = {
+  agent: string;
+  n: number;
+  wins: number;
+  kd: number | null;
+  acs: number | null;
+  adr: number | null;
+  fkfd: number | null;
+  kast_pct: number | null;
+};
+type RoleBreakdown = {
+  role: string;
+  n: number;
+  wins: number;
+  kd: number | null;
+  acs: number | null;
+  adr: number | null;
+  fkfd: number | null;
+  kast_pct: number | null;
+};
 
 export default async function PlayerDetailPage({
   params,
@@ -26,7 +44,7 @@ export default async function PlayerDetailPage({
 }) {
   const { id } = await params;
 
-  const [{ data: careerRows }, { data: agentRows }, { data: roleRows }, { data: matchLog }, { data: rosterRows }, weapons] =
+  const [{ data: careerRows }, { data: agentRows }, { data: roleRows }, { data: matchLog }, { data: rosterRows }, weaponGrid] =
     await Promise.all([
       supabase.from("v_player_career").select("*").eq("player_id", id),
       supabase
@@ -45,7 +63,7 @@ export default async function PlayerDetailPage({
         .eq("player_id", id)
         .order("date", { ascending: false }),
       supabase.from("v_player_career").select("player_id, display_name, headshot_filename"),
-      fetchPlayerWeaponTotals(supabase, id),
+      fetchPlayerWeaponGrid(supabase, id),
     ]);
 
   const player = (careerRows as PlayerCareer[] | null)?.[0];
@@ -197,8 +215,9 @@ export default async function PlayerDetailPage({
                           <th className="num-col">W</th>
                           <th className="num-col">Win %</th>
                           <th className="num-col">ACS</th>
-                          <th className="num-col">ADR</th>
                           <th className="num-col">K/D</th>
+                          <th className="num-col">ADR</th>
+                          <th className="num-col">KAST</th>
                           <th className="num-col">FK:FD</th>
                         </tr>
                       </thead>
@@ -212,9 +231,10 @@ export default async function PlayerDetailPage({
                             <td className="num-col num win">{a.wins}</td>
                             <td className="num-col num">{((100 * a.wins) / a.n).toFixed(0)}%</td>
                             <td className="num-col num">{a.acs !== null ? Math.round(a.acs) : "—"}</td>
+                            <td className="num-col num">{a.kd !== null ? a.kd.toFixed(2) : "—"}</td>
                             <td className="num-col num">{a.adr !== null ? Math.round(a.adr) : "—"}</td>
-                            <td className="num-col num">{a.kd ?? "—"}</td>
-                            <td className="num-col num">{a.fkfd ?? "—"}</td>
+                            <td className="num-col num">{a.kast_pct !== null ? `${Math.round(a.kast_pct)}%` : "—"}</td>
+                            <td className="num-col num">{a.fkfd !== null ? a.fkfd.toFixed(2) : "—"}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -231,10 +251,12 @@ export default async function PlayerDetailPage({
                           <th>Role</th>
                           <th className="num-col">Maps</th>
                           <th className="num-col">% of Maps</th>
+                          <th className="num-col">W</th>
                           <th className="num-col">Win %</th>
-                          <th className="num-col">K/D</th>
                           <th className="num-col">ACS</th>
+                          <th className="num-col">K/D</th>
                           <th className="num-col">ADR</th>
+                          <th className="num-col">KAST</th>
                           <th className="num-col">FK:FD</th>
                         </tr>
                       </thead>
@@ -246,11 +268,13 @@ export default async function PlayerDetailPage({
                             </td>
                             <td className="num-col num">{r.n}</td>
                             <td className="num-col num">{totalWithRole ? ((100 * r.n) / totalWithRole).toFixed(1) : "0.0"}%</td>
+                            <td className="num-col num win">{r.wins}</td>
                             <td className="num-col num">{((100 * r.wins) / r.n).toFixed(0)}%</td>
-                            <td className="num-col num">{r.kd ?? "—"}</td>
                             <td className="num-col num">{r.acs !== null ? Math.round(r.acs) : "—"}</td>
+                            <td className="num-col num">{r.kd !== null ? r.kd.toFixed(2) : "—"}</td>
                             <td className="num-col num">{r.adr !== null ? Math.round(r.adr) : "—"}</td>
-                            <td className="num-col num">{r.fkfd ?? "—"}</td>
+                            <td className="num-col num">{r.kast_pct !== null ? `${Math.round(r.kast_pct)}%` : "—"}</td>
+                            <td className="num-col num">{r.fkfd !== null ? r.fkfd.toFixed(2) : "—"}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -260,35 +284,7 @@ export default async function PlayerDetailPage({
 
                 <section>
                   <h2>Weapon Stats</h2>
-                  <div className="table-scroll">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Weapon</th>
-                          <th className="num-col">Kills</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {weapons.map((w) => {
-                          const icon = weaponIcon(w.weapon);
-                          return (
-                            <tr key={w.weapon}>
-                              <td className="name">
-                                <span className="weapon-cell">
-                                  {icon && (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img className="weapon-icon" src={icon} alt={w.weapon} />
-                                  )}
-                                  {w.weapon}
-                                </span>
-                              </td>
-                              <td className="num-col num">{w.kills}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                  <WeaponBuyGrid weaponGrid={weaponGrid} />
                 </section>
               </>
             ),

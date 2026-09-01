@@ -248,14 +248,41 @@
    top (real weapon icons where available — ability-kills like "Blade Storm"
    fall back to text, same missing-icon convention as everywhere else),
    kill count per cell. #}
-{# Weapon name cell with icon — icon-or-text fallback for ability-kills
-   (e.g. "Blade Storm"), same convention as agent_cell. #}
-{% macro weapon_cell(weapon) %}
-  {% set icon = weapon_icon(weapon) %}
-  <span class="weapon-cell">
-    {% if icon %}<img class="weapon-icon" src="{{ icon }}" alt="{{ weapon }}">{% endif %}
-    {{ weapon }}
-  </span>
+{% macro weapon_tile(w) %}
+  {% set icon = weapon_icon(w.weapon) %}
+  <div class="weapon-tile">
+    <div class="weapon-tile-icon">
+      {% if icon %}<img src="{{ icon }}" alt="{{ w.weapon }}">{% else %}<span class="avatar-fallback">—</span>{% endif %}
+    </div>
+    {{ chip(w.kills, blank_zero=True) }}
+    <div class="weapon-tile-name">{{ w.weapon }}</div>
+  </div>
+{% endmacro %}
+
+{# Career weapon kills laid out like the VALORANT buy menu — columns of
+   category groups (Sidearms | SMGs+Shotguns | Rifles+Machine Guns |
+   Sniper Rifles), kill count standing in for price. #}
+{% macro weapon_buy_grid(weapon_grid) %}
+<div class="weapon-grid">
+  {% for col in weapon_grid.columns %}
+  <div class="weapon-grid-col">
+    {% for cat in col %}
+    <div class="weapon-cat-label">{{ cat.label }}</div>
+    {% for w in cat.weapons %}
+    {{ weapon_tile(w) }}
+    {% endfor %}
+    {% endfor %}
+  </div>
+  {% endfor %}
+  {% if weapon_grid.other %}
+  <div class="weapon-grid-col">
+    <div class="weapon-cat-label">Melee / Abilities</div>
+    {% for w in weapon_grid.other %}
+    {{ weapon_tile(w) }}
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
 {% endmacro %}
 
 {% macro weapon_matrix_table(weapons) %}

@@ -165,6 +165,7 @@ def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:
           ROUND(SUM(kills) * 1.0 / NULLIF(SUM(deaths), 0), 2) AS kd,
           ROUND(SUM(acs * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS acs,
           ROUND(SUM(adr * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS adr,
+          ROUND(SUM(kast_pct * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS kast_pct,
           ROUND(SUM(fk) * 1.0 / NULLIF(SUM(fd), 0), 2) AS fkfd
         FROM v_wild_player_match_stats WHERE player_id = ? AND agent IS NOT NULL
         GROUP BY agent ORDER BY n DESC
@@ -186,6 +187,7 @@ def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:
           ROUND(SUM(kills) * 1.0 / NULLIF(SUM(deaths), 0), 2) AS kd,
           ROUND(SUM(acs * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS acs,
           ROUND(SUM(adr * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS adr,
+          ROUND(SUM(kast_pct * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS kast_pct,
           ROUND(SUM(fk) * 1.0 / NULLIF(SUM(fd), 0), 2) AS fkfd
         FROM v_wild_player_match_stats WHERE player_id = ? AND role IS NOT NULL
         GROUP BY role ORDER BY n DESC
@@ -213,21 +215,14 @@ def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:
         "stages": sorted({m["season_id"] for m in match_log if m["season_id"]}),
     }
 
-    # Career weapon kills — same category ordering (rifles -> snipers ->
-    # heavy -> shotguns -> SMGs -> pistols -> melee -> abilities/ults) as
-    # the match-level Weapons tab, for the same reason and for visual
-    # consistency between the two.
-    weapon_rows = conn.execute("""
-        SELECT weapon, SUM(kill_count) AS kills
-        FROM match_player_weapon_kills WHERE player_id = ?
-        GROUP BY weapon
-    """, (player_id,)).fetchall()
-    weapon_totals = {r["weapon"]: r["kills"] for r in weapon_rows}
-    weapons = [{"weapon": w, "kills": weapon_totals[w]} for w in _sort_weapons(weapon_totals)]
+    # Career weapon kills, laid out like the VALORANT buy menu (see
+    # player_weapon_grid — defined further down since it needs
+    # _BUY_MENU_CATEGORIES, declared near the other weapon-ordering helpers).
+    weapon_grid = player_weapon_grid(conn, player_id)
 
     return {
         "player": player, "totals": totals, "agents": agents, "roles": roles,
-        "match_log": match_log, "match_log_filters": match_log_filters, "weapons": weapons,
+        "match_log": match_log, "match_log_filters": match_log_filters, "weapon_grid": weapon_grid,
     }
 
 
@@ -483,6 +478,49 @@ def _sort_weapons(weapon_totals: dict[str, int]) -> list[str]:
         weapon_totals,
         key=lambda w: (_WEAPON_CATEGORY_ORDER.get(w, _WEAPON_ABILITY_RANK), -weapon_totals[w]),
     )
+
+
+# Same weapons, grouped and ordered the way VALORANT's own buy menu lays
+# them out — 4 columns (Sidearms | SMGs+Shotguns | Rifles+Machine Guns |
+# Sniper Rifles), each category's weapons in ascending price order — for
+# the player page's Weapon Stats grid, which mirrors that layout with kill
+# count standing in for price. A fixed structure (every weapon always
+# shown, 0 kills and all) rather than only the ones a player has actually
+# used, same as the real menu always showing every weapon regardless of
+# loadout.
+_BUY_MENU_COLUMNS: list[list[tuple[str, list[str]]]] = [
+    [("Sidearms", ["Classic", "Shorty", "Frenzy", "Ghost", "Sheriff"])],
+    [("SMGs", ["Stinger", "Spectre"]), ("Shotguns", ["Bucky", "Judge"])],
+    [("Rifles", ["Bulldog", "Guardian", "Phantom", "Vandal"]), ("Machine Guns", ["Ares", "Odin"])],
+    [("Sniper Rifles", ["Marshal", "Outlaw", "Operator"])],
+]
+
+
+def player_weapon_grid(conn: sqlite3.Connection, player_id: str) -> dict:
+    rows = conn.execute("""
+        SELECT weapon, SUM(kill_count) AS kills
+        FROM match_player_weapon_kills WHERE player_id = ?
+        GROUP BY weapon
+    """, (player_id,)).fetchall()
+    totals = {r["weapon"]: r["kills"] for r in rows}
+
+    columns = [
+        [
+            {"label": label, "weapons": [{"weapon": w, "kills": totals.get(w, 0)} for w in weapons]}
+            for label, weapons in col
+        ]
+        for col in _BUY_MENU_COLUMNS
+    ]
+
+    # Melee + ability-kills (e.g. "Blade Storm") aren't in the fixed buy-menu
+    # list above — shown separately, only the ones actually used, kills desc.
+    known = {w for col in _BUY_MENU_COLUMNS for _, ws in col for w in ws}
+    other = sorted(
+        ({"weapon": w, "kills": k} for w, k in totals.items() if w not in known),
+        key=lambda x: x["kills"], reverse=True,
+    )
+
+    return {"columns": columns, "other": other}
 
 
 def weapon_matrix(conn: sqlite3.Connection, match_id: str, wild_team_id: str) -> dict | None:

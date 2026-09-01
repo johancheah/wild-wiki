@@ -131,14 +131,47 @@ export function mergeWeaponMatrices(matrices: (WeaponMatrix | null)[]): WeaponMa
 }
 
 export type PlayerWeaponTotal = { weapon: string; kills: number };
+export type WeaponGridCategory = { label: string; weapons: PlayerWeaponTotal[] };
+export type PlayerWeaponGrid = { columns: WeaponGridCategory[][]; other: PlayerWeaponTotal[] };
 
-// Career weapon kills for one player, category-ordered (rifles -> snipers
-// -> heavy -> shotguns -> SMGs -> pistols -> melee -> abilities/ults) —
-// same ordering as the match-level Weapons tab, for the player page's
-// Weapon Stats table. Mirrors queries.py::player_detail's `weapons` query.
-export async function fetchPlayerWeaponTotals(supabase: SupabaseClient, playerId: string): Promise<PlayerWeaponTotal[]> {
+// Same weapons, grouped and ordered the way VALORANT's own buy menu lays
+// them out — 4 columns (Sidearms | SMGs+Shotguns | Rifles+Machine Guns |
+// Sniper Rifles), each category's weapons in ascending price order — for
+// the player page's Weapon Stats grid, which mirrors that layout with kill
+// count standing in for price. A fixed structure (every weapon always
+// shown, 0 kills and all) rather than only the ones a player has actually
+// used, same as the real menu always showing every weapon regardless of
+// loadout. Mirrors queries.py::_BUY_MENU_COLUMNS / player_weapon_grid.
+const BUY_MENU_COLUMNS: [string, string[]][][] = [
+  [["Sidearms", ["Classic", "Shorty", "Frenzy", "Ghost", "Sheriff"]]],
+  [
+    ["SMGs", ["Stinger", "Spectre"]],
+    ["Shotguns", ["Bucky", "Judge"]],
+  ],
+  [
+    ["Rifles", ["Bulldog", "Guardian", "Phantom", "Vandal"]],
+    ["Machine Guns", ["Ares", "Odin"]],
+  ],
+  [["Sniper Rifles", ["Marshal", "Outlaw", "Operator"]]],
+];
+
+export async function fetchPlayerWeaponGrid(supabase: SupabaseClient, playerId: string): Promise<PlayerWeaponGrid> {
   const { data } = await supabase.from("match_player_weapon_kills").select("weapon, kill_count").eq("player_id", playerId);
   const totals = new Map<string, number>();
   for (const r of data ?? []) totals.set(r.weapon, (totals.get(r.weapon) ?? 0) + r.kill_count);
-  return sortWeapons(totals).map((weapon) => ({ weapon, kills: totals.get(weapon)! }));
+
+  const columns = BUY_MENU_COLUMNS.map((col) =>
+    col.map(([label, weapons]) => ({
+      label,
+      weapons: weapons.map((weapon) => ({ weapon, kills: totals.get(weapon) ?? 0 })),
+    }))
+  );
+
+  const known = new Set(BUY_MENU_COLUMNS.flat().flatMap(([, weapons]) => weapons));
+  const other = [...totals.entries()]
+    .filter(([weapon]) => !known.has(weapon))
+    .map(([weapon, kills]) => ({ weapon, kills }))
+    .sort((a, b) => b.kills - a.kills);
+
+  return { columns, other };
 }

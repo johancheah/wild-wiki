@@ -140,7 +140,7 @@ nav a.active { color: var(--accent); background: var(--surface-2); }
 }
 .player-switcher-btn:hover { background: var(--surface-2); }
 .player-switcher-btn .avatar, .player-switcher-btn .avatar-fallback { flex-shrink: 0; }
-.player-switcher-caret { color: var(--text-faint); font-size: 11px; }
+.player-switcher-caret { color: var(--text-faint); font-size: 11px; opacity: 0.55; }
 
 .player-switcher-dropdown {
   display: none;
@@ -198,9 +198,11 @@ nav a.active { color: var(--accent); background: var(--surface-2); }
    button, since the avatar/name are already shown right there. */
 .player-switcher-header { margin-left: 10px; vertical-align: middle; }
 .player-switcher-header .player-switcher-btn {
-  padding: 8px; font-size: 16px; background: var(--surface-2); border: 1px solid var(--border);
+  padding: 8px; font-size: 16px; background: none; border: none;
 }
-.player-switcher-header .player-switcher-caret { font-size: 13px; }
+.player-switcher-header .player-switcher-btn:hover { background: var(--surface-2); }
+.player-switcher-header .player-switcher-caret { font-size: 13px; opacity: 0.4; }
+.player-switcher-header .player-switcher-btn:hover .player-switcher-caret { opacity: 0.8; }
 
 @media (max-width: 720px) {
   .nav-player.visible { max-width: 60px; }
@@ -246,6 +248,7 @@ section { margin-bottom: 40px; }
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 32px;
+  box-shadow: 0 0 28px rgba(169, 241, 79, 0.22);
 }
 .stat { background: var(--surface); padding: 18px 16px; }
 .stat .label {
@@ -332,7 +335,7 @@ tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4
 .avatar-fallback-lg { width: 72px; height: 72px; font-size: 24px; margin-right: 16px; border-radius: 14px; }
 .avatar-sm { width: 22px; height: 22px; margin-right: 0; border-radius: 5px; }
 .avatar-fallback-sm { width: 22px; height: 22px; margin-right: 0; border-radius: 5px; font-size: 9px; }
-.player-header { display: flex; align-items: center; }
+.player-header { display: flex; align-items: center; text-transform: none; }
 
 /* Agent icons */
 .agent-icon {
@@ -468,12 +471,32 @@ table.h2h-table td.name { display: flex; align-items: center; gap: 6px; }
 table.weapon-matrix-table th, table.weapon-matrix-table td { padding: 8px 6px; }
 .weapon-col-icon { width: 22px; height: 22px; object-fit: contain; display: block; margin: 0 auto; }
 
-/* Weapon name cell (Career Weapon Stats table): icon + name, same layout
-   as .agent-cell. */
-.weapon-cell { display: flex; align-items: center; }
-.weapon-icon {
-  width: 22px; height: 22px; object-fit: contain;
-  vertical-align: middle; margin-right: 8px; background: var(--surface-2); border-radius: 4px;
+/* Career Weapon Stats grid — laid out like the VALORANT buy menu: columns
+   of category groups, each weapon a tile with icon + kill-count chip +
+   name (kill count standing in for price). */
+.weapon-grid { display: flex; gap: 10px; align-items: flex-start; }
+.weapon-grid-col { flex: 1 1 0; min-width: 0; }
+.weapon-cat-label {
+  background: var(--surface-2); color: var(--text-dim);
+  font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 8px 10px; border-bottom: 2px solid var(--accent-dim);
+}
+.weapon-cat-label:not(:first-child) { margin-top: 10px; }
+.weapon-tile {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; padding: 12px 6px; background: var(--surface);
+  border: 1px solid var(--border); border-top: none;
+}
+.weapon-tile-icon { height: 32px; display: flex; align-items: center; justify-content: center; }
+.weapon-tile-icon img { max-width: 100%; max-height: 32px; object-fit: contain; }
+.weapon-tile-name {
+  font-size: 10.5px; font-weight: 700; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.02em; text-align: center;
+}
+
+@media (max-width: 900px) {
+  .weapon-grid { flex-wrap: wrap; }
+  .weapon-grid-col { flex-basis: calc(50% - 5px); }
 }
 
 /* Schedule: collapsible season groups */
