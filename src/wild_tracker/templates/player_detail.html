@@ -7,7 +7,7 @@
 
 <div class="stat-row">
   <div class="stat"><div class="label">Matches</div><div class="value num">{{ totals.matches_played }}</div></div>
-  <div class="stat"><div class="label">K / D / A</div><div class="value num" style="font-size:20px;">{{ totals.kills }}/{{ totals.deaths }}/{{ totals.assists }}</div></div>
+  <div class="stat"><div class="label">ACS</div><div class="value num">{{ "%.0f"|format(totals.acs) if totals.acs is not none else "—" }}</div></div>
   <div class="stat"><div class="label">K/D</div><div class="value num">{{ totals.kd if totals.kd is not none else "—" }}</div></div>
   <div class="stat"><div class="label">ADR</div><div class="value num">{{ totals.adr if totals.adr is not none else "—" }}</div></div>
   <div class="stat"><div class="label">HS%</div><div class="value num">{{ totals.hs_pct if totals.hs_pct is not none else "—" }}%</div></div>
@@ -71,7 +71,12 @@
   <h2>Agent Pool</h2>
   <div class="table-scroll">
     <table>
-      <thead><tr><th>Agent</th><th class="num-col">Played</th><th class="num-col">W</th><th class="num-col">Win %</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Agent</th><th class="num-col">Played</th><th class="num-col">W</th><th class="num-col">Win %</th>
+          <th class="num-col">ACS</th><th class="num-col">ADR</th><th class="num-col">HS%</th><th class="num-col">K/D</th>
+        </tr>
+      </thead>
       <tbody>
         {% for a in agents %}
         <tr>
@@ -79,6 +84,10 @@
           <td class="num-col num">{{ a.n }}</td>
           <td class="num-col num win">{{ a.wins }}</td>
           <td class="num-col num">{{ "%.0f"|format(100.0 * a.wins / a.n) }}%</td>
+          <td class="num-col num">{{ a.acs if a.acs is not none else "—" }}</td>
+          <td class="num-col num">{{ a.adr if a.adr is not none else "—" }}</td>
+          <td class="num-col num">{{ a.hs_pct if a.hs_pct is not none else "—" }}%</td>
+          <td class="num-col num">{{ a.kd if a.kd is not none else "—" }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -124,8 +133,12 @@
           <th class="num-col" data-sort-type="num">A</th>
           <th class="num-col" data-sort-type="num">+/&minus;</th>
           <th class="num-col" data-sort-type="num">K/D</th>
+          <th class="num-col" data-sort-type="num">KAST</th>
           <th class="num-col" data-sort-type="num">ADR</th>
           <th class="num-col" data-sort-type="num">HS%</th>
+          <th class="num-col" data-sort-type="num">FK</th>
+          <th class="num-col" data-sort-type="num">FD</th>
+          <th class="num-col" data-sort-type="num">+/&minus;</th>
           <th class="num-col" data-sort-type="num">Multi-K</th>
           <th class="num-col" data-sort-type="num">Clutch</th>
           <th class="num-col" data-sort-type="num">ECON</th>
@@ -144,14 +157,19 @@
           <td>{{ ui.role_cell(m.role) }}</td>
           {% set plusminus = m.kills - m.deaths %}
           {% set kd = (m.kills / m.deaths) if m.deaths else m.kills %}
+          {% set fkfd = (m.fk or 0) - (m.fd or 0) %}
           <td class="num-col num">{{ "%.0f"|format(m.acs) if m.acs is not none else "—" }}</td>
           <td class="num-col num">{{ m.kills }}</td>
           <td class="num-col num">{{ m.deaths }}</td>
           <td class="num-col num">{{ m.assists }}</td>
           <td class="num-col num {{ 'margin-pos' if plusminus > 0 else ('margin-neg' if plusminus < 0 else '') }}">{{ "+%d"|format(plusminus) if plusminus > 0 else plusminus }}</td>
           <td class="num-col num">{{ "%.2f"|format(kd) }}</td>
+          <td class="num-col num">{{ "%.0f"|format(m.kast_pct) if m.kast_pct is not none else "—" }}%</td>
           <td class="num-col num">{{ "%.1f"|format(m.adr) if m.adr is not none else "—" }}</td>
           <td class="num-col num">{{ "%.1f"|format(m.hs_pct) if m.hs_pct is not none else "—" }}%</td>
+          <td class="num-col num">{{ m.fk if m.fk is not none else "—" }}</td>
+          <td class="num-col num">{{ m.fd if m.fd is not none else "—" }}</td>
+          <td class="num-col num {{ 'margin-pos' if fkfd > 0 else ('margin-neg' if fkfd < 0 else '') }}">{{ "+%d"|format(fkfd) if fkfd > 0 else fkfd }}</td>
           <td class="num-col num">{{ (m.two_k or 0) + (m.three_k or 0) + (m.four_k or 0) + (m.five_k or 0) }}</td>
           <td class="num-col num">{{ m.clutches or 0 }}</td>
           <td class="num-col num">{{ "%.0f"|format(m.econ) if m.econ is not none else "—" }}</td>

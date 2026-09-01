@@ -86,6 +86,7 @@ SELECT
     COUNT(*) AS matches_played,
     SUM(v.kills) AS kills, SUM(v.deaths) AS deaths, SUM(v.assists) AS assists,
     ROUND((SUM(v.kills) * 1.0 / NULLIF(SUM(v.deaths), 0))::numeric, 2) AS kd,
+    ROUND((SUM(v.acs * v.rounds_played) * 1.0 / NULLIF(SUM(v.rounds_played), 0))::numeric, 1) AS acs,
     ROUND((SUM(v.adr * v.rounds_played) * 1.0 / NULLIF(SUM(v.rounds_played), 0))::numeric, 1) AS adr,
     ROUND((SUM(v.hs_pct * v.rounds_played) * 1.0 / NULLIF(SUM(v.rounds_played), 0))::numeric, 1) AS hs_pct,
     SUM(v.two_k) AS two_k, SUM(v.three_k) AS three_k, SUM(v.four_k) AS four_k, SUM(v.five_k) AS five_k,
@@ -96,10 +97,17 @@ FROM v_wild_player_match_stats v
 JOIN players p ON p.player_id = v.player_id
 GROUP BY p.player_id;
 
+-- Per-agent performance (not just play-count/win-rate) — rounds-weighted
+-- like v_player_role_breakdown below, same reasoning: a simple AVG(acs)
+-- across matches would over-weight short maps.
 CREATE OR REPLACE VIEW v_player_agent_pool AS
 SELECT
     player_id, agent, COUNT(*) AS n,
-    SUM(CASE WHEN match_result = 'WIN' THEN 1 ELSE 0 END) AS wins
+    SUM(CASE WHEN match_result = 'WIN' THEN 1 ELSE 0 END) AS wins,
+    ROUND((SUM(kills) * 1.0 / NULLIF(SUM(deaths), 0))::numeric, 2) AS kd,
+    ROUND((SUM(acs * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0))::numeric, 1) AS acs,
+    ROUND((SUM(adr * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0))::numeric, 1) AS adr,
+    ROUND((SUM(hs_pct * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0))::numeric, 1) AS hs_pct
 FROM v_wild_player_match_stats
 WHERE agent IS NOT NULL
 GROUP BY player_id, agent;

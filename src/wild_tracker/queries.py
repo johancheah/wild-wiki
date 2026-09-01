@@ -145,6 +145,7 @@ def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:
           COUNT(*) AS matches_played,
           SUM(kills) AS kills, SUM(deaths) AS deaths, SUM(assists) AS assists,
           ROUND(SUM(kills) * 1.0 / NULLIF(SUM(deaths), 0), 2) AS kd,
+          ROUND(SUM(acs * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS acs,
           ROUND(SUM(adr * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS adr,
           ROUND(SUM(hs_pct * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS hs_pct,
           SUM(two_k) AS two_k, SUM(three_k) AS three_k, SUM(four_k) AS four_k, SUM(five_k) AS five_k,
@@ -155,9 +156,16 @@ def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:
         FROM v_wild_player_match_stats WHERE player_id = ?
     """, (player_id,)).fetchone())
 
+    # Per-agent performance (not just play-count/win-rate) — rounds-weighted
+    # like the totals/role-breakdown queries above, same reasoning: a simple
+    # AVG(acs) across matches would over-weight short maps.
     agents = [dict(r) for r in conn.execute("""
         SELECT agent, COUNT(*) AS n,
-          SUM(CASE WHEN match_result='WIN' THEN 1 ELSE 0 END) AS wins
+          SUM(CASE WHEN match_result='WIN' THEN 1 ELSE 0 END) AS wins,
+          ROUND(SUM(kills) * 1.0 / NULLIF(SUM(deaths), 0), 2) AS kd,
+          ROUND(SUM(acs * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS acs,
+          ROUND(SUM(adr * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS adr,
+          ROUND(SUM(hs_pct * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS hs_pct
         FROM v_wild_player_match_stats WHERE player_id = ? AND agent IS NOT NULL
         GROUP BY agent ORDER BY n DESC
     """, (player_id,)).fetchall()]
@@ -186,7 +194,7 @@ def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:
 
     match_log = [dict(r) for r in conn.execute("""
         SELECT match_id, date, map, season_id, match_type, match_result, margin,
-          agent, role, acs, kills, deaths, assists, adr, hs_pct,
+          agent, role, acs, kills, deaths, assists, adr, hs_pct, kast_pct, fk, fd,
           two_k, three_k, four_k, five_k,
           (COALESCE(clutch_1v1, 0) + COALESCE(clutch_1v2, 0) + COALESCE(clutch_1v3, 0) + COALESCE(clutch_1v4, 0) + COALESCE(clutch_1v5, 0)) AS clutches,
           econ, match_source

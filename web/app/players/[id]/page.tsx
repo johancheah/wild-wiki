@@ -11,7 +11,7 @@ import type { NavPlayer } from "@/lib/PlayerHeaderContext";
 
 export const revalidate = 0;
 
-type AgentPool = { agent: string; n: number; wins: number };
+type AgentPool = { agent: string; n: number; wins: number; kd: number | null; acs: number | null; adr: number | null; hs_pct: number | null };
 type RoleBreakdown = { role: string; n: number; wins: number; kd: number | null; acs: number | null; adr: number | null };
 
 export default async function PlayerDetailPage({
@@ -75,10 +75,8 @@ export default async function PlayerDetailPage({
           <div className="value num">{player.matches_played}</div>
         </div>
         <div className="stat">
-          <div className="label">K / D / A</div>
-          <div className="value num" style={{ fontSize: 20 }}>
-            {player.kills}/{player.deaths}/{player.assists}
-          </div>
+          <div className="label">ACS</div>
+          <div className="value num">{player.acs !== null ? Math.round(player.acs) : "—"}</div>
         </div>
         <div className="stat">
           <div className="label">K/D</div>
@@ -138,6 +136,10 @@ export default async function PlayerDetailPage({
                 <th className="num-col">Played</th>
                 <th className="num-col">W</th>
                 <th className="num-col">Win %</th>
+                <th className="num-col">ACS</th>
+                <th className="num-col">ADR</th>
+                <th className="num-col">HS%</th>
+                <th className="num-col">K/D</th>
               </tr>
             </thead>
             <tbody>
@@ -149,6 +151,10 @@ export default async function PlayerDetailPage({
                   <td className="num-col num">{a.n}</td>
                   <td className="num-col num win">{a.wins}</td>
                   <td className="num-col num">{((100 * a.wins) / a.n).toFixed(0)}%</td>
+                  <td className="num-col num">{a.acs ?? "—"}</td>
+                  <td className="num-col num">{a.adr ?? "—"}</td>
+                  <td className="num-col num">{a.hs_pct !== null ? `${a.hs_pct}%` : "—"}</td>
+                  <td className="num-col num">{a.kd ?? "—"}</td>
                 </tr>
               ))}
             </tbody>

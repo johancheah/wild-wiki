@@ -29,8 +29,12 @@ const COLUMNS: Column[] = [
   { key: "a", label: "A", type: "num", numCol: true, value: (m) => m.assists },
   { key: "plusminus", label: "+/−", type: "num", numCol: true, value: (m) => m.kills - m.deaths },
   { key: "kd", label: "K/D", type: "num", numCol: true, value: (m) => (m.deaths ? m.kills / m.deaths : m.kills) },
+  { key: "kast_pct", label: "KAST", type: "num", numCol: true, value: (m) => m.kast_pct },
   { key: "adr", label: "ADR", type: "num", numCol: true, value: (m) => m.adr },
   { key: "hs_pct", label: "HS%", type: "num", numCol: true, value: (m) => m.hs_pct },
+  { key: "fk", label: "FK", type: "num", numCol: true, value: (m) => m.fk },
+  { key: "fd", label: "FD", type: "num", numCol: true, value: (m) => m.fd },
+  { key: "fkfd", label: "+/−", type: "num", numCol: true, value: (m) => (m.fk ?? 0) - (m.fd ?? 0) },
   {
     key: "multi_k",
     label: "Multi-K",
@@ -166,8 +170,14 @@ export function MatchLogTable({ log }: { log: MatchPlayerStats[] }) {
                   {m.kills - m.deaths > 0 ? `+${m.kills - m.deaths}` : m.kills - m.deaths}
                 </td>
                 <td className="num-col num">{(m.deaths ? m.kills / m.deaths : m.kills).toFixed(2)}</td>
+                <td className="num-col num">{m.kast_pct !== null ? `${Math.round(m.kast_pct)}%` : "—"}</td>
                 <td className="num-col num">{m.adr !== null ? m.adr.toFixed(1) : "—"}</td>
                 <td className="num-col num">{m.hs_pct !== null ? `${m.hs_pct.toFixed(1)}%` : "—"}</td>
+                <td className="num-col num">{m.fk ?? "—"}</td>
+                <td className="num-col num">{m.fd ?? "—"}</td>
+                <td className={`num-col num ${(m.fk ?? 0) - (m.fd ?? 0) > 0 ? "margin-pos" : (m.fk ?? 0) - (m.fd ?? 0) < 0 ? "margin-neg" : ""}`}>
+                  {(m.fk ?? 0) - (m.fd ?? 0) > 0 ? `+${(m.fk ?? 0) - (m.fd ?? 0)}` : (m.fk ?? 0) - (m.fd ?? 0)}
+                </td>
                 <td className="num-col num">
                   {(m.two_k ?? 0) + (m.three_k ?? 0) + (m.four_k ?? 0) + (m.five_k ?? 0)}
                 </td>

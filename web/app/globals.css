@@ -275,6 +275,7 @@ tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4
   display: inline-block; padding: 2px 8px; border-radius: 3px;
   font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
 }
+.pill.win, .pill.loss { display: inline-block; width: 50px; text-align: center; }
 .pill.win { background: var(--win-dim); color: var(--win); }
 .pill.loss { background: var(--loss-dim); color: var(--loss); }
 .pill.src-api { background: var(--surface-2); color: var(--accent); border: 1px solid var(--accent-dim); }
