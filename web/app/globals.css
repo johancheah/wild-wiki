@@ -617,6 +617,22 @@ tr.week-row td:first-child { color: var(--text-faint); }
 }
 .filters-row select:hover { border-color: var(--accent-dim); }
 
+/* Match Log "Expanded Stats" toggle — swaps the combined Multi-K/Clutch
+   columns for their full per-tier breakdown plus Plants/Defuses, widening
+   the table rather than reflowing it (.table-scroll already handles the
+   horizontal overflow). Caret rotates open the same way .season-toggle
+   does on the Schedule page, for the same "this expands" affordance. */
+.expand-toggle-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface-2); color: var(--text-dim); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 12px; font-size: 13.5px; font-weight: 600;
+  font-family: inherit; cursor: pointer;
+}
+.expand-toggle-btn:hover { border-color: var(--accent-dim); }
+.expand-toggle-btn[aria-pressed="true"] { color: var(--text); border-color: var(--accent-dim); }
+.expand-toggle-caret { display: inline-block; color: var(--accent); transition: transform 0.15s ease; }
+.expand-toggle-btn[aria-pressed="true"] .expand-toggle-caret { transform: rotate(90deg); }
+
 /* Team Comps: composition row as 4 fixed-width role slots (Controller/
    Initiator/Sentinel/Duelist) rather than per-icon margins — fixed slot
    widths are what keep every row's leftmost/rightmost icon aligned to the

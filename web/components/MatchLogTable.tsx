@@ -13,6 +13,12 @@ type Column = {
   label: string;
   type: "string" | "num" | "date";
   numCol?: boolean;
+  // Which Expanded Stats state this column belongs to — omitted means
+  // always shown. "collapse" columns (the combined Multi-K/Clutch totals)
+  // swap out for their "expand" breakdown (2K-5K, 1v1-1v5, Plants,
+  // Defuses) when the toggle is on, widening the table rather than
+  // reflowing it.
+  group?: "collapse" | "expand";
   value: (m: MatchPlayerStats) => string | number | null;
 };
 
@@ -40,16 +46,29 @@ const COLUMNS: Column[] = [
     label: "Multi-K",
     type: "num",
     numCol: true,
+    group: "collapse",
     value: (m) => (m.two_k ?? 0) + (m.three_k ?? 0) + (m.four_k ?? 0) + (m.five_k ?? 0),
   },
+  { key: "two_k", label: "2K", type: "num", numCol: true, group: "expand", value: (m) => m.two_k },
+  { key: "three_k", label: "3K", type: "num", numCol: true, group: "expand", value: (m) => m.three_k },
+  { key: "four_k", label: "4K", type: "num", numCol: true, group: "expand", value: (m) => m.four_k },
+  { key: "five_k", label: "5K", type: "num", numCol: true, group: "expand", value: (m) => m.five_k },
   {
     key: "clutch",
     label: "Clutch",
     type: "num",
     numCol: true,
+    group: "collapse",
     value: (m) =>
       (m.clutch_1v1 ?? 0) + (m.clutch_1v2 ?? 0) + (m.clutch_1v3 ?? 0) + (m.clutch_1v4 ?? 0) + (m.clutch_1v5 ?? 0),
   },
+  { key: "clutch_1v1", label: "1v1", type: "num", numCol: true, group: "expand", value: (m) => m.clutch_1v1 },
+  { key: "clutch_1v2", label: "1v2", type: "num", numCol: true, group: "expand", value: (m) => m.clutch_1v2 },
+  { key: "clutch_1v3", label: "1v3", type: "num", numCol: true, group: "expand", value: (m) => m.clutch_1v3 },
+  { key: "clutch_1v4", label: "1v4", type: "num", numCol: true, group: "expand", value: (m) => m.clutch_1v4 },
+  { key: "clutch_1v5", label: "1v5", type: "num", numCol: true, group: "expand", value: (m) => m.clutch_1v5 },
+  { key: "plants", label: "Plants", type: "num", numCol: true, group: "expand", value: (m) => m.plants },
+  { key: "defuses", label: "Defuses", type: "num", numCol: true, group: "expand", value: (m) => m.defuses },
   { key: "econ", label: "ECON", type: "num", numCol: true, value: (m) => m.econ },
 ];
 
@@ -69,6 +88,12 @@ export function MatchLogTable({ log }: { log: MatchPlayerStats[] }) {
     map: "",
   });
   const [sort, setSort] = useState<{ col: string; dir: 1 | -1 } | null>({ col: "date", dir: -1 });
+  const [expanded, setExpanded] = useState(false);
+
+  const visibleColumns = useMemo(
+    () => COLUMNS.filter((c) => !c.group || (expanded ? c.group === "expand" : c.group === "collapse")),
+    [expanded]
+  );
 
   // Week-grouping stripe: rows sharing the same match week (same season,
   // Eastern-local calendar night, and match_type — see lib/schedule.ts's
@@ -148,13 +173,21 @@ export function MatchLogTable({ log }: { log: MatchPlayerStats[] }) {
             ))}
           </select>
         ))}
+        <button
+          className="expand-toggle-btn"
+          type="button"
+          aria-pressed={expanded}
+          onClick={() => setExpanded((e) => !e)}
+        >
+          <span className="expand-toggle-caret">▶</span> Expanded Stats
+        </button>
       </div>
 
       <div className="table-scroll">
         <table className="sortable-table">
           <thead>
             <tr>
-              {COLUMNS.map((c) => (
+              {visibleColumns.map((c) => (
                 <th
                   key={c.key}
                   className={`${c.numCol ? "num-col" : ""} ${
@@ -202,16 +235,34 @@ export function MatchLogTable({ log }: { log: MatchPlayerStats[] }) {
                 <td className={`num-col num ${(m.fk ?? 0) - (m.fd ?? 0) > 0 ? "margin-pos" : (m.fk ?? 0) - (m.fd ?? 0) < 0 ? "margin-neg" : ""}`}>
                   {(m.fk ?? 0) - (m.fd ?? 0) > 0 ? `+${(m.fk ?? 0) - (m.fd ?? 0)}` : (m.fk ?? 0) - (m.fd ?? 0)}
                 </td>
-                <td className="num-col num">
-                  {(m.two_k ?? 0) + (m.three_k ?? 0) + (m.four_k ?? 0) + (m.five_k ?? 0)}
-                </td>
-                <td className="num-col num">
-                  {(m.clutch_1v1 ?? 0) +
-                    (m.clutch_1v2 ?? 0) +
-                    (m.clutch_1v3 ?? 0) +
-                    (m.clutch_1v4 ?? 0) +
-                    (m.clutch_1v5 ?? 0)}
-                </td>
+                {expanded ? (
+                  <>
+                    <td className="num-col num">{m.two_k ?? 0}</td>
+                    <td className="num-col num">{m.three_k ?? 0}</td>
+                    <td className="num-col num">{m.four_k ?? 0}</td>
+                    <td className="num-col num">{m.five_k ?? 0}</td>
+                    <td className="num-col num">{m.clutch_1v1 ?? 0}</td>
+                    <td className="num-col num">{m.clutch_1v2 ?? 0}</td>
+                    <td className="num-col num">{m.clutch_1v3 ?? 0}</td>
+                    <td className="num-col num">{m.clutch_1v4 ?? 0}</td>
+                    <td className="num-col num">{m.clutch_1v5 ?? 0}</td>
+                    <td className="num-col num">{m.plants ?? 0}</td>
+                    <td className="num-col num">{m.defuses ?? 0}</td>
+                  </>
+                ) : (
+                  <>
+                    <td className="num-col num">
+                      {(m.two_k ?? 0) + (m.three_k ?? 0) + (m.four_k ?? 0) + (m.five_k ?? 0)}
+                    </td>
+                    <td className="num-col num">
+                      {(m.clutch_1v1 ?? 0) +
+                        (m.clutch_1v2 ?? 0) +
+                        (m.clutch_1v3 ?? 0) +
+                        (m.clutch_1v4 ?? 0) +
+                        (m.clutch_1v5 ?? 0)}
+                    </td>
+                  </>
+                )}
                 <td className="num-col num">{m.econ !== null ? m.econ.toFixed(0) : "—"}</td>
               </tr>
             ))}

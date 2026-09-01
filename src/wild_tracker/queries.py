@@ -199,8 +199,9 @@ def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:
         SELECT match_id, date, map, season_id, match_type, match_result, margin,
           agent, role, acs, kills, deaths, assists, adr, hs_pct, kast_pct, fk, fd,
           two_k, three_k, four_k, five_k,
+          clutch_1v1, clutch_1v2, clutch_1v3, clutch_1v4, clutch_1v5,
           (COALESCE(clutch_1v1, 0) + COALESCE(clutch_1v2, 0) + COALESCE(clutch_1v3, 0) + COALESCE(clutch_1v4, 0) + COALESCE(clutch_1v5, 0)) AS clutches,
-          econ, match_source
+          plants, defuses, econ, match_source
         FROM v_wild_player_match_stats WHERE player_id = ?
         ORDER BY date DESC
     """, (player_id,)).fetchall()]
