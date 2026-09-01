@@ -294,12 +294,21 @@ tbody td.name { color: var(--text); font-weight: 600; }
 tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4px; }
 
 /* Freezes the first column (Agent Pool / Role Breakdown) while the rest of
-   a wide table scrolls horizontally under it — needs an opaque background
-   since sticky cells sit above the columns scrolling past underneath. */
+   a wide table scrolls horizontally under it — a frosted (translucent +
+   blurred), not fully solid, background so the scrolling columns are
+   still faintly visible sliding underneath rather than hard-clipped. */
 .sticky-first-col th:first-child, .sticky-first-col td:first-child {
-  position: sticky; left: 0; z-index: 1; background: var(--bg);
+  position: sticky; left: 0; z-index: 1;
+  background: rgba(12, 15, 19, 0.72);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
-.sticky-first-col thead th:first-child { z-index: 2; background: var(--surface-2); }
+.sticky-first-col thead th:first-child {
+  z-index: 2;
+  background: rgba(24, 29, 37, 0.82);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
 
 .pill {
   display: inline-block; padding: 2px 8px; border-radius: 3px;
