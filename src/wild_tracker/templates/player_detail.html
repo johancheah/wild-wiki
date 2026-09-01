@@ -4,14 +4,17 @@
 {% block content %}
 <a class="back-link" href="/players">&larr; All Players</a>
 <h1 class="player-header">
-  {{ ui.avatar(player.display_name, player.headshot_filename, "lg") }}{{ player.display_name }}
   {% if nav_roster %}
   <span class="player-switcher player-switcher-header">
     <button class="player-switcher-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Switch player">
+      {{ ui.avatar(player.display_name, player.headshot_filename, "lg") }}
+      <span class="player-switcher-name">{{ player.display_name }}</span>
       <span class="player-switcher-caret">&#9662;</span>
     </button>
     {{ ui.player_switcher_dropdown(player.player_id, nav_roster) }}
   </span>
+  {% else %}
+  {{ ui.avatar(player.display_name, player.headshot_filename, "lg") }}{{ player.display_name }}
   {% endif %}
 </h1>
 

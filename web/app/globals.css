@@ -193,21 +193,36 @@ nav a.active { color: var(--accent); background: var(--surface-2); }
    element. That's not a timing/animation issue, it's just wrong. */
 .nav-player.visible { max-width: 320px; opacity: 1; margin-left: 12px; overflow: visible; }
 
-/* Page-header instance (player detail page): always visible next to the
-   big player name, so it's reachable without scrolling — just a caret
-   button, since the avatar/name are already shown right there. */
-.player-switcher-header { margin-left: 10px; vertical-align: middle; }
+/* Page-header instance (player detail page): the whole avatar+name is the
+   click target (not just a caret off to the side), styled to read as the
+   page's own h1 rather than a nav pill — bumped up to match font-size. */
+.player-switcher-header { vertical-align: middle; }
 .player-switcher-header .player-switcher-btn {
-  padding: 8px; font-size: 16px; background: none; border: none;
+  padding: 4px 14px 4px 4px;
+  font-size: 20px;
+  font-weight: 800;
+  gap: 12px;
 }
-.player-switcher-header .player-switcher-btn:hover { background: var(--surface-2); }
-.player-switcher-header .player-switcher-caret { font-size: 13px; opacity: 0.4; }
-.player-switcher-header .player-switcher-btn:hover .player-switcher-caret { opacity: 0.8; }
+.player-switcher-header .player-switcher-caret { font-size: 14px; opacity: 0.45; }
+.player-switcher-header .player-switcher-btn:hover .player-switcher-caret { opacity: 0.85; }
 
 @media (max-width: 720px) {
   .nav-player.visible { max-width: 60px; }
-  .player-switcher-name { display: none; }
+  .nav-player .player-switcher-name { display: none; }
   .nav-player .player-switcher-btn { padding: 6px; }
+
+  /* Anchoring the panel under the button (position:absolute; left:0) puts
+     it off-screen or awkwardly clipped depending on where the button
+     happens to sit — centering it as a fixed overlay reads better on a
+     narrow viewport than trying to keep it button-relative. */
+  .player-switcher-dropdown {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100vw - 32px);
+    max-width: 340px;
+  }
 }
 
 .wrap {

@@ -89,9 +89,14 @@ export default async function PlayerDetailPage({
         &larr; All Players
       </Link>
       <h1 className="player-header">
-        <Avatar displayName={player.display_name} headshotFilename={player.headshot_filename} size="lg" />
-        {player.display_name}
-        {roster.length > 0 && <PlayerSwitcher currentPlayer={navPlayer} roster={roster} variant="header" />}
+        {roster.length > 0 ? (
+          <PlayerSwitcher currentPlayer={navPlayer} roster={roster} variant="header" />
+        ) : (
+          <>
+            <Avatar displayName={player.display_name} headshotFilename={player.headshot_filename} size="lg" />
+            {player.display_name}
+          </>
+        )}
       </h1>
 
       <Tabs

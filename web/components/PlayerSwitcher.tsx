@@ -7,10 +7,11 @@ import type { NavPlayer } from "@/lib/PlayerHeaderContext";
 
 // Player-switcher dropdown: a button that opens a list of the rest of the
 // WILD roster to jump to. Used in two places — the nav bar (variant="nav",
-// avatar+name+caret, only reachable once scrolled past the page's own big
-// header) and the page header itself (variant="header", just a caret next
-// to the name that's already big and visible there) — sharing this one
-// implementation so both read as the same component and behave the same.
+// compact avatar+name+caret, only reachable once scrolled past the page's
+// own big header) and the page header itself (variant="header", the full
+// big avatar+name+caret, styled to read as the page's own h1) — sharing
+// this one implementation so both read as the same component and behave
+// the same, with the whole name (not just the caret) as the click target.
 export function PlayerSwitcher({
   currentPlayer,
   roster,
@@ -44,12 +45,12 @@ export function PlayerSwitcher({
           setOpen((o) => !o);
         }}
       >
-        {variant === "nav" && (
-          <>
-            <Avatar displayName={currentPlayer.display_name} headshotFilename={currentPlayer.headshot_filename} />
-            <span className="player-switcher-name">{currentPlayer.display_name}</span>
-          </>
-        )}
+        <Avatar
+          displayName={currentPlayer.display_name}
+          headshotFilename={currentPlayer.headshot_filename}
+          size={variant === "header" ? "lg" : undefined}
+        />
+        <span className="player-switcher-name">{currentPlayer.display_name}</span>
         <span className="player-switcher-caret">▾</span>
       </button>
       <div className={`player-switcher-dropdown ${open ? "open" : ""}`}>
