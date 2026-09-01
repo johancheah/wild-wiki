@@ -7,6 +7,8 @@ import { RoleCell } from "@/components/RoleCell";
 import { StatChip } from "@/components/StatChip";
 import { MatchLogTable } from "@/components/MatchLogTable";
 import { PlayerHeaderSync } from "@/components/PlayerHeaderSync";
+import { PlayerSwitcher } from "@/components/PlayerSwitcher";
+import { Tabs } from "@/components/Tabs";
 import { fetchPlayerWeaponTotals } from "@/lib/weapons";
 import { weaponIcon } from "@/lib/assets";
 import type { PlayerCareer, MatchPlayerStats } from "@/lib/types";
@@ -71,220 +73,238 @@ export default async function PlayerDetailPage({
       <h1 className="player-header">
         <Avatar displayName={player.display_name} headshotFilename={player.headshot_filename} size="lg" />
         {player.display_name}
+        {roster.length > 0 && <PlayerSwitcher currentPlayer={navPlayer} roster={roster} variant="header" />}
       </h1>
 
-      <div className="stat-row">
-        <div className="stat">
-          <div className="label">Matches</div>
-          <div className="value num">{player.matches_played}</div>
-        </div>
-        <div className="stat">
-          <div className="label">ACS</div>
-          <div className="value num">{player.acs !== null ? Math.round(player.acs) : "—"}</div>
-        </div>
-        <div className="stat">
-          <div className="label">K/D</div>
-          <div className="value num">{player.kd ?? "—"}</div>
-        </div>
-        <div className="stat">
-          <div className="label">ADR</div>
-          <div className="value num">{player.adr !== null ? Math.round(player.adr) : "—"}</div>
-        </div>
-        <div className="stat">
-          <div className="label">HS%</div>
-          <div className="value num">{player.hs_pct ?? "—"}%</div>
-        </div>
-        <div className="stat">
-          <div className="label">ECON</div>
-          <div className="value num">{player.econ ?? "—"}</div>
-        </div>
-      </div>
+      <Tabs
+        tabs={[
+          {
+            id: "overview",
+            label: "Overview",
+            content: (
+              <>
+                <div className="stat-row">
+                  <div className="stat">
+                    <div className="label">Matches</div>
+                    <div className="value num">{player.matches_played}</div>
+                  </div>
+                  <div className="stat">
+                    <div className="label">ACS</div>
+                    <div className="value num">{player.acs !== null ? Math.round(player.acs) : "—"}</div>
+                  </div>
+                  <div className="stat">
+                    <div className="label">K/D</div>
+                    <div className="value num">{player.kd ?? "—"}</div>
+                  </div>
+                  <div className="stat">
+                    <div className="label">ADR</div>
+                    <div className="value num">{player.adr !== null ? Math.round(player.adr) : "—"}</div>
+                  </div>
+                  <div className="stat">
+                    <div className="label">HS%</div>
+                    <div className="value num">{player.hs_pct ?? "—"}%</div>
+                  </div>
+                  <div className="stat">
+                    <div className="label">ECON</div>
+                    <div className="value num">{player.econ ?? "—"}</div>
+                  </div>
+                </div>
 
-      <section>
-        <h2>Multi-Kills &amp; Clutches (Career)</h2>
-        <div className="table-scroll">
-          <table className="performance-table">
-            <thead>
-              <tr>
-                <th className="num-col">2K</th>
-                <th className="num-col">3K</th>
-                <th className="num-col">4K</th>
-                <th className="num-col">5K</th>
-                <th className="num-col">Total</th>
-                <th className="col-gap"></th>
-                <th className="num-col">1v1</th>
-                <th className="num-col">1v2</th>
-                <th className="num-col">1v3</th>
-                <th className="num-col">1v4</th>
-                <th className="num-col">1v5</th>
-                <th className="num-col">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="num-col">
-                  <StatChip value={player.two_k} blankZero square level={1} />
-                </td>
-                <td className="num-col">
-                  <StatChip value={player.three_k} blankZero square level={2} />
-                </td>
-                <td className="num-col">
-                  <StatChip value={player.four_k} blankZero square level={3} />
-                </td>
-                <td className="num-col">
-                  <StatChip value={player.five_k} blankZero square level={4} />
-                </td>
-                <td className="num-col">
-                  <StatChip
-                    value={(player.two_k ?? 0) + (player.three_k ?? 0) + (player.four_k ?? 0) + (player.five_k ?? 0)}
-                    blankZero
-                    square
-                  />
-                </td>
-                <td className="col-gap"></td>
-                <td className="num-col">
-                  <StatChip value={player.clutch_1v1} blankZero square level={1} />
-                </td>
-                <td className="num-col">
-                  <StatChip value={player.clutch_1v2} blankZero square level={2} />
-                </td>
-                <td className="num-col">
-                  <StatChip value={player.clutch_1v3} blankZero square level={3} />
-                </td>
-                <td className="num-col">
-                  <StatChip value={player.clutch_1v4} blankZero square level={4} />
-                </td>
-                <td className="num-col">
-                  <StatChip value={player.clutch_1v5} blankZero square level={5} />
-                </td>
-                <td className="num-col">
-                  <StatChip
-                    value={
-                      (player.clutch_1v1 ?? 0) +
-                      (player.clutch_1v2 ?? 0) +
-                      (player.clutch_1v3 ?? 0) +
-                      (player.clutch_1v4 ?? 0) +
-                      (player.clutch_1v5 ?? 0)
-                    }
-                    blankZero
-                    square
-                  />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
+                <section>
+                  <h2>Multi-Kills &amp; Clutches (Career)</h2>
+                  <div className="table-scroll">
+                    <table className="performance-table">
+                      <thead>
+                        <tr>
+                          <th className="num-col">2K</th>
+                          <th className="num-col">3K</th>
+                          <th className="num-col">4K</th>
+                          <th className="num-col">5K</th>
+                          <th className="num-col">Total</th>
+                          <th className="col-gap"></th>
+                          <th className="num-col">1v1</th>
+                          <th className="num-col">1v2</th>
+                          <th className="num-col">1v3</th>
+                          <th className="num-col">1v4</th>
+                          <th className="num-col">1v5</th>
+                          <th className="num-col">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td className="num-col">
+                            <StatChip value={player.two_k} blankZero square level={1} />
+                          </td>
+                          <td className="num-col">
+                            <StatChip value={player.three_k} blankZero square level={2} />
+                          </td>
+                          <td className="num-col">
+                            <StatChip value={player.four_k} blankZero square level={3} />
+                          </td>
+                          <td className="num-col">
+                            <StatChip value={player.five_k} blankZero square level={4} />
+                          </td>
+                          <td className="num-col">
+                            <StatChip
+                              value={(player.two_k ?? 0) + (player.three_k ?? 0) + (player.four_k ?? 0) + (player.five_k ?? 0)}
+                              blankZero
+                              square
+                            />
+                          </td>
+                          <td className="col-gap"></td>
+                          <td className="num-col">
+                            <StatChip value={player.clutch_1v1} blankZero square level={1} />
+                          </td>
+                          <td className="num-col">
+                            <StatChip value={player.clutch_1v2} blankZero square level={2} />
+                          </td>
+                          <td className="num-col">
+                            <StatChip value={player.clutch_1v3} blankZero square level={3} />
+                          </td>
+                          <td className="num-col">
+                            <StatChip value={player.clutch_1v4} blankZero square level={4} />
+                          </td>
+                          <td className="num-col">
+                            <StatChip value={player.clutch_1v5} blankZero square level={5} />
+                          </td>
+                          <td className="num-col">
+                            <StatChip
+                              value={
+                                (player.clutch_1v1 ?? 0) +
+                                (player.clutch_1v2 ?? 0) +
+                                (player.clutch_1v3 ?? 0) +
+                                (player.clutch_1v4 ?? 0) +
+                                (player.clutch_1v5 ?? 0)
+                              }
+                              blankZero
+                              square
+                            />
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
 
-      <section>
-        <h2>Agent Pool</h2>
-        <div className="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Agent</th>
-                <th className="num-col">Played</th>
-                <th className="num-col">W</th>
-                <th className="num-col">Win %</th>
-                <th className="num-col">ACS</th>
-                <th className="num-col">ADR</th>
-                <th className="num-col">K/D</th>
-                <th className="num-col">FK:FD</th>
-              </tr>
-            </thead>
-            <tbody>
-              {agents.map((a) => (
-                <tr key={a.agent}>
-                  <td className="name">
-                    <AgentCell agent={a.agent} />
-                  </td>
-                  <td className="num-col num">{a.n}</td>
-                  <td className="num-col num win">{a.wins}</td>
-                  <td className="num-col num">{((100 * a.wins) / a.n).toFixed(0)}%</td>
-                  <td className="num-col num">{a.acs !== null ? Math.round(a.acs) : "—"}</td>
-                  <td className="num-col num">{a.adr !== null ? Math.round(a.adr) : "—"}</td>
-                  <td className="num-col num">{a.kd ?? "—"}</td>
-                  <td className="num-col num">{a.fkfd ?? "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+                <section>
+                  <h2>Agent Pool</h2>
+                  <div className="table-scroll">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Agent</th>
+                          <th className="num-col">Played</th>
+                          <th className="num-col">W</th>
+                          <th className="num-col">Win %</th>
+                          <th className="num-col">ACS</th>
+                          <th className="num-col">ADR</th>
+                          <th className="num-col">K/D</th>
+                          <th className="num-col">FK:FD</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {agents.map((a) => (
+                          <tr key={a.agent}>
+                            <td className="name">
+                              <AgentCell agent={a.agent} />
+                            </td>
+                            <td className="num-col num">{a.n}</td>
+                            <td className="num-col num win">{a.wins}</td>
+                            <td className="num-col num">{((100 * a.wins) / a.n).toFixed(0)}%</td>
+                            <td className="num-col num">{a.acs !== null ? Math.round(a.acs) : "—"}</td>
+                            <td className="num-col num">{a.adr !== null ? Math.round(a.adr) : "—"}</td>
+                            <td className="num-col num">{a.kd ?? "—"}</td>
+                            <td className="num-col num">{a.fkfd ?? "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
 
-      <section>
-        <h2>Role Breakdown</h2>
-        <div className="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Role</th>
-                <th className="num-col">Maps</th>
-                <th className="num-col">% of Maps</th>
-                <th className="num-col">Win %</th>
-                <th className="num-col">K/D</th>
-                <th className="num-col">ACS</th>
-                <th className="num-col">ADR</th>
-                <th className="num-col">FK:FD</th>
-              </tr>
-            </thead>
-            <tbody>
-              {roles.map((r) => (
-                <tr key={r.role}>
-                  <td className="name">
-                    <RoleCell role={r.role} />
-                  </td>
-                  <td className="num-col num">{r.n}</td>
-                  <td className="num-col num">{totalWithRole ? ((100 * r.n) / totalWithRole).toFixed(1) : "0.0"}%</td>
-                  <td className="num-col num">{((100 * r.wins) / r.n).toFixed(0)}%</td>
-                  <td className="num-col num">{r.kd ?? "—"}</td>
-                  <td className="num-col num">{r.acs !== null ? Math.round(r.acs) : "—"}</td>
-                  <td className="num-col num">{r.adr !== null ? Math.round(r.adr) : "—"}</td>
-                  <td className="num-col num">{r.fkfd ?? "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+                <section>
+                  <h2>Role Breakdown</h2>
+                  <div className="table-scroll">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Role</th>
+                          <th className="num-col">Maps</th>
+                          <th className="num-col">% of Maps</th>
+                          <th className="num-col">Win %</th>
+                          <th className="num-col">K/D</th>
+                          <th className="num-col">ACS</th>
+                          <th className="num-col">ADR</th>
+                          <th className="num-col">FK:FD</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {roles.map((r) => (
+                          <tr key={r.role}>
+                            <td className="name">
+                              <RoleCell role={r.role} />
+                            </td>
+                            <td className="num-col num">{r.n}</td>
+                            <td className="num-col num">{totalWithRole ? ((100 * r.n) / totalWithRole).toFixed(1) : "0.0"}%</td>
+                            <td className="num-col num">{((100 * r.wins) / r.n).toFixed(0)}%</td>
+                            <td className="num-col num">{r.kd ?? "—"}</td>
+                            <td className="num-col num">{r.acs !== null ? Math.round(r.acs) : "—"}</td>
+                            <td className="num-col num">{r.adr !== null ? Math.round(r.adr) : "—"}</td>
+                            <td className="num-col num">{r.fkfd ?? "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
 
-      <section>
-        <h2>Weapon Stats</h2>
-        <div className="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Weapon</th>
-                <th className="num-col">Kills</th>
-              </tr>
-            </thead>
-            <tbody>
-              {weapons.map((w) => {
-                const icon = weaponIcon(w.weapon);
-                return (
-                  <tr key={w.weapon}>
-                    <td className="name">
-                      <span className="weapon-cell">
-                        {icon && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img className="weapon-icon" src={icon} alt={w.weapon} />
-                        )}
-                        {w.weapon}
-                      </span>
-                    </td>
-                    <td className="num-col num">{w.kills}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section>
-        <h2>Match Log</h2>
-        <MatchLogTable log={log} />
-      </section>
+                <section>
+                  <h2>Weapon Stats</h2>
+                  <div className="table-scroll">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Weapon</th>
+                          <th className="num-col">Kills</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {weapons.map((w) => {
+                          const icon = weaponIcon(w.weapon);
+                          return (
+                            <tr key={w.weapon}>
+                              <td className="name">
+                                <span className="weapon-cell">
+                                  {icon && (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img className="weapon-icon" src={icon} alt={w.weapon} />
+                                  )}
+                                  {w.weapon}
+                                </span>
+                              </td>
+                              <td className="num-col num">{w.kills}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              </>
+            ),
+          },
+          {
+            id: "matchlog",
+            label: "Match Log",
+            content: (
+              <section>
+                <h2>Match Log</h2>
+                <MatchLogTable log={log} />
+              </section>
+            ),
+          },
+        ]}
+      />
     </>
   );
 }

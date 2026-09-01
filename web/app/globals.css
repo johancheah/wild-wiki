@@ -118,30 +118,13 @@ nav a.active { color: var(--accent); background: var(--surface-2); }
   .mobile-menu.open { display: flex; }
 }
 
-/* Player detail page: compact avatar+name that fades/slides into the nav
-   bar next to the logo once the page's own big player header scrolls out
-   of view (Nav.tsx toggles .visible on scroll), and doubles as a dropdown
-   for jumping to another player. Collapsed to zero width by default
-   (rather than display:none) so the max-width transition has something to
-   animate from. */
-.nav-player {
-  position: relative;
-  display: flex;
-  align-items: center;
-  max-width: 0;
-  opacity: 0;
-  overflow: hidden;
-  margin-left: 0;
-  transition: max-width 0.32s ease, opacity 0.24s ease, margin-left 0.32s ease;
-}
-/* overflow flips to visible only once shown — while collapsed, hidden is
-   what makes the max-width transition actually clip the content; but if
-   it stayed hidden once open, it would also clip the dropdown panel
-   below the button, which is absolutely positioned relative to this
-   element. That's not a timing/animation issue, it's just wrong. */
-.nav-player.visible { max-width: 320px; opacity: 1; margin-left: 12px; overflow: visible; }
-
-.nav-player-btn {
+/* Player-switcher dropdown: a button (avatar+name+caret in the nav bar, or
+   just a caret next to the page's own big header) that opens a list of the
+   rest of the WILD roster to jump to. Used in two places — see
+   .nav-player and .player-switcher-header below — sharing this same
+   button/dropdown/link styling so they read as one component. */
+.player-switcher { position: relative; display: inline-flex; align-items: center; }
+.player-switcher-btn {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -155,11 +138,11 @@ nav a.active { color: var(--accent); background: var(--surface-2); }
   white-space: nowrap;
   cursor: pointer;
 }
-.nav-player-btn:hover { background: var(--surface-2); }
-.nav-player-btn .avatar, .nav-player-btn .avatar-fallback { flex-shrink: 0; }
-.nav-player-caret { color: var(--text-faint); font-size: 11px; }
+.player-switcher-btn:hover { background: var(--surface-2); }
+.player-switcher-btn .avatar, .player-switcher-btn .avatar-fallback { flex-shrink: 0; }
+.player-switcher-caret { color: var(--text-faint); font-size: 11px; }
 
-.nav-player-dropdown {
+.player-switcher-dropdown {
   display: none;
   flex-direction: column;
   gap: 2px;
@@ -174,9 +157,10 @@ nav a.active { color: var(--accent); background: var(--surface-2); }
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  z-index: 20;
 }
-.nav-player-dropdown.open { display: flex; }
-.nav-player-dropdown a {
+.player-switcher-dropdown.open { display: flex; }
+.player-switcher-dropdown a {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -187,13 +171,41 @@ nav a.active { color: var(--accent); background: var(--surface-2); }
   color: var(--text-dim);
   white-space: nowrap;
 }
-.nav-player-dropdown a:hover { color: var(--text); background: var(--surface-2); }
-.nav-player-dropdown a.active { color: var(--accent); background: var(--surface-2); }
+.player-switcher-dropdown a:hover { color: var(--text); background: var(--surface-2); }
+.player-switcher-dropdown a.active { color: var(--accent); background: var(--surface-2); }
+
+/* Nav-bar instance: compact avatar+name that fades/slides into the pill
+   next to the logo once the page's own big player header scrolls out of
+   view (Nav.tsx toggles .visible on scroll). Collapsed to zero width by
+   default (rather than display:none) so the max-width transition has
+   something to animate from. */
+.nav-player {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  margin-left: 0;
+  transition: max-width 0.32s ease, opacity 0.24s ease, margin-left 0.32s ease;
+}
+/* overflow flips to visible only once shown — while collapsed, hidden is
+   what makes the max-width transition actually clip the content; but if
+   it stayed hidden once open, it would also clip the dropdown panel
+   below the button, which is absolutely positioned relative to this
+   element. That's not a timing/animation issue, it's just wrong. */
+.nav-player.visible { max-width: 320px; opacity: 1; margin-left: 12px; overflow: visible; }
+
+/* Page-header instance (player detail page): always visible next to the
+   big player name, so it's reachable without scrolling — just a caret
+   button, since the avatar/name are already shown right there. */
+.player-switcher-header { margin-left: 10px; vertical-align: middle; }
+.player-switcher-header .player-switcher-btn {
+  padding: 8px; font-size: 16px; background: var(--surface-2); border: 1px solid var(--border);
+}
+.player-switcher-header .player-switcher-caret { font-size: 13px; }
 
 @media (max-width: 720px) {
   .nav-player.visible { max-width: 60px; }
-  .nav-player-name { display: none; }
-  .nav-player-btn { padding: 6px; }
+  .player-switcher-name { display: none; }
+  .nav-player .player-switcher-btn { padding: 6px; }
 }
 
 .wrap {

@@ -14,18 +14,14 @@
       <a class="brand" href="/"><img class="brand-logo" src="/static/logo.png" alt="WILD Gaming"></a>
       {% if nav_player %}
       <div class="nav-player" id="nav-player">
-        <button class="nav-player-btn" id="nav-player-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="nav-player-dropdown">
-          {{ ui.avatar(nav_player.display_name, nav_player.headshot_filename) }}
-          <span class="nav-player-name">{{ nav_player.display_name }}</span>
-          <span class="nav-player-caret">&#9662;</span>
-        </button>
-        <div class="nav-player-dropdown" id="nav-player-dropdown">
-          {% for p in nav_roster %}
-          <a href="/players/{{ p.player_id }}" class="{{ 'active' if p.player_id == nav_player.player_id }}">
-            {{ ui.avatar(p.display_name, p.headshot_filename) }}{{ p.display_name }}
-          </a>
-          {% endfor %}
-        </div>
+        <span class="player-switcher">
+          <button class="player-switcher-btn" type="button" aria-haspopup="true" aria-expanded="false">
+            {{ ui.avatar(nav_player.display_name, nav_player.headshot_filename) }}
+            <span class="player-switcher-name">{{ nav_player.display_name }}</span>
+            <span class="player-switcher-caret">&#9662;</span>
+          </button>
+          {{ ui.player_switcher_dropdown(nav_player.player_id, nav_roster) }}
+        </span>
       </div>
       {% endif %}
       <nav class="desktop-nav">
@@ -64,7 +60,7 @@
 
     // Player detail page only: the compact avatar+name in the nav bar
     // fades/slides in once the page's own big player header has scrolled
-    // past, and doubles as a dropdown to jump to another player.
+    // past.
     (function () {
       var navPlayer = document.getElementById("nav-player");
       if (!navPlayer) return;
@@ -74,18 +70,36 @@
       }
       window.addEventListener("scroll", onScroll, { passive: true });
       onScroll();
+    })();
 
-      var btn = document.getElementById("nav-player-btn");
-      var dropdown = document.getElementById("nav-player-dropdown");
-      btn.addEventListener("click", function (e) {
-        e.stopPropagation();
-        var open = dropdown.classList.toggle("open");
-        btn.setAttribute("aria-expanded", open ? "true" : "false");
+    // Generic player-switcher dropdown: every .player-switcher on the page
+    // (the nav-bar one, and the page-header one on the player detail page
+    // itself) gets independent open/close, closing any other open one
+    // first so only one dropdown is ever open at a time.
+    (function () {
+      var switchers = document.querySelectorAll(".player-switcher");
+      if (!switchers.length) return;
+
+      function closeAll() {
+        document.querySelectorAll(".player-switcher-dropdown.open").forEach(function (d) { d.classList.remove("open"); });
+        document.querySelectorAll('.player-switcher-btn[aria-expanded="true"]').forEach(function (b) { b.setAttribute("aria-expanded", "false"); });
+      }
+
+      switchers.forEach(function (switcher) {
+        var btn = switcher.querySelector(".player-switcher-btn");
+        var dropdown = switcher.querySelector(".player-switcher-dropdown");
+        if (!btn || !dropdown) return;
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var willOpen = !dropdown.classList.contains("open");
+          closeAll();
+          if (willOpen) {
+            dropdown.classList.add("open");
+            btn.setAttribute("aria-expanded", "true");
+          }
+        });
       });
-      document.addEventListener("click", function () {
-        dropdown.classList.remove("open");
-        btn.setAttribute("aria-expanded", "false");
-      });
+      document.addEventListener("click", closeAll);
     })();
 
     // Generic tab-toggle: every .tab-btn/.tab-panel pair is scoped by a

@@ -8,6 +8,20 @@
   <a href="/schedule" class="{{ 'active' if active == 'schedule' }}">Schedule</a>
 {% endmacro %}
 
+{# Player-switcher dropdown panel — list of WILD roster players, current
+   one marked active. Shared by the nav-bar switcher (base.html) and the
+   page-header switcher (player_detail.html), so there's one dropdown
+   implementation regardless of where its trigger button lives. #}
+{% macro player_switcher_dropdown(current_player_id, roster) %}
+<div class="player-switcher-dropdown">
+  {% for p in roster %}
+  <a href="/players/{{ p.player_id }}" class="{{ 'active' if p.player_id == current_player_id }}">
+    {{ avatar(p.display_name, p.headshot_filename) }}{{ p.display_name }}
+  </a>
+  {% endfor %}
+</div>
+{% endmacro %}
+
 {% macro avatar(display_name, headshot_filename, size="") %}
   {% set url = headshot_url(headshot_filename) %}
   {% if url %}

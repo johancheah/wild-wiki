@@ -3,7 +3,24 @@
 {% block title %}{{ player.riot_name }} — WILD Gaming{% endblock %}
 {% block content %}
 <a class="back-link" href="/players">&larr; All Players</a>
-<h1 class="player-header">{{ ui.avatar(player.display_name, player.headshot_filename, "lg") }}{{ player.display_name }}</h1>
+<h1 class="player-header">
+  {{ ui.avatar(player.display_name, player.headshot_filename, "lg") }}{{ player.display_name }}
+  {% if nav_roster %}
+  <span class="player-switcher player-switcher-header">
+    <button class="player-switcher-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Switch player">
+      <span class="player-switcher-caret">&#9662;</span>
+    </button>
+    {{ ui.player_switcher_dropdown(player.player_id, nav_roster) }}
+  </span>
+  {% endif %}
+</h1>
+
+<div class="tabs" data-group="player">
+  <button class="tab-btn active" data-tab="overview" data-group="player">Overview</button>
+  <button class="tab-btn" data-tab="matchlog" data-group="player">Match Log</button>
+</div>
+
+<div id="tab-player-overview" class="tab-panel" data-group="player">
 
 <div class="stat-row">
   <div class="stat"><div class="label">Matches</div><div class="value num">{{ totals.matches_played }}</div></div>
@@ -122,6 +139,9 @@
   </div>
 </section>
 
+</div>
+
+<div id="tab-player-matchlog" class="tab-panel hidden" data-group="player">
 <section>
   <h2>Match Log</h2>
 
@@ -206,6 +226,7 @@
     </table>
   </div>
 </section>
+</div>
 
 <script>
   (function () {
