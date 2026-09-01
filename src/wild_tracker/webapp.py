@@ -74,9 +74,9 @@ templates.env.globals["asset_version"] = asset_version
 
 
 def fmt_date(date_str: str) -> str:
-    """'YYYY-MM-DD' or a full API timestamp -> 'Aug 30, 26' (MMM DD, YY)."""
+    """'YYYY-MM-DD' or a full API timestamp -> '08/30/26' (MM/DD/YY)."""
     local = queries._local_date(date_str)
-    return datetime.strptime(local, "%Y-%m-%d").strftime("%b %d, %y")
+    return datetime.strptime(local, "%Y-%m-%d").strftime("%m/%d/%y")
 
 
 templates.env.filters["fmt_date"] = fmt_date

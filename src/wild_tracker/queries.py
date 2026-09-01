@@ -171,7 +171,7 @@ def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:
 
     match_log = [dict(r) for r in conn.execute("""
         SELECT match_id, date, map, season_id, match_type, match_result, margin,
-          agent, role, kills, deaths, assists, adr, hs_pct,
+          agent, role, acs, kills, deaths, assists, adr, hs_pct,
           two_k, three_k, four_k, five_k,
           (COALESCE(clutch_1v1, 0) + COALESCE(clutch_1v2, 0) + COALESCE(clutch_1v3, 0) + COALESCE(clutch_1v4, 0) + COALESCE(clutch_1v5, 0)) AS clutches,
           econ, match_source

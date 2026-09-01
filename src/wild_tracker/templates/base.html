@@ -52,7 +52,12 @@
       function cellValue(td, type) {
         var raw = td.dataset.value !== undefined ? td.dataset.value : td.textContent.trim();
         if (type === "string" || type === "date") return String(raw).toLowerCase();
-        var n = parseFloat(String(raw).replace("%", "").replace(/[—-]/g, "").trim());
+        // Only the "no data" placeholder (—) means null — a leading "-" is
+        // a real negative sign (e.g. a +/- column) and must survive so
+        // parseFloat keeps it, not get stripped like the placeholder.
+        var text = String(raw).replace("%", "").trim();
+        if (text === "" || text === "—") return null;
+        var n = parseFloat(text);
         return isNaN(n) ? null : n;
       }
 

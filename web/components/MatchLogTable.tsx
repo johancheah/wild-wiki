@@ -23,9 +23,12 @@ const COLUMNS: Column[] = [
   { key: "result", label: "Result", type: "string", value: (m) => m.match_result },
   { key: "agent", label: "Agent", type: "string", value: (m) => m.agent },
   { key: "role", label: "Role", type: "string", value: (m) => m.role },
+  { key: "acs", label: "ACS", type: "num", numCol: true, value: (m) => m.acs },
   { key: "k", label: "K", type: "num", numCol: true, value: (m) => m.kills },
   { key: "d", label: "D", type: "num", numCol: true, value: (m) => m.deaths },
   { key: "a", label: "A", type: "num", numCol: true, value: (m) => m.assists },
+  { key: "plusminus", label: "+/−", type: "num", numCol: true, value: (m) => m.kills - m.deaths },
+  { key: "kd", label: "K/D", type: "num", numCol: true, value: (m) => (m.deaths ? m.kills / m.deaths : m.kills) },
   { key: "adr", label: "ADR", type: "num", numCol: true, value: (m) => m.adr },
   { key: "hs_pct", label: "HS%", type: "num", numCol: true, value: (m) => m.hs_pct },
   {
@@ -155,9 +158,14 @@ export function MatchLogTable({ log }: { log: MatchPlayerStats[] }) {
                 <td>
                   <RoleCell role={m.role} />
                 </td>
+                <td className="num-col num">{m.acs !== null ? Math.round(m.acs) : "—"}</td>
                 <td className="num-col num">{m.kills}</td>
                 <td className="num-col num">{m.deaths}</td>
                 <td className="num-col num">{m.assists}</td>
+                <td className={`num-col num ${m.kills - m.deaths > 0 ? "margin-pos" : m.kills - m.deaths < 0 ? "margin-neg" : ""}`}>
+                  {m.kills - m.deaths > 0 ? `+${m.kills - m.deaths}` : m.kills - m.deaths}
+                </td>
+                <td className="num-col num">{(m.deaths ? m.kills / m.deaths : m.kills).toFixed(2)}</td>
                 <td className="num-col num">{m.adr !== null ? m.adr.toFixed(1) : "—"}</td>
                 <td className="num-col num">{m.hs_pct !== null ? `${m.hs_pct.toFixed(1)}%` : "—"}</td>
                 <td className="num-col num">

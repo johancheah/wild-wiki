@@ -118,9 +118,12 @@
           <th data-sort-type="string">Result</th>
           <th data-sort-type="string">Agent</th>
           <th data-sort-type="string">Role</th>
+          <th class="num-col" data-sort-type="num">ACS</th>
           <th class="num-col" data-sort-type="num">K</th>
           <th class="num-col" data-sort-type="num">D</th>
           <th class="num-col" data-sort-type="num">A</th>
+          <th class="num-col" data-sort-type="num">+/&minus;</th>
+          <th class="num-col" data-sort-type="num">K/D</th>
           <th class="num-col" data-sort-type="num">ADR</th>
           <th class="num-col" data-sort-type="num">HS%</th>
           <th class="num-col" data-sort-type="num">Multi-K</th>
@@ -139,9 +142,14 @@
           <td><span class="pill {{ 'win' if m.match_result == 'WIN' else 'loss' }}">{{ m.match_result }}</span></td>
           <td>{{ ui.agent_cell(m.agent) }}</td>
           <td>{{ ui.role_cell(m.role) }}</td>
+          {% set plusminus = m.kills - m.deaths %}
+          {% set kd = (m.kills / m.deaths) if m.deaths else m.kills %}
+          <td class="num-col num">{{ "%.0f"|format(m.acs) if m.acs is not none else "—" }}</td>
           <td class="num-col num">{{ m.kills }}</td>
           <td class="num-col num">{{ m.deaths }}</td>
           <td class="num-col num">{{ m.assists }}</td>
+          <td class="num-col num {{ 'margin-pos' if plusminus > 0 else ('margin-neg' if plusminus < 0 else '') }}">{{ "+%d"|format(plusminus) if plusminus > 0 else plusminus }}</td>
+          <td class="num-col num">{{ "%.2f"|format(kd) }}</td>
           <td class="num-col num">{{ "%.1f"|format(m.adr) if m.adr is not none else "—" }}</td>
           <td class="num-col num">{{ "%.1f"|format(m.hs_pct) if m.hs_pct is not none else "—" }}%</td>
           <td class="num-col num">{{ (m.two_k or 0) + (m.three_k or 0) + (m.four_k or 0) + (m.five_k or 0) }}</td>
