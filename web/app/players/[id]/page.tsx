@@ -7,13 +7,15 @@ import { RoleCell } from "@/components/RoleCell";
 import { StatChip } from "@/components/StatChip";
 import { MatchLogTable } from "@/components/MatchLogTable";
 import { PlayerHeaderSync } from "@/components/PlayerHeaderSync";
+import { fetchPlayerWeaponTotals } from "@/lib/weapons";
+import { weaponIcon } from "@/lib/assets";
 import type { PlayerCareer, MatchPlayerStats } from "@/lib/types";
 import type { NavPlayer } from "@/lib/PlayerHeaderContext";
 
 export const revalidate = 0;
 
-type AgentPool = { agent: string; n: number; wins: number; kd: number | null; acs: number | null; adr: number | null; hs_pct: number | null };
-type RoleBreakdown = { role: string; n: number; wins: number; kd: number | null; acs: number | null; adr: number | null };
+type AgentPool = { agent: string; n: number; wins: number; kd: number | null; acs: number | null; adr: number | null; fkfd: number | null };
+type RoleBreakdown = { role: string; n: number; wins: number; kd: number | null; acs: number | null; adr: number | null; fkfd: number | null };
 
 export default async function PlayerDetailPage({
   params,
@@ -22,7 +24,7 @@ export default async function PlayerDetailPage({
 }) {
   const { id } = await params;
 
-  const [{ data: careerRows }, { data: agentRows }, { data: roleRows }, { data: matchLog }, { data: rosterRows }] =
+  const [{ data: careerRows }, { data: agentRows }, { data: roleRows }, { data: matchLog }, { data: rosterRows }, weapons] =
     await Promise.all([
       supabase.from("v_player_career").select("*").eq("player_id", id),
       supabase
@@ -41,6 +43,7 @@ export default async function PlayerDetailPage({
         .eq("player_id", id)
         .order("date", { ascending: false }),
       supabase.from("v_player_career").select("player_id, display_name, headshot_filename"),
+      fetchPlayerWeaponTotals(supabase, id),
     ]);
 
   const player = (careerRows as PlayerCareer[] | null)?.[0];
@@ -85,7 +88,7 @@ export default async function PlayerDetailPage({
         </div>
         <div className="stat">
           <div className="label">ADR</div>
-          <div className="value num">{player.adr ?? "—"}</div>
+          <div className="value num">{player.adr !== null ? Math.round(player.adr) : "—"}</div>
         </div>
         <div className="stat">
           <div className="label">HS%</div>
@@ -107,11 +110,14 @@ export default async function PlayerDetailPage({
                 <th className="num-col">3K</th>
                 <th className="num-col">4K</th>
                 <th className="num-col">5K</th>
+                <th className="num-col">Total</th>
+                <th className="col-gap"></th>
                 <th className="num-col">1v1</th>
                 <th className="num-col">1v2</th>
                 <th className="num-col">1v3</th>
                 <th className="num-col">1v4</th>
                 <th className="num-col">1v5</th>
+                <th className="num-col">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -129,6 +135,14 @@ export default async function PlayerDetailPage({
                   <StatChip value={player.five_k} blankZero square level={4} />
                 </td>
                 <td className="num-col">
+                  <StatChip
+                    value={(player.two_k ?? 0) + (player.three_k ?? 0) + (player.four_k ?? 0) + (player.five_k ?? 0)}
+                    blankZero
+                    square
+                  />
+                </td>
+                <td className="col-gap"></td>
+                <td className="num-col">
                   <StatChip value={player.clutch_1v1} blankZero square level={1} />
                 </td>
                 <td className="num-col">
@@ -142,6 +156,19 @@ export default async function PlayerDetailPage({
                 </td>
                 <td className="num-col">
                   <StatChip value={player.clutch_1v5} blankZero square level={5} />
+                </td>
+                <td className="num-col">
+                  <StatChip
+                    value={
+                      (player.clutch_1v1 ?? 0) +
+                      (player.clutch_1v2 ?? 0) +
+                      (player.clutch_1v3 ?? 0) +
+                      (player.clutch_1v4 ?? 0) +
+                      (player.clutch_1v5 ?? 0)
+                    }
+                    blankZero
+                    square
+                  />
                 </td>
               </tr>
             </tbody>
@@ -161,8 +188,8 @@ export default async function PlayerDetailPage({
                 <th className="num-col">Win %</th>
                 <th className="num-col">ACS</th>
                 <th className="num-col">ADR</th>
-                <th className="num-col">HS%</th>
                 <th className="num-col">K/D</th>
+                <th className="num-col">FK:FD</th>
               </tr>
             </thead>
             <tbody>
@@ -174,10 +201,10 @@ export default async function PlayerDetailPage({
                   <td className="num-col num">{a.n}</td>
                   <td className="num-col num win">{a.wins}</td>
                   <td className="num-col num">{((100 * a.wins) / a.n).toFixed(0)}%</td>
-                  <td className="num-col num">{a.acs ?? "—"}</td>
-                  <td className="num-col num">{a.adr ?? "—"}</td>
-                  <td className="num-col num">{a.hs_pct !== null ? `${a.hs_pct}%` : "—"}</td>
+                  <td className="num-col num">{a.acs !== null ? Math.round(a.acs) : "—"}</td>
+                  <td className="num-col num">{a.adr !== null ? Math.round(a.adr) : "—"}</td>
                   <td className="num-col num">{a.kd ?? "—"}</td>
+                  <td className="num-col num">{a.fkfd ?? "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -198,6 +225,7 @@ export default async function PlayerDetailPage({
                 <th className="num-col">K/D</th>
                 <th className="num-col">ACS</th>
                 <th className="num-col">ADR</th>
+                <th className="num-col">FK:FD</th>
               </tr>
             </thead>
             <tbody>
@@ -210,10 +238,44 @@ export default async function PlayerDetailPage({
                   <td className="num-col num">{totalWithRole ? ((100 * r.n) / totalWithRole).toFixed(1) : "0.0"}%</td>
                   <td className="num-col num">{((100 * r.wins) / r.n).toFixed(0)}%</td>
                   <td className="num-col num">{r.kd ?? "—"}</td>
-                  <td className="num-col num">{r.acs ?? "—"}</td>
-                  <td className="num-col num">{r.adr ?? "—"}</td>
+                  <td className="num-col num">{r.acs !== null ? Math.round(r.acs) : "—"}</td>
+                  <td className="num-col num">{r.adr !== null ? Math.round(r.adr) : "—"}</td>
+                  <td className="num-col num">{r.fkfd ?? "—"}</td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2>Weapon Stats</h2>
+        <div className="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Weapon</th>
+                <th className="num-col">Kills</th>
+              </tr>
+            </thead>
+            <tbody>
+              {weapons.map((w) => {
+                const icon = weaponIcon(w.weapon);
+                return (
+                  <tr key={w.weapon}>
+                    <td className="name">
+                      <span className="weapon-cell">
+                        {icon && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img className="weapon-icon" src={icon} alt={w.weapon} />
+                        )}
+                        {w.weapon}
+                      </span>
+                    </td>
+                    <td className="num-col num">{w.kills}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

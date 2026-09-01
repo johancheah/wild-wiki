@@ -35,7 +35,7 @@ const WEAPON_CATEGORY_ORDER: Record<string, number> = {
 };
 const WEAPON_ABILITY_RANK = 7;
 
-function sortWeapons(weaponTotals: Map<string, number>): string[] {
+export function sortWeapons(weaponTotals: Map<string, number>): string[] {
   return [...weaponTotals.keys()].sort((a, b) => {
     const rankA = WEAPON_CATEGORY_ORDER[a] ?? WEAPON_ABILITY_RANK;
     const rankB = WEAPON_CATEGORY_ORDER[b] ?? WEAPON_ABILITY_RANK;
@@ -128,4 +128,17 @@ export function mergeWeaponMatrices(matrices: (WeaponMatrix | null)[]): WeaponMa
   const weapons = sortWeapons(weaponTotals);
   const playersOut = [...byPlayer.values()].sort((a, b) => b.total - a.total);
   return { weapons, players: playersOut };
+}
+
+export type PlayerWeaponTotal = { weapon: string; kills: number };
+
+// Career weapon kills for one player, category-ordered (rifles -> snipers
+// -> heavy -> shotguns -> SMGs -> pistols -> melee -> abilities/ults) —
+// same ordering as the match-level Weapons tab, for the player page's
+// Weapon Stats table. Mirrors queries.py::player_detail's `weapons` query.
+export async function fetchPlayerWeaponTotals(supabase: SupabaseClient, playerId: string): Promise<PlayerWeaponTotal[]> {
+  const { data } = await supabase.from("match_player_weapon_kills").select("weapon, kill_count").eq("player_id", playerId);
+  const totals = new Map<string, number>();
+  for (const r of data ?? []) totals.set(r.weapon, (totals.get(r.weapon) ?? 0) + r.kill_count);
+  return sortWeapons(totals).map((weapon) => ({ weapon, kills: totals.get(weapon)! }));
 }

@@ -9,7 +9,7 @@
   <div class="stat"><div class="label">Matches</div><div class="value num">{{ totals.matches_played }}</div></div>
   <div class="stat"><div class="label">ACS</div><div class="value num">{{ "%.0f"|format(totals.acs) if totals.acs is not none else "—" }}</div></div>
   <div class="stat"><div class="label">K/D</div><div class="value num">{{ totals.kd if totals.kd is not none else "—" }}</div></div>
-  <div class="stat"><div class="label">ADR</div><div class="value num">{{ totals.adr if totals.adr is not none else "—" }}</div></div>
+  <div class="stat"><div class="label">ADR</div><div class="value num">{{ "%.0f"|format(totals.adr) if totals.adr is not none else "—" }}</div></div>
   <div class="stat"><div class="label">HS%</div><div class="value num">{{ totals.hs_pct if totals.hs_pct is not none else "—" }}%</div></div>
   <div class="stat"><div class="label">ECON</div><div class="value num">{{ totals.econ if totals.econ is not none else "—" }}</div></div>
 </div>
@@ -20,21 +20,27 @@
     <table class="performance-table">
       <thead>
         <tr>
-          <th class="num-col">2K</th><th class="num-col">3K</th><th class="num-col">4K</th><th class="num-col">5K</th>
-          <th class="num-col">1v1</th><th class="num-col">1v2</th><th class="num-col">1v3</th><th class="num-col">1v4</th><th class="num-col">1v5</th>
+          <th class="num-col">2K</th><th class="num-col">3K</th><th class="num-col">4K</th><th class="num-col">5K</th><th class="num-col">Total</th>
+          <th class="col-gap"></th>
+          <th class="num-col">1v1</th><th class="num-col">1v2</th><th class="num-col">1v3</th><th class="num-col">1v4</th><th class="num-col">1v5</th><th class="num-col">Total</th>
         </tr>
       </thead>
       <tbody>
+        {% set multi_total = (totals.two_k or 0) + (totals.three_k or 0) + (totals.four_k or 0) + (totals.five_k or 0) %}
+        {% set clutch_total = (totals.clutch_1v1 or 0) + (totals.clutch_1v2 or 0) + (totals.clutch_1v3 or 0) + (totals.clutch_1v4 or 0) + (totals.clutch_1v5 or 0) %}
         <tr>
           <td class="num-col">{{ ui.chip(totals.two_k, blank_zero=True, square=True, level=1) }}</td>
           <td class="num-col">{{ ui.chip(totals.three_k, blank_zero=True, square=True, level=2) }}</td>
           <td class="num-col">{{ ui.chip(totals.four_k, blank_zero=True, square=True, level=3) }}</td>
           <td class="num-col">{{ ui.chip(totals.five_k, blank_zero=True, square=True, level=4) }}</td>
+          <td class="num-col">{{ ui.chip(multi_total, blank_zero=True, square=True) }}</td>
+          <td class="col-gap"></td>
           <td class="num-col">{{ ui.chip(totals.clutch_1v1, blank_zero=True, square=True, level=1) }}</td>
           <td class="num-col">{{ ui.chip(totals.clutch_1v2, blank_zero=True, square=True, level=2) }}</td>
           <td class="num-col">{{ ui.chip(totals.clutch_1v3, blank_zero=True, square=True, level=3) }}</td>
           <td class="num-col">{{ ui.chip(totals.clutch_1v4, blank_zero=True, square=True, level=4) }}</td>
           <td class="num-col">{{ ui.chip(totals.clutch_1v5, blank_zero=True, square=True, level=5) }}</td>
+          <td class="num-col">{{ ui.chip(clutch_total, blank_zero=True, square=True) }}</td>
         </tr>
       </tbody>
     </table>
@@ -49,7 +55,7 @@
         <tr>
           <th>Role</th><th class="num-col">Maps</th><th class="num-col">% of Maps</th>
           <th class="num-col">W</th><th class="num-col">Win %</th>
-          <th class="num-col">ACS</th><th class="num-col">ADR</th><th class="num-col">K/D</th>
+          <th class="num-col">ACS</th><th class="num-col">ADR</th><th class="num-col">K/D</th><th class="num-col">FK:FD</th>
         </tr>
       </thead>
       <tbody>
@@ -60,9 +66,10 @@
           <td class="num-col num">{{ r.pct }}%</td>
           <td class="num-col num win">{{ r.wins }}</td>
           <td class="num-col num">{{ "%.0f"|format(100.0 * r.wins / r.n) }}%</td>
-          <td class="num-col num">{{ r.acs if r.acs is not none else "—" }}</td>
-          <td class="num-col num">{{ r.adr if r.adr is not none else "—" }}</td>
+          <td class="num-col num">{{ "%.0f"|format(r.acs) if r.acs is not none else "—" }}</td>
+          <td class="num-col num">{{ "%.0f"|format(r.adr) if r.adr is not none else "—" }}</td>
           <td class="num-col num">{{ r.kd if r.kd is not none else "—" }}</td>
+          <td class="num-col num">{{ r.fkfd if r.fkfd is not none else "—" }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -77,7 +84,7 @@
       <thead>
         <tr>
           <th>Agent</th><th class="num-col">Played</th><th class="num-col">W</th><th class="num-col">Win %</th>
-          <th class="num-col">ACS</th><th class="num-col">ADR</th><th class="num-col">HS%</th><th class="num-col">K/D</th>
+          <th class="num-col">ACS</th><th class="num-col">ADR</th><th class="num-col">K/D</th><th class="num-col">FK:FD</th>
         </tr>
       </thead>
       <tbody>
@@ -87,10 +94,27 @@
           <td class="num-col num">{{ a.n }}</td>
           <td class="num-col num win">{{ a.wins }}</td>
           <td class="num-col num">{{ "%.0f"|format(100.0 * a.wins / a.n) }}%</td>
-          <td class="num-col num">{{ a.acs if a.acs is not none else "—" }}</td>
-          <td class="num-col num">{{ a.adr if a.adr is not none else "—" }}</td>
-          <td class="num-col num">{{ a.hs_pct if a.hs_pct is not none else "—" }}%</td>
+          <td class="num-col num">{{ "%.0f"|format(a.acs) if a.acs is not none else "—" }}</td>
+          <td class="num-col num">{{ "%.0f"|format(a.adr) if a.adr is not none else "—" }}</td>
           <td class="num-col num">{{ a.kd if a.kd is not none else "—" }}</td>
+          <td class="num-col num">{{ a.fkfd if a.fkfd is not none else "—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Weapon Stats</h2>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Weapon</th><th class="num-col">Kills</th></tr></thead>
+      <tbody>
+        {% for w in weapons %}
+        <tr>
+          <td class="name">{{ ui.weapon_cell(w.weapon) }}</td>
+          <td class="num-col num">{{ w.kills }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -168,7 +192,7 @@
           <td class="num-col num {{ 'margin-pos' if plusminus > 0 else ('margin-neg' if plusminus < 0 else '') }}">{{ "+%d"|format(plusminus) if plusminus > 0 else plusminus }}</td>
           <td class="num-col num">{{ "%.2f"|format(kd) }}</td>
           <td class="num-col num">{{ "%.0f"|format(m.kast_pct) if m.kast_pct is not none else "—" }}%</td>
-          <td class="num-col num">{{ "%.1f"|format(m.adr) if m.adr is not none else "—" }}</td>
+          <td class="num-col num">{{ "%.0f"|format(m.adr) if m.adr is not none else "—" }}</td>
           <td class="num-col num">{{ "%.1f"|format(m.hs_pct) if m.hs_pct is not none else "—" }}%</td>
           <td class="num-col num">{{ m.fk if m.fk is not none else "—" }}</td>
           <td class="num-col num">{{ m.fd if m.fd is not none else "—" }}</td>

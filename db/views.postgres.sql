@@ -110,7 +110,8 @@ SELECT
     ROUND((SUM(kills) * 1.0 / NULLIF(SUM(deaths), 0))::numeric, 2) AS kd,
     ROUND((SUM(acs * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0))::numeric, 1) AS acs,
     ROUND((SUM(adr * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0))::numeric, 1) AS adr,
-    ROUND((SUM(hs_pct * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0))::numeric, 1) AS hs_pct
+    ROUND((SUM(hs_pct * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0))::numeric, 1) AS hs_pct,
+    ROUND((SUM(fk) * 1.0 / NULLIF(SUM(fd), 0))::numeric, 2) AS fkfd
 FROM v_wild_player_match_stats
 WHERE agent IS NOT NULL
 GROUP BY player_id, agent;
@@ -125,7 +126,8 @@ SELECT
     SUM(CASE WHEN match_result = 'WIN' THEN 1 ELSE 0 END) AS wins,
     ROUND((SUM(kills) * 1.0 / NULLIF(SUM(deaths), 0))::numeric, 2) AS kd,
     ROUND((SUM(acs * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0))::numeric, 1) AS acs,
-    ROUND((SUM(adr * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0))::numeric, 1) AS adr
+    ROUND((SUM(adr * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0))::numeric, 1) AS adr,
+    ROUND((SUM(fk) * 1.0 / NULLIF(SUM(fd), 0))::numeric, 2) AS fkfd
 FROM v_wild_player_match_stats
 WHERE role IS NOT NULL
 GROUP BY player_id, role;

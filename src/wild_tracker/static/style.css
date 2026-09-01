@@ -445,6 +445,14 @@ table.h2h-table td.name { display: flex; align-items: center; gap: 6px; }
 table.weapon-matrix-table th, table.weapon-matrix-table td { padding: 8px 6px; }
 .weapon-col-icon { width: 22px; height: 22px; object-fit: contain; display: block; margin: 0 auto; }
 
+/* Weapon name cell (Career Weapon Stats table): icon + name, same layout
+   as .agent-cell. */
+.weapon-cell { display: flex; align-items: center; }
+.weapon-icon {
+  width: 22px; height: 22px; object-fit: contain;
+  vertical-align: middle; margin-right: 8px; background: var(--surface-2); border-radius: 4px;
+}
+
 /* Schedule: collapsible season groups */
 tr.season-header { cursor: pointer; background: var(--surface-2); }
 tr.season-header:hover td { background: var(--surface-2); }

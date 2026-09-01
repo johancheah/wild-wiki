@@ -234,6 +234,16 @@
    top (real weapon icons where available — ability-kills like "Blade Storm"
    fall back to text, same missing-icon convention as everywhere else),
    kill count per cell. #}
+{# Weapon name cell with icon — icon-or-text fallback for ability-kills
+   (e.g. "Blade Storm"), same convention as agent_cell. #}
+{% macro weapon_cell(weapon) %}
+  {% set icon = weapon_icon(weapon) %}
+  <span class="weapon-cell">
+    {% if icon %}<img class="weapon-icon" src="{{ icon }}" alt="{{ weapon }}">{% endif %}
+    {{ weapon }}
+  </span>
+{% endmacro %}
+
 {% macro weapon_matrix_table(weapons) %}
 <div class="table-scroll">
   <table class="weapon-matrix-table">

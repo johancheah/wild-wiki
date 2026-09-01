@@ -165,7 +165,7 @@ def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:
           ROUND(SUM(kills) * 1.0 / NULLIF(SUM(deaths), 0), 2) AS kd,
           ROUND(SUM(acs * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS acs,
           ROUND(SUM(adr * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS adr,
-          ROUND(SUM(hs_pct * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS hs_pct
+          ROUND(SUM(fk) * 1.0 / NULLIF(SUM(fd), 0), 2) AS fkfd
         FROM v_wild_player_match_stats WHERE player_id = ? AND agent IS NOT NULL
         GROUP BY agent ORDER BY n DESC
     """, (player_id,)).fetchall()]
@@ -185,7 +185,8 @@ def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:
           SUM(CASE WHEN match_result='WIN' THEN 1 ELSE 0 END) AS wins,
           ROUND(SUM(kills) * 1.0 / NULLIF(SUM(deaths), 0), 2) AS kd,
           ROUND(SUM(acs * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS acs,
-          ROUND(SUM(adr * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS adr
+          ROUND(SUM(adr * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS adr,
+          ROUND(SUM(fk) * 1.0 / NULLIF(SUM(fd), 0), 2) AS fkfd
         FROM v_wild_player_match_stats WHERE player_id = ? AND role IS NOT NULL
         GROUP BY role ORDER BY n DESC
     """, (player_id,)).fetchall()]
@@ -212,9 +213,21 @@ def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:
         "stages": sorted({m["season_id"] for m in match_log if m["season_id"]}),
     }
 
+    # Career weapon kills — same category ordering (rifles -> snipers ->
+    # heavy -> shotguns -> SMGs -> pistols -> melee -> abilities/ults) as
+    # the match-level Weapons tab, for the same reason and for visual
+    # consistency between the two.
+    weapon_rows = conn.execute("""
+        SELECT weapon, SUM(kill_count) AS kills
+        FROM match_player_weapon_kills WHERE player_id = ?
+        GROUP BY weapon
+    """, (player_id,)).fetchall()
+    weapon_totals = {r["weapon"]: r["kills"] for r in weapon_rows}
+    weapons = [{"weapon": w, "kills": weapon_totals[w]} for w in _sort_weapons(weapon_totals)]
+
     return {
         "player": player, "totals": totals, "agents": agents, "roles": roles,
-        "match_log": match_log, "match_log_filters": match_log_filters,
+        "match_log": match_log, "match_log_filters": match_log_filters, "weapons": weapons,
     }
 
 

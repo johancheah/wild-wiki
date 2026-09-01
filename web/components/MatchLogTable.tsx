@@ -171,7 +171,7 @@ export function MatchLogTable({ log }: { log: MatchPlayerStats[] }) {
                 </td>
                 <td className="num-col num">{(m.deaths ? m.kills / m.deaths : m.kills).toFixed(2)}</td>
                 <td className="num-col num">{m.kast_pct !== null ? `${Math.round(m.kast_pct)}%` : "—"}</td>
-                <td className="num-col num">{m.adr !== null ? m.adr.toFixed(1) : "—"}</td>
+                <td className="num-col num">{m.adr !== null ? Math.round(m.adr) : "—"}</td>
                 <td className="num-col num">{m.hs_pct !== null ? `${m.hs_pct.toFixed(1)}%` : "—"}</td>
                 <td className="num-col num">{m.fk ?? "—"}</td>
                 <td className="num-col num">{m.fd ?? "—"}</td>
