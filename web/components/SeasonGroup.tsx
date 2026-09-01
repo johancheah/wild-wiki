@@ -41,7 +41,11 @@ export function SeasonGroup({ season, defaultOpen }: { season: SeasonGroupData; 
           <td>{w.local_date}</td>
           <td>
             {w.maps.map((m) => (
-              <span key={m.match_id} className={`pill ${m.result === "WIN" ? "win" : "loss"}`} style={{ marginRight: 6 }}>
+              <span
+                key={m.match_id}
+                className={`pill pill-map-result ${m.result === "WIN" ? "win" : "loss"}`}
+                style={{ marginRight: 6 }}
+              >
                 {m.map} {m.result}
               </span>
             ))}

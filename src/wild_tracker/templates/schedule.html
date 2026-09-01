@@ -34,7 +34,7 @@
         <td>{{ w.local_date }}</td>
         <td>
           {% for m in w.maps %}
-            <span class="pill {{ 'win' if m.result == 'WIN' else 'loss' }}" style="margin-right:6px;">
+            <span class="pill pill-map-result {{ 'win' if m.result == 'WIN' else 'loss' }}" style="margin-right:6px;">
               {{ m.map }} {{ m.result }}
             </span>
           {% endfor %}
