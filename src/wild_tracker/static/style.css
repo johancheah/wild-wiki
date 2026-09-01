@@ -271,6 +271,7 @@ table.sortable-table thead th.sort-asc::after { content: " \25B2"; font-size: 9p
 table.sortable-table thead th.sort-desc::after { content: " \25BC"; font-size: 9px; }
 tbody td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--text-dim); white-space: nowrap; }
 tbody tr:last-child td { border-bottom: none; }
+tbody tr.week-alt td { background: var(--surface); }
 tbody tr.linkable:hover td { background: var(--surface-2); cursor: pointer; }
 tbody td.name { color: var(--text); font-weight: 600; }
 tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4px; }

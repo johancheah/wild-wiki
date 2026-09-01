@@ -70,6 +70,30 @@ export function MatchLogTable({ log }: { log: MatchPlayerStats[] }) {
   });
   const [sort, setSort] = useState<{ col: string; dir: 1 | -1 } | null>({ col: "date", dir: -1 });
 
+  // Week-grouping stripe: rows sharing the same match week (same season,
+  // Eastern-local calendar night, and match_type — see lib/schedule.ts's
+  // week grouping) alternate background so weeks are visually separated,
+  // most useful since a week is usually 2 maps played back to back. Keyed
+  // by match_id off the original (date-desc) `log` order rather than the
+  // current sort, so re-sorting the table doesn't reshuffle which rows are
+  // striped — same degrade as the Python app's click-to-sort, which moves
+  // the same DOM rows (and their stripe class) around instead of
+  // recomputing groups.
+  const weekAlt = useMemo(() => {
+    const out = new Map<string, boolean>();
+    let prevKey: string | null = null;
+    let alt = false;
+    for (const m of log) {
+      const key = `${m.season_id ?? ""}|${localDate(m.date)}|${m.match_type ?? ""}`;
+      if (key !== prevKey) {
+        alt = !alt;
+        prevKey = key;
+      }
+      out.set(m.match_id, alt);
+    }
+    return out;
+  }, [log]);
+
   const options = useMemo(() => {
     const out: Record<FilterKey, string[]> = { agent: [], season_id: [], role: [], map: [] };
     for (const key of FILTERS.map((f) => f.key)) {
@@ -145,7 +169,7 @@ export function MatchLogTable({ log }: { log: MatchPlayerStats[] }) {
           </thead>
           <tbody>
             {sorted.map((m) => (
-              <tr key={m.match_id} className="linkable">
+              <tr key={m.match_id} className={`linkable${weekAlt.get(m.match_id) ? " week-alt" : ""}`}>
                 <td>
                   <Link href={`/matches/${m.match_id}`}>{formatMatchDate(m.date)}</Link>
                 </td>

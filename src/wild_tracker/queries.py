@@ -205,6 +205,19 @@ def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:
         ORDER BY date DESC
     """, (player_id,)).fetchall()]
 
+    # Week-grouping stripe: rows sharing the same match week (same season,
+    # Eastern-local calendar night, and match_type — see match_weeks())
+    # alternate background so weeks are visually separated, most useful
+    # since a week is usually 2 maps played back to back.
+    prev_week_key = None
+    week_alt = False
+    for m in match_log:
+        week_key = (m["season_id"], _local_date(m["date"]), m["match_type"])
+        if week_key != prev_week_key:
+            week_alt = not week_alt
+            prev_week_key = week_key
+        m["week_alt"] = week_alt
+
     # Distinct values actually present in this player's own match log, for
     # the Match Log filter dropdowns — not every agent/map/stage in the
     # game, just the ones they've actually played.

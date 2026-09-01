@@ -183,7 +183,7 @@
       </thead>
       <tbody>
         {% for m in match_log %}
-        <tr class="linkable" onclick="location.href='/matches/{{ m.match_id }}'"
+        <tr class="linkable{{ ' week-alt' if m.week_alt else '' }}" onclick="location.href='/matches/{{ m.match_id }}'"
             data-agent="{{ m.agent or '' }}" data-stage="{{ m.season_id or '' }}"
             data-role="{{ m.role or '' }}" data-map="{{ m.map or '' }}">
           <td data-value="{{ m.date[:10] }}">{{ m.date|fmt_date }}</td>
