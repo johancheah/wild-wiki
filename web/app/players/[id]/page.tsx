@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Avatar } from "@/components/Avatar";
 import { AgentCell } from "@/components/AgentCell";
-import { MapCell } from "@/components/MapCell";
 import { RoleCell } from "@/components/RoleCell";
+import { MatchLogTable } from "@/components/MatchLogTable";
 import type { PlayerCareer, MatchPlayerStats } from "@/lib/types";
 
 export const revalidate = 0;
@@ -179,62 +179,7 @@ export default async function PlayerDetailPage({
 
       <section>
         <h2>Match Log</h2>
-        <div className="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Map</th>
-                <th>Result</th>
-                <th>Agent</th>
-                <th className="num-col">K</th>
-                <th className="num-col">D</th>
-                <th className="num-col">A</th>
-                <th className="num-col">ADR</th>
-                <th className="num-col">HS%</th>
-                <th className="num-col">Multi-K</th>
-                <th className="num-col">Clutch</th>
-                <th className="num-col">ECON</th>
-              </tr>
-            </thead>
-            <tbody>
-              {log.map((m) => (
-                <tr key={m.match_id} className="linkable">
-                  <td>
-                    <Link href={`/matches/${m.match_id}`}>{m.date.slice(0, 10)}</Link>
-                  </td>
-                  <td>
-                    <MapCell map={m.map} />
-                  </td>
-                  <td>
-                    <span className={`pill ${m.match_result === "WIN" ? "win" : "loss"}`}>
-                      {m.match_result}
-                    </span>
-                  </td>
-                  <td>
-                    <AgentCell agent={m.agent} />
-                  </td>
-                  <td className="num-col num">{m.kills}</td>
-                  <td className="num-col num">{m.deaths}</td>
-                  <td className="num-col num">{m.assists}</td>
-                  <td className="num-col num">{m.adr !== null ? m.adr.toFixed(1) : "—"}</td>
-                  <td className="num-col num">{m.hs_pct !== null ? m.hs_pct.toFixed(1) : "—"}%</td>
-                  <td className="num-col num">
-                    {(m.two_k ?? 0) + (m.three_k ?? 0) + (m.four_k ?? 0) + (m.five_k ?? 0)}
-                  </td>
-                  <td className="num-col num">
-                    {(m.clutch_1v1 ?? 0) +
-                      (m.clutch_1v2 ?? 0) +
-                      (m.clutch_1v3 ?? 0) +
-                      (m.clutch_1v4 ?? 0) +
-                      (m.clutch_1v5 ?? 0)}
-                  </td>
-                  <td className="num-col num">{m.econ !== null ? m.econ.toFixed(0) : "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <MatchLogTable log={log} />
       </section>
     </>
   );

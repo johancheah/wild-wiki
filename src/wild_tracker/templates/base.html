@@ -38,6 +38,49 @@
         document.getElementById("tab-" + group + "-" + btn.dataset.tab).classList.remove("hidden");
       });
     });
+
+    // Generic click-to-sort: any table with class="sortable-table" gets
+    // per-column sorting driven by each <th data-sort-type="...">. A cell
+    // can override what actually gets compared via td[data-value] (e.g. an
+    // ISO date under a "MMM DD, YY" display string) — falls back to the
+    // cell's own text otherwise.
+    document.querySelectorAll(".sortable-table").forEach(function (table) {
+      var headers = table.querySelectorAll("thead th");
+      var tbody = table.querySelector("tbody");
+      var state = { col: null, dir: 1 };
+
+      function cellValue(td, type) {
+        var raw = td.dataset.value !== undefined ? td.dataset.value : td.textContent.trim();
+        if (type === "string" || type === "date") return String(raw).toLowerCase();
+        var n = parseFloat(String(raw).replace("%", "").replace(/[—-]/g, "").trim());
+        return isNaN(n) ? null : n;
+      }
+
+      headers.forEach(function (th, i) {
+        if (!th.dataset.sortType) return;
+        th.addEventListener("click", function () {
+          var type = th.dataset.sortType || "num";
+          var dir = state.col === i ? -state.dir : type === "string" || type === "date" ? 1 : -1;
+          state = { col: i, dir: dir };
+
+          headers.forEach(function (h) { h.classList.remove("sort-asc", "sort-desc"); });
+          th.classList.add(dir === 1 ? "sort-asc" : "sort-desc");
+
+          var rows = Array.prototype.slice.call(tbody.querySelectorAll("tr"));
+          rows.sort(function (a, b) {
+            var av = cellValue(a.children[i], type);
+            var bv = cellValue(b.children[i], type);
+            if (av === null && bv === null) return 0;
+            if (av === null) return 1;
+            if (bv === null) return -1;
+            if (av < bv) return -1 * dir;
+            if (av > bv) return 1 * dir;
+            return 0;
+          });
+          rows.forEach(function (r) { tbody.appendChild(r); });
+        });
+      });
+    });
   </script>
 </body>
 </html>

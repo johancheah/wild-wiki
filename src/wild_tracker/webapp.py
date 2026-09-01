@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -70,6 +71,15 @@ def asset_version() -> int:
 
 
 templates.env.globals["asset_version"] = asset_version
+
+
+def fmt_date(date_str: str) -> str:
+    """'YYYY-MM-DD' or a full API timestamp -> 'Aug 30, 26' (MMM DD, YY)."""
+    local = queries._local_date(date_str)
+    return datetime.strptime(local, "%Y-%m-%d").strftime("%b %d, %y")
+
+
+templates.env.filters["fmt_date"] = fmt_date
 
 
 def get_conn():

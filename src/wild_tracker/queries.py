@@ -171,7 +171,7 @@ def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:
 
     match_log = [dict(r) for r in conn.execute("""
         SELECT match_id, date, map, season_id, match_type, match_result, margin,
-          agent, kills, deaths, assists, adr, hs_pct,
+          agent, role, kills, deaths, assists, adr, hs_pct,
           two_k, three_k, four_k, five_k,
           (COALESCE(clutch_1v1, 0) + COALESCE(clutch_1v2, 0) + COALESCE(clutch_1v3, 0) + COALESCE(clutch_1v4, 0) + COALESCE(clutch_1v5, 0)) AS clutches,
           econ, match_source
@@ -179,7 +179,20 @@ def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:
         ORDER BY date DESC
     """, (player_id,)).fetchall()]
 
-    return {"player": player, "totals": totals, "agents": agents, "roles": roles, "match_log": match_log}
+    # Distinct values actually present in this player's own match log, for
+    # the Match Log filter dropdowns — not every agent/map/stage in the
+    # game, just the ones they've actually played.
+    match_log_filters = {
+        "agents": sorted({m["agent"] for m in match_log if m["agent"]}),
+        "roles": sorted({m["role"] for m in match_log if m["role"]}),
+        "maps": sorted({m["map"] for m in match_log if m["map"]}),
+        "stages": sorted({m["season_id"] for m in match_log if m["season_id"]}),
+    }
+
+    return {
+        "player": player, "totals": totals, "agents": agents, "roles": roles,
+        "match_log": match_log, "match_log_filters": match_log_filters,
+    }
 
 
 def match_weeks(conn: sqlite3.Connection) -> list[dict]:

@@ -88,22 +88,57 @@
 
 <section>
   <h2>Match Log</h2>
+
+  <div class="filters-row" id="match-log-filters">
+    <select data-filter="agent">
+      <option value="">All Agents</option>
+      {% for a in match_log_filters.agents %}<option value="{{ a }}">{{ a }}</option>{% endfor %}
+    </select>
+    <select data-filter="stage">
+      <option value="">All Stages</option>
+      {% for s in match_log_filters.stages %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+    </select>
+    <select data-filter="role">
+      <option value="">All Roles</option>
+      {% for r in match_log_filters.roles %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+    </select>
+    <select data-filter="map">
+      <option value="">All Maps</option>
+      {% for m in match_log_filters.maps %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
+    </select>
+  </div>
+
   <div class="table-scroll">
-    <table>
+    <table id="match-log-table" class="sortable-table">
       <thead>
         <tr>
-          <th>Date</th><th>Map</th><th>Result</th><th>Agent</th>
-          <th class="num-col">K</th><th class="num-col">D</th><th class="num-col">A</th>
-          <th class="num-col">ADR</th><th class="num-col">HS%</th><th class="num-col">Multi-K</th><th class="num-col">Clutch</th><th class="num-col">ECON</th>
+          <th data-sort-type="date">Date</th>
+          <th data-sort-type="string">Map</th>
+          <th data-sort-type="string">Stage</th>
+          <th data-sort-type="string">Result</th>
+          <th data-sort-type="string">Agent</th>
+          <th data-sort-type="string">Role</th>
+          <th class="num-col" data-sort-type="num">K</th>
+          <th class="num-col" data-sort-type="num">D</th>
+          <th class="num-col" data-sort-type="num">A</th>
+          <th class="num-col" data-sort-type="num">ADR</th>
+          <th class="num-col" data-sort-type="num">HS%</th>
+          <th class="num-col" data-sort-type="num">Multi-K</th>
+          <th class="num-col" data-sort-type="num">Clutch</th>
+          <th class="num-col" data-sort-type="num">ECON</th>
         </tr>
       </thead>
       <tbody>
         {% for m in match_log %}
-        <tr class="linkable" onclick="location.href='/matches/{{ m.match_id }}'">
-          <td>{{ m.date[:10] }}</td>
+        <tr class="linkable" onclick="location.href='/matches/{{ m.match_id }}'"
+            data-agent="{{ m.agent or '' }}" data-stage="{{ m.season_id or '' }}"
+            data-role="{{ m.role or '' }}" data-map="{{ m.map or '' }}">
+          <td data-value="{{ m.date[:10] }}">{{ m.date|fmt_date }}</td>
           <td>{{ ui.map_cell(m.map) }}</td>
+          <td>{{ m.season_id or "—" }}</td>
           <td><span class="pill {{ 'win' if m.match_result == 'WIN' else 'loss' }}">{{ m.match_result }}</span></td>
           <td>{{ ui.agent_cell(m.agent) }}</td>
+          <td>{{ ui.role_cell(m.role) }}</td>
           <td class="num-col num">{{ m.kills }}</td>
           <td class="num-col num">{{ m.deaths }}</td>
           <td class="num-col num">{{ m.assists }}</td>
@@ -118,4 +153,25 @@
     </table>
   </div>
 </section>
+
+<script>
+  (function () {
+    var filterBar = document.getElementById("match-log-filters");
+    var table = document.getElementById("match-log-table");
+    if (!filterBar || !table) return;
+    var selects = filterBar.querySelectorAll("select");
+    var rows = table.querySelectorAll("tbody tr");
+
+    function applyFilters() {
+      var active = {};
+      selects.forEach(function (sel) { if (sel.value) active[sel.dataset.filter] = sel.value; });
+      rows.forEach(function (row) {
+        var visible = Object.keys(active).every(function (key) { return row.dataset[key] === active[key]; });
+        row.classList.toggle("hidden", !visible);
+      });
+    }
+
+    selects.forEach(function (sel) { sel.addEventListener("change", applyFilters); });
+  })();
+</script>
 {% endblock %}

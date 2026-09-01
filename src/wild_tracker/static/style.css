@@ -384,6 +384,7 @@ tr.week-row td:first-child { color: var(--text-faint); }
 .tab-btn:hover { color: var(--text-dim); }
 .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
 .tab-panel.hidden { display: none; }
+tr.hidden { display: none; }
 
 /* Economy tab */
 .econ-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
@@ -420,6 +421,17 @@ tr.week-row td:first-child { color: var(--text-faint); }
   font-family: inherit; cursor: pointer; min-width: 180px;
 }
 .comps-map-select select:hover { border-color: var(--accent-dim); }
+
+/* Generic row of filter <select>s (e.g. player Match Log: Agent/Stage/
+   Role/Map) — same look as .comps-map-select's select but laid out as a
+   wrapping flex row since there can be several side by side. */
+.filters-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.filters-row select {
+  background: var(--surface-2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 12px; font-size: 13.5px; font-weight: 600;
+  font-family: inherit; cursor: pointer; min-width: 140px;
+}
+.filters-row select:hover { border-color: var(--accent-dim); }
 
 /* Team Comps: composition row as 4 fixed-width role slots (Controller/
    Initiator/Sentinel/Duelist) rather than per-icon margins — fixed slot
