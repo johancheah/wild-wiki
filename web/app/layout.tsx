@@ -5,6 +5,7 @@ import Grainient from "@/components/Grainient";
 import { PlayerHeaderProvider } from "@/lib/PlayerHeaderContext";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://wild-wiki.vercel.app"),
   title: "WILD Gaming",
   description: "WILD Gaming Valorant Premier tracker",
 };

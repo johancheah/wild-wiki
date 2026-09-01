@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -36,6 +37,24 @@ type RoleBreakdown = {
   fkfd: number | null;
   kast_pct: number | null;
 };
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const [{ data: careerRows }, { data: agentRows }] = await Promise.all([
+    supabase.from("v_player_career").select("display_name, matches_played").eq("player_id", id),
+    supabase.from("v_player_agent_pool").select("agent, n").eq("player_id", id).order("n", { ascending: false }).limit(1),
+  ]);
+  const player = careerRows?.[0] as { display_name: string; matches_played: number } | undefined;
+  if (!player) return { title: "Player — WILD Gaming" };
+
+  const topAgent = agentRows?.[0] as { agent: string } | undefined;
+  const description = `${player.matches_played} matches played${topAgent ? ` · Most played: ${topAgent.agent}` : ""}`;
+
+  return {
+    title: `${player.display_name} — WILD Gaming`,
+    description,
+  };
+}
 
 export default async function PlayerDetailPage({
   params,

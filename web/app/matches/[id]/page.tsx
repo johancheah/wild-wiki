@@ -1,11 +1,26 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { MatchTabs } from "@/components/MatchTabs";
 import { mapSplash } from "@/lib/assets";
 import { fetchMatchFullDetail } from "@/lib/matchDetail";
+import type { MatchRow } from "@/lib/types";
 
 export const revalidate = 0;
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const { data: matchRows } = await supabase.from("v_match_row").select("*").eq("match_id", id);
+  const match = (matchRows as MatchRow[] | null)?.[0];
+  if (!match) return { title: "Match — WILD Gaming" };
+
+  const marginText = match.margin != null ? (match.margin > 0 ? `+${match.margin}` : `${match.margin}`) : null;
+  const title = `${match.map}${match.opponent_name ? ` vs ${match.opponent_name}` : ""} — WILD Gaming`;
+  const description = [match.result, marginText, match.season_id].filter(Boolean).join(" · ");
+
+  return { title, description };
+}
 
 export default async function MatchDetailPage({
   params,
