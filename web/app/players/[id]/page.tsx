@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { Avatar } from "@/components/Avatar";
 import { AgentCell } from "@/components/AgentCell";
 import { RoleCell } from "@/components/RoleCell";
+import { StatChip } from "@/components/StatChip";
 import { MatchLogTable } from "@/components/MatchLogTable";
 import { PlayerHeaderSync } from "@/components/PlayerHeaderSync";
 import type { PlayerCareer, MatchPlayerStats } from "@/lib/types";
@@ -99,27 +100,49 @@ export default async function PlayerDetailPage({
       <section>
         <h2>Multi-Kills &amp; Clutches (Career)</h2>
         <div className="table-scroll">
-          <table>
+          <table className="performance-table">
             <thead>
               <tr>
                 <th className="num-col">2K</th>
                 <th className="num-col">3K</th>
                 <th className="num-col">4K</th>
                 <th className="num-col">5K</th>
-                <th className="num-col">Clutches</th>
-                <th className="num-col">Plants</th>
-                <th className="num-col">Defuses</th>
+                <th className="num-col">1v1</th>
+                <th className="num-col">1v2</th>
+                <th className="num-col">1v3</th>
+                <th className="num-col">1v4</th>
+                <th className="num-col">1v5</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className="num-col num">{player.two_k ?? 0}</td>
-                <td className="num-col num">{player.three_k ?? 0}</td>
-                <td className="num-col num">{player.four_k ?? 0}</td>
-                <td className="num-col num">{player.five_k ?? 0}</td>
-                <td className="num-col num">{player.clutches ?? 0}</td>
-                <td className="num-col num">{player.plants ?? 0}</td>
-                <td className="num-col num">{player.defuses ?? 0}</td>
+                <td className="num-col">
+                  <StatChip value={player.two_k} blankZero square level={1} />
+                </td>
+                <td className="num-col">
+                  <StatChip value={player.three_k} blankZero square level={2} />
+                </td>
+                <td className="num-col">
+                  <StatChip value={player.four_k} blankZero square level={3} />
+                </td>
+                <td className="num-col">
+                  <StatChip value={player.five_k} blankZero square level={4} />
+                </td>
+                <td className="num-col">
+                  <StatChip value={player.clutch_1v1} blankZero square level={1} />
+                </td>
+                <td className="num-col">
+                  <StatChip value={player.clutch_1v2} blankZero square level={2} />
+                </td>
+                <td className="num-col">
+                  <StatChip value={player.clutch_1v3} blankZero square level={3} />
+                </td>
+                <td className="num-col">
+                  <StatChip value={player.clutch_1v4} blankZero square level={4} />
+                </td>
+                <td className="num-col">
+                  <StatChip value={player.clutch_1v5} blankZero square level={5} />
+                </td>
               </tr>
             </tbody>
           </table>

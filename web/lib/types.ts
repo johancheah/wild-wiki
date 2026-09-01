@@ -72,6 +72,11 @@ export type PlayerCareer = {
   plants: number | null;
   defuses: number | null;
   econ: number | null;
+  clutch_1v1: number | null;
+  clutch_1v2: number | null;
+  clutch_1v3: number | null;
+  clutch_1v4: number | null;
+  clutch_1v5: number | null;
 };
 
 export type MatchListItem = {

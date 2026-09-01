@@ -17,21 +17,24 @@
 <section>
   <h2>Multi-Kills &amp; Clutches (Career)</h2>
   <div class="table-scroll">
-    <table>
-      <thead><tr><th class="num-col">2K</th><th class="num-col">3K</th><th class="num-col">4K</th><th class="num-col">5K</th><th class="num-col">1v1</th><th class="num-col">1v2</th><th class="num-col">1v3</th><th class="num-col">1v4</th><th class="num-col">1v5</th><th class="num-col">Plants</th><th class="num-col">Defuses</th></tr></thead>
+    <table class="performance-table">
+      <thead>
+        <tr>
+          <th class="num-col">2K</th><th class="num-col">3K</th><th class="num-col">4K</th><th class="num-col">5K</th>
+          <th class="num-col">1v1</th><th class="num-col">1v2</th><th class="num-col">1v3</th><th class="num-col">1v4</th><th class="num-col">1v5</th>
+        </tr>
+      </thead>
       <tbody>
         <tr>
-          <td class="num-col num">{{ totals.two_k or 0 }}</td>
-          <td class="num-col num">{{ totals.three_k or 0 }}</td>
-          <td class="num-col num">{{ totals.four_k or 0 }}</td>
-          <td class="num-col num">{{ totals.five_k or 0 }}</td>
-          <td class="num-col num">{{ totals.clutch_1v1 or 0 }}</td>
-          <td class="num-col num">{{ totals.clutch_1v2 or 0 }}</td>
-          <td class="num-col num">{{ totals.clutch_1v3 or 0 }}</td>
-          <td class="num-col num">{{ totals.clutch_1v4 or 0 }}</td>
-          <td class="num-col num">{{ totals.clutch_1v5 or 0 }}</td>
-          <td class="num-col num">{{ totals.plants or 0 }}</td>
-          <td class="num-col num">{{ totals.defuses or 0 }}</td>
+          <td class="num-col">{{ ui.chip(totals.two_k, blank_zero=True, square=True, level=1) }}</td>
+          <td class="num-col">{{ ui.chip(totals.three_k, blank_zero=True, square=True, level=2) }}</td>
+          <td class="num-col">{{ ui.chip(totals.four_k, blank_zero=True, square=True, level=3) }}</td>
+          <td class="num-col">{{ ui.chip(totals.five_k, blank_zero=True, square=True, level=4) }}</td>
+          <td class="num-col">{{ ui.chip(totals.clutch_1v1, blank_zero=True, square=True, level=1) }}</td>
+          <td class="num-col">{{ ui.chip(totals.clutch_1v2, blank_zero=True, square=True, level=2) }}</td>
+          <td class="num-col">{{ ui.chip(totals.clutch_1v3, blank_zero=True, square=True, level=3) }}</td>
+          <td class="num-col">{{ ui.chip(totals.clutch_1v4, blank_zero=True, square=True, level=4) }}</td>
+          <td class="num-col">{{ ui.chip(totals.clutch_1v5, blank_zero=True, square=True, level=5) }}</td>
         </tr>
       </tbody>
     </table>
@@ -122,8 +125,8 @@
       <thead>
         <tr>
           <th data-sort-type="date">Date</th>
-          <th data-sort-type="string">Map</th>
           <th data-sort-type="string">Stage</th>
+          <th data-sort-type="string">Map</th>
           <th data-sort-type="string">Result</th>
           <th data-sort-type="string">Agent</th>
           <th data-sort-type="string">Role</th>
@@ -150,11 +153,11 @@
             data-agent="{{ m.agent or '' }}" data-stage="{{ m.season_id or '' }}"
             data-role="{{ m.role or '' }}" data-map="{{ m.map or '' }}">
           <td data-value="{{ m.date[:10] }}">{{ m.date|fmt_date }}</td>
-          <td>{{ ui.map_cell(m.map) }}</td>
           <td>{{ m.season_id or "—" }}</td>
+          <td>{{ ui.map_cell(m.map) }}</td>
           <td><span class="pill {{ 'win' if m.match_result == 'WIN' else 'loss' }}">{{ m.match_result }}</span></td>
           <td>{{ ui.agent_cell(m.agent) }}</td>
-          <td>{{ ui.role_cell(m.role) }}</td>
+          <td>{{ ui.role_cell_icon_only(m.role) }}</td>
           {% set plusminus = m.kills - m.deaths %}
           {% set kd = (m.kills / m.deaths) if m.deaths else m.kills %}
           {% set fkfd = (m.fk or 0) - (m.fd or 0) %}

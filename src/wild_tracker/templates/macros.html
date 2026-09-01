@@ -33,6 +33,18 @@
   </span>
 {% endmacro %}
 
+{# Icon-only variant of role_cell above — no text. #}
+{% macro role_cell_icon_only(role) %}
+  {% set files = {"Duelist": "role-duelist.png", "Initiator": "role-initiator.webp", "Controller": "role-controller.webp", "Sentinel": "role-sentinel.webp"} %}
+  <span class="role-cell-icon-only" title="{{ role or '' }}">
+    {% if role in files %}
+      <img class="role-icon" src="/static/icons/{{ files[role] }}" alt="{{ role }}">
+    {% else %}
+      <span class="avatar-fallback">—</span>
+    {% endif %}
+  </span>
+{% endmacro %}
+
 {# Box score variant: icon only, no agent name (agent_cell above keeps the
    name — still used in Agent Pool / Match Log where the text is wanted). #}
 {% macro agent_cell_icon_only(agent) %}

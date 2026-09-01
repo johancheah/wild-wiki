@@ -64,6 +64,11 @@ export async function fetchPlayerCareer(supabase: SupabaseClient, stage: string 
     four_k: number;
     five_k: number;
     clutches: number;
+    clutch_1v1: number;
+    clutch_1v2: number;
+    clutch_1v3: number;
+    clutch_1v4: number;
+    clutch_1v5: number;
     plants: number;
     defuses: number;
     econSum: number;
@@ -92,6 +97,11 @@ export async function fetchPlayerCareer(supabase: SupabaseClient, stage: string 
         four_k: 0,
         five_k: 0,
         clutches: 0,
+        clutch_1v1: 0,
+        clutch_1v2: 0,
+        clutch_1v3: 0,
+        clutch_1v4: 0,
+        clutch_1v5: 0,
         plants: 0,
         defuses: 0,
         econSum: 0,
@@ -113,6 +123,11 @@ export async function fetchPlayerCareer(supabase: SupabaseClient, stage: string 
     acc.four_k += r.four_k ?? 0;
     acc.five_k += r.five_k ?? 0;
     acc.clutches += (r.clutch_1v1 ?? 0) + (r.clutch_1v2 ?? 0) + (r.clutch_1v3 ?? 0) + (r.clutch_1v4 ?? 0) + (r.clutch_1v5 ?? 0);
+    acc.clutch_1v1 += r.clutch_1v1 ?? 0;
+    acc.clutch_1v2 += r.clutch_1v2 ?? 0;
+    acc.clutch_1v3 += r.clutch_1v3 ?? 0;
+    acc.clutch_1v4 += r.clutch_1v4 ?? 0;
+    acc.clutch_1v5 += r.clutch_1v5 ?? 0;
     acc.plants += r.plants ?? 0;
     acc.defuses += r.defuses ?? 0;
     if (r.econ !== null) {
@@ -143,6 +158,11 @@ export async function fetchPlayerCareer(supabase: SupabaseClient, stage: string 
     plants: acc.plants,
     defuses: acc.defuses,
     econ: acc.econN ? Math.round(acc.econSum / acc.econN) : null,
+    clutch_1v1: acc.clutch_1v1,
+    clutch_1v2: acc.clutch_1v2,
+    clutch_1v3: acc.clutch_1v3,
+    clutch_1v4: acc.clutch_1v4,
+    clutch_1v5: acc.clutch_1v5,
   }));
 
   players.sort((a, b) => b.kills - a.kills);

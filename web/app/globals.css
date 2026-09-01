@@ -345,6 +345,8 @@ tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4
   object-fit: contain; filter: opacity(0.85);
 }
 .role-cell { display: flex; align-items: center; }
+.role-cell-icon-only { display: flex; align-items: center; justify-content: center; }
+.role-cell-icon-only .role-icon { width: 20px; height: 20px; margin-right: 0; }
 
 /* Map icons/splash */
 .map-icon {

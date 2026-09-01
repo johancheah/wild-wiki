@@ -92,7 +92,10 @@ SELECT
     SUM(v.two_k) AS two_k, SUM(v.three_k) AS three_k, SUM(v.four_k) AS four_k, SUM(v.five_k) AS five_k,
     SUM(COALESCE(v.clutch_1v1, 0) + COALESCE(v.clutch_1v2, 0) + COALESCE(v.clutch_1v3, 0) + COALESCE(v.clutch_1v4, 0) + COALESCE(v.clutch_1v5, 0)) AS clutches,
     SUM(v.plants) AS plants, SUM(v.defuses) AS defuses,
-    ROUND(AVG(v.econ)::numeric, 1) AS econ
+    ROUND(AVG(v.econ)::numeric, 1) AS econ,
+    SUM(COALESCE(v.clutch_1v1, 0)) AS clutch_1v1, SUM(COALESCE(v.clutch_1v2, 0)) AS clutch_1v2,
+    SUM(COALESCE(v.clutch_1v3, 0)) AS clutch_1v3, SUM(COALESCE(v.clutch_1v4, 0)) AS clutch_1v4,
+    SUM(COALESCE(v.clutch_1v5, 0)) AS clutch_1v5
 FROM v_wild_player_match_stats v
 JOIN players p ON p.player_id = v.player_id
 GROUP BY p.player_id;

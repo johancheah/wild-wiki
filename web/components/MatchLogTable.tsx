@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AgentCell } from "./AgentCell";
 import { MapCell } from "./MapCell";
-import { RoleCell } from "./RoleCell";
+import { RoleCellIconOnly } from "./RoleCell";
 import { formatMatchDate, localDate } from "@/lib/schedule";
 import type { MatchPlayerStats } from "@/lib/types";
 
@@ -18,8 +18,8 @@ type Column = {
 
 const COLUMNS: Column[] = [
   { key: "date", label: "Date", type: "date", value: (m) => localDate(m.date) },
-  { key: "map", label: "Map", type: "string", value: (m) => m.map },
   { key: "stage", label: "Stage", type: "string", value: (m) => m.season_id },
+  { key: "map", label: "Map", type: "string", value: (m) => m.map },
   { key: "result", label: "Result", type: "string", value: (m) => m.match_result },
   { key: "agent", label: "Agent", type: "string", value: (m) => m.agent },
   { key: "role", label: "Role", type: "string", value: (m) => m.role },
@@ -149,10 +149,10 @@ export function MatchLogTable({ log }: { log: MatchPlayerStats[] }) {
                 <td>
                   <Link href={`/matches/${m.match_id}`}>{formatMatchDate(m.date)}</Link>
                 </td>
+                <td>{m.season_id ?? "—"}</td>
                 <td>
                   <MapCell map={m.map} />
                 </td>
-                <td>{m.season_id ?? "—"}</td>
                 <td>
                   <span className={`pill ${m.match_result === "WIN" ? "win" : "loss"}`}>{m.match_result}</span>
                 </td>
@@ -160,7 +160,7 @@ export function MatchLogTable({ log }: { log: MatchPlayerStats[] }) {
                   <AgentCell agent={m.agent} />
                 </td>
                 <td>
-                  <RoleCell role={m.role} />
+                  <RoleCellIconOnly role={m.role} />
                 </td>
                 <td className="num-col num">{m.acs !== null ? Math.round(m.acs) : "—"}</td>
                 <td className="num-col num">{m.kills}</td>
