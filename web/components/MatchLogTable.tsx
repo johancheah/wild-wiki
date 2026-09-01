@@ -8,6 +8,14 @@ import { RoleCellIconOnly } from "./RoleCell";
 import { formatMatchDate, localDate } from "@/lib/schedule";
 import type { MatchPlayerStats } from "@/lib/types";
 
+// Plain numeric cell that fades a zero (or missing value) down to a dash
+// instead of a distracting "0" — used by the Expanded Stats columns
+// (2K-5K, 1v1-1v5, Plants, Defuses), which are mostly zero for any given
+// match. Mirrors macros.html::num_zero.
+function NumZero({ value }: { value: number | null }) {
+  return value ? <>{value}</> : <span className="num-zero">—</span>;
+}
+
 type Column = {
   key: string;
   label: string;
@@ -237,17 +245,17 @@ export function MatchLogTable({ log }: { log: MatchPlayerStats[] }) {
                 </td>
                 {expanded ? (
                   <>
-                    <td className="num-col num">{m.two_k ?? 0}</td>
-                    <td className="num-col num">{m.three_k ?? 0}</td>
-                    <td className="num-col num">{m.four_k ?? 0}</td>
-                    <td className="num-col num">{m.five_k ?? 0}</td>
-                    <td className="num-col num">{m.clutch_1v1 ?? 0}</td>
-                    <td className="num-col num">{m.clutch_1v2 ?? 0}</td>
-                    <td className="num-col num">{m.clutch_1v3 ?? 0}</td>
-                    <td className="num-col num">{m.clutch_1v4 ?? 0}</td>
-                    <td className="num-col num">{m.clutch_1v5 ?? 0}</td>
-                    <td className="num-col num">{m.plants ?? 0}</td>
-                    <td className="num-col num">{m.defuses ?? 0}</td>
+                    <td className="num-col num"><NumZero value={m.two_k} /></td>
+                    <td className="num-col num"><NumZero value={m.three_k} /></td>
+                    <td className="num-col num"><NumZero value={m.four_k} /></td>
+                    <td className="num-col num"><NumZero value={m.five_k} /></td>
+                    <td className="num-col num"><NumZero value={m.clutch_1v1} /></td>
+                    <td className="num-col num"><NumZero value={m.clutch_1v2} /></td>
+                    <td className="num-col num"><NumZero value={m.clutch_1v3} /></td>
+                    <td className="num-col num"><NumZero value={m.clutch_1v4} /></td>
+                    <td className="num-col num"><NumZero value={m.clutch_1v5} /></td>
+                    <td className="num-col num"><NumZero value={m.plants} /></td>
+                    <td className="num-col num"><NumZero value={m.defuses} /></td>
                   </>
                 ) : (
                   <>

@@ -70,7 +70,7 @@
 <section>
   <h2>Role Breakdown</h2>
   <div class="table-scroll">
-    <table>
+    <table class="sticky-first-col">
       <thead>
         <tr>
           <th>Role</th><th class="num-col">Maps</th><th class="num-col">% of Maps</th>
@@ -101,7 +101,7 @@
 <section>
   <h2>Agent Pool</h2>
   <div class="table-scroll">
-    <table>
+    <table class="sticky-first-col">
       <thead>
         <tr>
           <th>Agent</th><th class="num-col">Played</th><th class="num-col">W</th><th class="num-col">Win %</th>
@@ -225,18 +225,18 @@
           <td class="num-col num">{{ m.fd if m.fd is not none else "—" }}</td>
           <td class="num-col num {{ 'margin-pos' if fkfd > 0 else ('margin-neg' if fkfd < 0 else '') }}">{{ "+%d"|format(fkfd) if fkfd > 0 else fkfd }}</td>
           <td class="num-col num col-collapse">{{ (m.two_k or 0) + (m.three_k or 0) + (m.four_k or 0) + (m.five_k or 0) }}</td>
-          <td class="num-col num col-expand">{{ m.two_k or 0 }}</td>
-          <td class="num-col num col-expand">{{ m.three_k or 0 }}</td>
-          <td class="num-col num col-expand">{{ m.four_k or 0 }}</td>
-          <td class="num-col num col-expand">{{ m.five_k or 0 }}</td>
+          <td class="num-col num col-expand">{{ ui.num_zero(m.two_k) }}</td>
+          <td class="num-col num col-expand">{{ ui.num_zero(m.three_k) }}</td>
+          <td class="num-col num col-expand">{{ ui.num_zero(m.four_k) }}</td>
+          <td class="num-col num col-expand">{{ ui.num_zero(m.five_k) }}</td>
           <td class="num-col num col-collapse">{{ m.clutches or 0 }}</td>
-          <td class="num-col num col-expand">{{ m.clutch_1v1 or 0 }}</td>
-          <td class="num-col num col-expand">{{ m.clutch_1v2 or 0 }}</td>
-          <td class="num-col num col-expand">{{ m.clutch_1v3 or 0 }}</td>
-          <td class="num-col num col-expand">{{ m.clutch_1v4 or 0 }}</td>
-          <td class="num-col num col-expand">{{ m.clutch_1v5 or 0 }}</td>
-          <td class="num-col num col-expand">{{ m.plants or 0 }}</td>
-          <td class="num-col num col-expand">{{ m.defuses or 0 }}</td>
+          <td class="num-col num col-expand">{{ ui.num_zero(m.clutch_1v1) }}</td>
+          <td class="num-col num col-expand">{{ ui.num_zero(m.clutch_1v2) }}</td>
+          <td class="num-col num col-expand">{{ ui.num_zero(m.clutch_1v3) }}</td>
+          <td class="num-col num col-expand">{{ ui.num_zero(m.clutch_1v4) }}</td>
+          <td class="num-col num col-expand">{{ ui.num_zero(m.clutch_1v5) }}</td>
+          <td class="num-col num col-expand">{{ ui.num_zero(m.plants) }}</td>
+          <td class="num-col num col-expand">{{ ui.num_zero(m.defuses) }}</td>
           <td class="num-col num">{{ "%.0f"|format(m.econ) if m.econ is not none else "—" }}</td>
         </tr>
         {% endfor %}

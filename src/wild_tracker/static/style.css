@@ -196,9 +196,11 @@ nav a.active { color: var(--accent); background: var(--surface-2); }
 .player-switcher-header .player-switcher-btn:hover .player-switcher-caret { opacity: 0.85; }
 
 @media (max-width: 720px) {
-  .nav-player.visible { max-width: 60px; }
-  .nav-player .player-switcher-name { display: none; }
-  .nav-player .player-switcher-btn { padding: 6px; }
+  .nav-player.visible { max-width: 180px; }
+  .nav-player .player-switcher-name {
+    max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block;
+  }
+  .nav-player .player-switcher-btn { padding: 6px 10px 6px 6px; }
 
   /* Anchoring the panel under the button (position:absolute; left:0) puts
      it off-screen or awkwardly clipped depending on where the button
@@ -290,6 +292,14 @@ tbody tr.week-alt td { background: var(--surface); }
 tbody tr.linkable:hover td { background: var(--surface-2); cursor: pointer; }
 tbody td.name { color: var(--text); font-weight: 600; }
 tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4px; }
+
+/* Freezes the first column (Agent Pool / Role Breakdown) while the rest of
+   a wide table scrolls horizontally under it — needs an opaque background
+   since sticky cells sit above the columns scrolling past underneath. */
+.sticky-first-col th:first-child, .sticky-first-col td:first-child {
+  position: sticky; left: 0; z-index: 1; background: var(--bg);
+}
+.sticky-first-col thead th:first-child { z-index: 2; background: var(--surface-2); }
 
 .pill {
   display: inline-block; padding: 2px 8px; border-radius: 3px;
@@ -630,6 +640,11 @@ tr.hidden { display: none; }
 #match-log-table th.col-expand, #match-log-table td.col-expand { display: none; }
 #match-log-table.expanded th.col-collapse, #match-log-table.expanded td.col-collapse { display: none; }
 #match-log-table.expanded th.col-expand, #match-log-table.expanded td.col-expand { display: table-cell; }
+
+/* Expanded Stats columns are mostly zero for any given match — fading a
+   zero down to a dash keeps the real (non-zero) values from getting lost
+   in a wall of "0"s. */
+.num-zero { color: var(--text-faint); }
 
 /* Team Comps: composition row as 4 fixed-width role slots (Controller/
    Initiator/Sentinel/Duelist) rather than per-icon margins — fixed slot

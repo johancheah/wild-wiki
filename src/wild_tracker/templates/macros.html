@@ -121,6 +121,12 @@
   </span>
 {% endmacro %}
 
+{# Plain numeric table cell that fades a zero (or missing value) down to a
+   dash instead of a distracting "0" — used by Match Log's Expanded Stats
+   columns (2K-5K, 1v1-1v5, Plants, Defuses), which are mostly zero for any
+   given match. #}
+{% macro num_zero(value) %}{% if value %}{{ value }}{% else %}<span class="num-zero">&mdash;</span>{% endif %}{% endmacro %}
+
 {% macro chip(value, diff=False, blank_zero=False, square=False, level=0, title=None) %}
   {% set sq = " sq" if square else "" %}
   {% set lvl = " chip-lvl-" ~ level if level and value else "" %}

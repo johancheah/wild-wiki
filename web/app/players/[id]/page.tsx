@@ -212,7 +212,7 @@ export default async function PlayerDetailPage({
                 <section>
                   <h2>Agent Pool</h2>
                   <div className="table-scroll">
-                    <table>
+                    <table className="sticky-first-col">
                       <thead>
                         <tr>
                           <th>Agent</th>
@@ -250,7 +250,7 @@ export default async function PlayerDetailPage({
                 <section>
                   <h2>Role Breakdown</h2>
                   <div className="table-scroll">
-                    <table>
+                    <table className="sticky-first-col">
                       <thead>
                         <tr>
                           <th>Role</th>
