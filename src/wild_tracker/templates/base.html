@@ -8,23 +8,44 @@
   <link rel="stylesheet" href="/static/style.css?v={{ asset_version() }}">
 </head>
 <body>
+  {% import "macros.html" as ui %}
   <header class="topbar">
     <div class="topbar-inner">
-      <a class="brand" href="/"><img class="brand-logo" src="/static/logo.png" alt="WILD Gaming">WILD <span>GAMING</span></a>
-      <nav>
-        <a href="/" class="{{ 'active' if active == 'home' }}">Home</a>
-        <a href="/team" class="{{ 'active' if active == 'team' }}">Team Stats</a>
-        <a href="/players" class="{{ 'active' if active == 'players' }}">Player Stats</a>
-        <a href="/matches" class="{{ 'active' if active == 'matches' }}">Matches</a>
-        <a href="/comps" class="{{ 'active' if active == 'comps' }}">Team Comps</a>
-        <a href="/schedule" class="{{ 'active' if active == 'schedule' }}">Schedule</a>
+      <a class="brand" href="/"><img class="brand-logo" src="/static/logo.png" alt="WILD Gaming"></a>
+      <nav class="desktop-nav">
+        {{ ui.nav_links(active) }}
       </nav>
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="mobile-menu">&#9776;</button>
     </div>
+    <nav class="mobile-menu" id="mobile-menu">
+      {{ ui.nav_links(active) }}
+    </nav>
   </header>
   <main class="wrap">
     {% block content %}{% endblock %}
   </main>
   <script>
+    // Mobile hamburger menu: toggles the .mobile-menu dropdown (hidden on
+    // desktop widths via CSS regardless of this class) and swaps the
+    // button glyph between hamburger/close.
+    (function () {
+      var toggle = document.getElementById("nav-toggle");
+      var menu = document.getElementById("mobile-menu");
+      if (!toggle || !menu) return;
+      toggle.addEventListener("click", function () {
+        var open = menu.classList.toggle("open");
+        toggle.setAttribute("aria-expanded", open ? "true" : "false");
+        toggle.innerHTML = open ? "&#10005;" : "&#9776;";
+      });
+      menu.querySelectorAll("a").forEach(function (a) {
+        a.addEventListener("click", function () {
+          menu.classList.remove("open");
+          toggle.setAttribute("aria-expanded", "false");
+          toggle.innerHTML = "&#9776;";
+        });
+      });
+    })();
+
     // Generic tab-toggle: every .tab-btn/.tab-panel pair is scoped by a
     // shared data-group, so multiple tab groups (e.g. nested per-map tabs
     // inside an outer Overall/Map1/Map2 group on the match-week page) can

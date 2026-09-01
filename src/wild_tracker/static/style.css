@@ -33,45 +33,79 @@ a { color: inherit; text-decoration: none; }
 }
 
 .topbar {
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
   position: sticky;
   top: 0;
   z-index: 10;
+  padding: 14px 24px 0;
+  background: linear-gradient(var(--bg) 65%, transparent);
 }
 
 .topbar-inner {
   max-width: 1080px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 6px 10px 6px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 56px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
 }
 
-.brand {
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.brand span { color: var(--accent); }
-.brand-logo { height: 32px; width: auto; display: block; }
+.brand { display: flex; align-items: center; }
+.brand-logo { height: 34px; width: auto; display: block; }
 
-nav { display: flex; gap: 4px; }
+nav.desktop-nav { display: flex; gap: 4px; }
 nav a {
-  padding: 8px 12px;
-  border-radius: 4px;
+  padding: 8px 14px;
+  border-radius: 999px;
   font-size: 13.5px;
   font-weight: 600;
   color: var(--text-dim);
 }
 nav a:hover { color: var(--text); background: var(--surface-2); }
 nav a.active { color: var(--accent); background: var(--surface-2); }
+
+.nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.nav-toggle:hover { background: var(--surface-2); }
+
+.mobile-menu {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 1080px;
+  margin: 8px auto 0;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+.mobile-menu a { padding: 12px 16px; border-radius: 14px; font-size: 14.5px; }
+
+@media (max-width: 720px) {
+  nav.desktop-nav { display: none; }
+  .nav-toggle { display: flex; }
+  /* .open only takes effect at mobile widths, so a menu left open before
+     the viewport grows past the breakpoint doesn't linger underneath the
+     now-visible desktop nav. */
+  .mobile-menu.open { display: flex; }
+}
 
 .wrap {
   max-width: 1080px;

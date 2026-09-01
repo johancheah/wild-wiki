@@ -1,3 +1,13 @@
+{# Site nav links — shared by the desktop pill nav and the mobile hamburger
+   dropdown (base.html) so the list of pages lives in exactly one place. #}
+{% macro nav_links(active) %}
+  <a href="/team" class="{{ 'active' if active == 'team' }}">Team Stats</a>
+  <a href="/players" class="{{ 'active' if active == 'players' }}">Player Stats</a>
+  <a href="/matches" class="{{ 'active' if active == 'matches' }}">Matches</a>
+  <a href="/comps" class="{{ 'active' if active == 'comps' }}">Team Comps</a>
+  <a href="/schedule" class="{{ 'active' if active == 'schedule' }}">Schedule</a>
+{% endmacro %}
+
 {% macro avatar(display_name, headshot_filename, size="") %}
   {% set url = headshot_url(headshot_filename) %}
   {% if url %}
