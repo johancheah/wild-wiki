@@ -5,7 +5,9 @@ import { Avatar } from "@/components/Avatar";
 import { AgentCell } from "@/components/AgentCell";
 import { RoleCell } from "@/components/RoleCell";
 import { MatchLogTable } from "@/components/MatchLogTable";
+import { PlayerHeaderSync } from "@/components/PlayerHeaderSync";
 import type { PlayerCareer, MatchPlayerStats } from "@/lib/types";
+import type { NavPlayer } from "@/lib/PlayerHeaderContext";
 
 export const revalidate = 0;
 
@@ -19,24 +21,26 @@ export default async function PlayerDetailPage({
 }) {
   const { id } = await params;
 
-  const [{ data: careerRows }, { data: agentRows }, { data: roleRows }, { data: matchLog }] = await Promise.all([
-    supabase.from("v_player_career").select("*").eq("player_id", id),
-    supabase
-      .from("v_player_agent_pool")
-      .select("*")
-      .eq("player_id", id)
-      .order("n", { ascending: false }),
-    supabase
-      .from("v_player_role_breakdown")
-      .select("*")
-      .eq("player_id", id)
-      .order("n", { ascending: false }),
-    supabase
-      .from("v_wild_player_match_stats")
-      .select("*")
-      .eq("player_id", id)
-      .order("date", { ascending: false }),
-  ]);
+  const [{ data: careerRows }, { data: agentRows }, { data: roleRows }, { data: matchLog }, { data: rosterRows }] =
+    await Promise.all([
+      supabase.from("v_player_career").select("*").eq("player_id", id),
+      supabase
+        .from("v_player_agent_pool")
+        .select("*")
+        .eq("player_id", id)
+        .order("n", { ascending: false }),
+      supabase
+        .from("v_player_role_breakdown")
+        .select("*")
+        .eq("player_id", id)
+        .order("n", { ascending: false }),
+      supabase
+        .from("v_wild_player_match_stats")
+        .select("*")
+        .eq("player_id", id)
+        .order("date", { ascending: false }),
+      supabase.from("v_player_career").select("player_id, display_name, headshot_filename"),
+    ]);
 
   const player = (careerRows as PlayerCareer[] | null)?.[0];
   if (!player) notFound();
@@ -45,9 +49,18 @@ export default async function PlayerDetailPage({
   const roles = (roleRows ?? []) as RoleBreakdown[];
   const totalWithRole = roles.reduce((s, r) => s + r.n, 0);
   const log = (matchLog ?? []) as MatchPlayerStats[];
+  const roster = ((rosterRows ?? []) as NavPlayer[]).sort((a, b) =>
+    a.display_name.localeCompare(b.display_name, undefined, { sensitivity: "base" })
+  );
+  const navPlayer: NavPlayer = {
+    player_id: player.player_id,
+    display_name: player.display_name,
+    headshot_filename: player.headshot_filename,
+  };
 
   return (
     <>
+      <PlayerHeaderSync player={navPlayer} roster={roster} />
       <Link className="back-link" href="/players">
         &larr; All Players
       </Link>

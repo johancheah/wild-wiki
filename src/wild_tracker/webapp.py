@@ -121,10 +121,14 @@ def player_list(request: Request, stage: Optional[str] = None):
 def player_detail(request: Request, player_id: str):
     conn = get_conn()
     data = queries.player_detail(conn, player_id)
+    roster = queries.player_roster(conn)
     conn.close()
     if data is None:
         raise HTTPException(status_code=404, detail="Player not found")
-    return templates.TemplateResponse("player_detail.html", {"request": request, "active": "players", **data})
+    return templates.TemplateResponse("player_detail.html", {
+        "request": request, "active": "players", **data,
+        "nav_player": data["player"], "nav_roster": roster,
+    })
 
 
 @app.get("/matches", response_class=HTMLResponse)

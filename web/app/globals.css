@@ -118,6 +118,79 @@ nav a.active { color: var(--accent); background: var(--surface-2); }
   .mobile-menu.open { display: flex; }
 }
 
+/* Player detail page: compact avatar+name that fades/slides into the nav
+   bar next to the logo once the page's own big player header scrolls out
+   of view (Nav.tsx toggles .visible on scroll), and doubles as a dropdown
+   for jumping to another player. Collapsed to zero width by default
+   (rather than display:none) so the max-width transition has something to
+   animate from. */
+.nav-player {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  margin-left: 0;
+  transition: max-width 0.32s ease, opacity 0.24s ease, margin-left 0.32s ease;
+}
+.nav-player.visible { max-width: 260px; opacity: 1; margin-left: 12px; }
+
+.nav-player-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 6px 6px;
+  border-radius: 999px;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.nav-player-btn:hover { background: var(--surface-2); }
+.nav-player-btn .avatar-sm, .nav-player-btn .avatar-fallback-sm { flex-shrink: 0; }
+.nav-player-caret { color: var(--text-faint); font-size: 10px; }
+
+.nav-player-dropdown {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  min-width: 220px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+.nav-player-dropdown.open { display: flex; }
+.nav-player-dropdown a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.nav-player-dropdown a:hover { color: var(--text); background: var(--surface-2); }
+.nav-player-dropdown a.active { color: var(--accent); background: var(--surface-2); }
+
+@media (max-width: 720px) {
+  .nav-player.visible { max-width: 60px; }
+  .nav-player-name { display: none; }
+  .nav-player-btn { padding: 6px; }
+}
+
 .wrap {
   max-width: 1080px;
   margin: 0 auto;

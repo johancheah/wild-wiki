@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 import Grainient from "@/components/Grainient";
+import { PlayerHeaderProvider } from "@/lib/PlayerHeaderContext";
 
 export const metadata: Metadata = {
   title: "WILD Gaming",
@@ -40,8 +41,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             zoom={1.3}
           />
         </div>
-        <Nav />
-        <main className="wrap">{children}</main>
+        <PlayerHeaderProvider>
+          <Nav />
+          <main className="wrap">{children}</main>
+        </PlayerHeaderProvider>
       </body>
     </html>
   );

@@ -116,6 +116,21 @@ def player_career_list(conn: sqlite3.Connection, stage: str | None = None) -> li
     """, params).fetchall()]
 
 
+def player_roster(conn: sqlite3.Connection) -> list[dict]:
+    """Minimal id/name/headshot list for every WILD roster member,
+    alphabetical by display name — powers the nav bar's player-switcher
+    dropdown on the player detail page (deliberately not the full
+    career-stats query; the dropdown just needs enough to render a row and
+    link). Scoped to v_wild_player_match_stats, same as player_career_list
+    — the raw `players` table also has every opponent ever faced, which
+    isn't what "switch to another player" should mean here."""
+    return [dict(r) for r in conn.execute("""
+        SELECT DISTINCT p.player_id, p.headshot_filename, COALESCE(p.nickname, p.riot_name) AS display_name
+        FROM players p JOIN v_wild_player_match_stats v ON v.player_id = p.player_id
+        ORDER BY display_name COLLATE NOCASE
+    """).fetchall()]
+
+
 def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:
     player_row = conn.execute(
         "SELECT *, COALESCE(nickname, riot_name) AS display_name FROM players WHERE player_id = ?",

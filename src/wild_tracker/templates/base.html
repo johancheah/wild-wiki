@@ -12,6 +12,22 @@
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="/"><img class="brand-logo" src="/static/logo.png" alt="WILD Gaming"></a>
+      {% if nav_player %}
+      <div class="nav-player" id="nav-player">
+        <button class="nav-player-btn" id="nav-player-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="nav-player-dropdown">
+          {{ ui.avatar(nav_player.display_name, nav_player.headshot_filename, "sm") }}
+          <span class="nav-player-name">{{ nav_player.display_name }}</span>
+          <span class="nav-player-caret">&#9662;</span>
+        </button>
+        <div class="nav-player-dropdown" id="nav-player-dropdown">
+          {% for p in nav_roster %}
+          <a href="/players/{{ p.player_id }}" class="{{ 'active' if p.player_id == nav_player.player_id }}">
+            {{ ui.avatar(p.display_name, p.headshot_filename, "sm") }}{{ p.display_name }}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
       <nav class="desktop-nav">
         {{ ui.nav_links(active) }}
       </nav>
@@ -43,6 +59,32 @@
           toggle.setAttribute("aria-expanded", "false");
           toggle.innerHTML = "&#9776;";
         });
+      });
+    })();
+
+    // Player detail page only: the compact avatar+name in the nav bar
+    // fades/slides in once the page's own big player header has scrolled
+    // past, and doubles as a dropdown to jump to another player.
+    (function () {
+      var navPlayer = document.getElementById("nav-player");
+      if (!navPlayer) return;
+      var threshold = 220;
+      function onScroll() {
+        navPlayer.classList.toggle("visible", window.scrollY > threshold);
+      }
+      window.addEventListener("scroll", onScroll, { passive: true });
+      onScroll();
+
+      var btn = document.getElementById("nav-player-btn");
+      var dropdown = document.getElementById("nav-player-dropdown");
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var open = dropdown.classList.toggle("open");
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+      document.addEventListener("click", function () {
+        dropdown.classList.remove("open");
+        btn.setAttribute("aria-expanded", "false");
       });
     })();
 
