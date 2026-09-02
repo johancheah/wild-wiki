@@ -82,7 +82,7 @@ def home_page_data(conn: sqlite3.Connection) -> dict:
 
 
 def stage_list(conn: sqlite3.Connection) -> list[str]:
-    """Distinct season/stage ids (e.g. "E11A5"), most recent first — same
+    """Distinct season/stage ids (e.g. "V26A5"), most recent first — same
     ordering convention as schedule.html."""
     rows = conn.execute("""
         SELECT season_id, MIN(date) AS first_date FROM matches

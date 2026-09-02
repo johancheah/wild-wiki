@@ -1,9 +1,51 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from .agent_roles import agent_role
+
+_EPISODE_ACT_RE = re.compile(r"^[Ee](\d{1,2})[Aa](\d{1,2})$")
+_YEAR_ACT_RE = re.compile(r"^[Vv](\d{2}):?[Aa](\d{1,2})$")
+
+
+def normalize_season_id(raw: str | None) -> str | None:
+    """Canonicalizes a season/stage label to VALORANT's public branding.
+
+    Riot's own API (metadata.season.short, e.g. "e10a3") kept incrementing an
+    internal episode counter past Episode 9, while the in-game UI (and this
+    project's spreadsheet, typed by hand off that UI) switched to year-based
+    branding for the same real stages ("V25 Act 3" etc. — see
+    valorant.fandom.com/wiki/Premier's History table): Episode 10 is 2025,
+    Episode 11 is 2026, so "E{10+n}" and "V{25+n}" name the same stage.
+    Confirmed by cross-referencing this project's own match dates and map
+    rotations against that table (e.g. the matches API-tagged "e10a3" run the
+    exact Haven→Lotus→Sunset→Pearl→Icebox→Ascent rotation the wiki lists for
+    V25 Act 3). Also strips the stray colon a few hand-typed spreadsheet rows
+    used ("V25:A4" -> "V25A4"). Anything else (Beta/Ignition/Launch, or an
+    already-canonical pre-Episode-10 code like E7A3) passes through as-is
+    apart from whitespace trimming.
+    """
+    if raw is None:
+        return None
+    s = raw.strip()
+    if not s:
+        return None
+
+    m = _EPISODE_ACT_RE.match(s)
+    if m:
+        episode, act = int(m.group(1)), int(m.group(2))
+        if episode >= 10:
+            return f"V{episode + 15}A{act}"
+        return f"E{episode}A{act}"
+
+    m = _YEAR_ACT_RE.match(s)
+    if m:
+        year, act = m.group(1), int(m.group(2))
+        return f"V{year}A{act}"
+
+    return s
 
 
 def _get(d: dict | None, *path: str, default: Any = None) -> Any:
@@ -81,11 +123,13 @@ def normalize_match(raw: dict, wild_premier_team_id: str, match_type: str | None
     # metadata.season is {"id": <uuid>, "short": "e10a3"} in the real API
     # (confirmed against a live match) — "short" is the human-readable code,
     # analogous to the spreadsheet's Phase column ("E9A2" etc.), so use that
-    # rather than the opaque UUID.
+    # rather than the opaque UUID. Passed through normalize_season_id since
+    # the API's own internal episode numbering has drifted from Riot's
+    # public-facing branding since Episode 10 (see that function's docstring).
     season_short = _get(metadata, "season", "short")
     match_row = {
         "match_id": match_id,
-        "season_id": season_short.upper() if season_short else None,
+        "season_id": normalize_season_id(season_short),
         "date": metadata.get("started_at"),
         "map": _get(metadata, "map", "name"),
         "match_type": match_type,

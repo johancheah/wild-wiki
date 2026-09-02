@@ -32,6 +32,7 @@ TEAM_TZ = ZoneInfo("America/New_York")
 
 from .config import load_config
 from .db import connect, init_schema, upsert
+from .normalize import normalize_season_id
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("wild_tracker.xlsx_import")
@@ -149,7 +150,7 @@ def run_import(xlsx_path: Path) -> None:
         upsert(conn, "matches", {
             "match_id": match_id,
             "source": "spreadsheet",
-            "season_id": first["phase"],
+            "season_id": normalize_season_id(first["phase"]),
             "date": date_iso,
             "map": map_name,
             "match_type": first["type"],
