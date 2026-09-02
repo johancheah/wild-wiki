@@ -35,6 +35,7 @@ export function MatchTabs({
   h2h,
   eventRounds,
   teamSummary,
+  map,
 }: {
   wildRows: MatchTabsRow[];
   enemyRows?: MatchTabsRow[] | null;
@@ -48,6 +49,7 @@ export function MatchTabs({
   h2h?: H2hMatrix | null;
   eventRounds?: EventRounds;
   teamSummary?: MatchTeamSummary | null;
+  map?: string | null;
 }) {
   return (
     <>
@@ -59,7 +61,7 @@ export function MatchTabs({
             label: "Overview",
             content: (
               <>
-                {teamSummary && <TeamSummaryCard summary={teamSummary} opponentName={opponentName} />}
+                {teamSummary && <TeamSummaryCard summary={teamSummary} opponentName={opponentName} map={map} />}
                 <section>
                   <h2>{boxTitle}</h2>
                   {subtitle && (

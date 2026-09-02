@@ -3,8 +3,6 @@
 {% block title %}{{ match.map }} — WILD Gaming{% endblock %}
 {% block content %}
 <a class="back-link" href="/matches">&larr; All Matches</a>
-{% set splash = map_splash(match.map) %}
-{% if splash %}<img class="map-splash-banner" src="{{ splash }}" alt="{{ match.map }}">{% endif %}
 <h1>
   {{ match.map }}
   <span class="pill {{ 'win' if match.result == 'WIN' else 'loss' }}" style="vertical-align: middle;">{{ match.result }}</span>
@@ -20,5 +18,5 @@
 {% set enemy_rows = box_score|rejectattr("is_wild_player")|list|sort(attribute="acs", reverse=True) %}
 {% set economies = [{"map": match.map, "opponent": match.opponent_name, "economy": economy}] if economy else None %}
 
-{{ ui.match_tabs(group="m", wild_rows=wild_rows, enemy_rows=enemy_rows, weapons=weapons, economies=economies, timeline=timeline, opponent_name=match.opponent_name, h2h=h2h, event_rounds=event_rounds, team_summary=team_summary) }}
+{{ ui.match_tabs(group="m", wild_rows=wild_rows, enemy_rows=enemy_rows, weapons=weapons, economies=economies, timeline=timeline, opponent_name=match.opponent_name, h2h=h2h, event_rounds=event_rounds, team_summary=team_summary, map=match.map) }}
 {% endblock %}

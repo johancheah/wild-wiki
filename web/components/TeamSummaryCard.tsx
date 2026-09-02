@@ -1,16 +1,29 @@
 import type { MatchTeamSummary } from "@/lib/teamSummary";
+import { mapSplash } from "@/lib/assets";
 
 // Team-vs-team round-stat overview card — score plus ATK/DEF round wins,
 // first bloods (rounds won off first blood in parens), post-plant
 // conversion, clutches, and thrifties (rounds won on an Eco/Semi-Eco buy).
 // API-sourced matches only (lib/teamSummary.ts returns null otherwise), so
 // MatchTabs only renders this when present. Mirrors
-// macros.html::team_summary_card.
-export function TeamSummaryCard({ summary, opponentName }: { summary: MatchTeamSummary; opponentName?: string | null }) {
+// macros.html::team_summary_card. The header uses the map's splash art as
+// its background (replaces the earlier flat green stripe) with a dark
+// scrim (see .team-summary-header::before in globals.css) so the score
+// stays readable over any map art.
+export function TeamSummaryCard({
+  summary,
+  opponentName,
+  map,
+}: {
+  summary: MatchTeamSummary;
+  opponentName?: string | null;
+  map?: string | null;
+}) {
   const { wild, enemy } = summary;
+  const splash = mapSplash(map);
   return (
     <div className="team-summary-card">
-      <div className="team-summary-header">
+      <div className="team-summary-header" style={splash ? { backgroundImage: `url(${splash})` } : undefined}>
         <div className="team-summary-team wild">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="team-summary-logo" src="/logo.png" alt="WILD" />

@@ -324,9 +324,10 @@
    conversion, clutches, and thrifties (rounds won on an Eco/Semi-Eco buy).
    API-sourced matches only (queries.py::match_team_summary returns None
    otherwise), so match_tabs below only renders this when present. #}
-{% macro team_summary_card(ts, opponent_name) %}
+{% macro team_summary_card(ts, opponent_name, map=None) %}
+{% set splash = map_splash(map) %}
 <div class="team-summary-card">
-  <div class="team-summary-header">
+  <div class="team-summary-header"{% if splash %} style="background-image: url('{{ splash }}');"{% endif %}>
     <div class="team-summary-team wild">
       <img class="team-summary-logo" src="/static/logo.png" alt="WILD">
       <span class="team-summary-score">{{ ts.wild.score }}</span>
@@ -380,7 +381,7 @@
    matrix / economy grid on the site is rendered by the exact same markup.
    `group` must be unique on the page (used to scope tab-button clicks and
    panel ids so multiple tab groups can be nested without colliding). #}
-{% macro match_tabs(group, wild_rows, enemy_rows=None, weapons=None, economies=None, box_title="WILD Box Score", multi_agent=False, subtitle=None, timeline=None, opponent_name=None, h2h=None, event_rounds=None, team_summary=None) %}
+{% macro match_tabs(group, wild_rows, enemy_rows=None, weapons=None, economies=None, box_title="WILD Box Score", multi_agent=False, subtitle=None, timeline=None, opponent_name=None, h2h=None, event_rounds=None, team_summary=None, map=None) %}
   {% if timeline %}{{ round_timeline(timeline, opponent_name) }}{% endif %}
   <div class="tabs" data-group="{{ group }}">
     <button class="tab-btn active" data-tab="overview" data-group="{{ group }}">Overview</button>
@@ -390,7 +391,7 @@
   </div>
 
   <div id="tab-{{ group }}-overview" class="tab-panel" data-group="{{ group }}">
-    {% if team_summary %}{{ team_summary_card(team_summary, opponent_name) }}{% endif %}
+    {% if team_summary %}{{ team_summary_card(team_summary, opponent_name, map) }}{% endif %}
     <section>
       <h2>{{ box_title }}</h2>
       {% if subtitle %}<div class="subtitle" style="margin-top:-8px;">{{ subtitle }}</div>{% endif %}

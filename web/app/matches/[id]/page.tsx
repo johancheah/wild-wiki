@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { MatchTabs } from "@/components/MatchTabs";
-import { mapSplash } from "@/lib/assets";
 import { fetchMatchFullDetail } from "@/lib/matchDetail";
 import { matchRoundScore } from "@/lib/ogAssets";
 import type { MatchRow } from "@/lib/types";
@@ -38,7 +37,6 @@ export default async function MatchDetailPage({
   if (!detail) notFound();
 
   const { match, wildRows, enemyRows, timeline, economy, weapons, h2h, eventRounds, teamSummary } = detail;
-  const splash = mapSplash(match.map);
   const economies = economy ? [{ map: match.map, opponent: match.opponent_name, economy }] : null;
 
   return (
@@ -46,10 +44,6 @@ export default async function MatchDetailPage({
       <Link className="back-link" href="/matches">
         &larr; All Matches
       </Link>
-      {splash && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img className="map-splash-banner" src={splash} alt={match.map} />
-      )}
       <h1>
         {match.map}{" "}
         <span className={`pill ${match.result === "WIN" ? "win" : "loss"}`} style={{ verticalAlign: "middle" }}>
@@ -80,6 +74,7 @@ export default async function MatchDetailPage({
         h2h={h2h}
         eventRounds={eventRounds}
         teamSummary={teamSummary}
+        map={match.map}
       />
     </>
   );

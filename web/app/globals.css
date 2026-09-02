@@ -459,17 +459,30 @@ tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4
   border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 28px;
 }
 .team-summary-header {
+  position: relative;
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 28px;
-  background: repeating-linear-gradient(135deg, var(--accent) 0px, var(--accent) 16px, #98dc45 16px, #98dc45 32px);
+  background-color: var(--surface-2);
+  background-size: cover; background-position: center;
+  overflow: hidden;
 }
+/* Dark scrim over the map splash image so the score/name stay legible
+   regardless of the underlying art's brightness. */
+.team-summary-header::before {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(4, 8, 5, 0.82), rgba(4, 8, 5, 0.45) 45%, rgba(4, 8, 5, 0.82));
+}
+.team-summary-team, .team-summary-sep { position: relative; z-index: 1; }
 .team-summary-team { display: flex; align-items: center; gap: 12px; }
 .team-summary-team.enemy { flex-direction: row-reverse; }
 .team-summary-logo { height: 34px; width: auto; display: block; }
-.team-summary-score { font-size: 30px; font-weight: 800; color: #0d1607; font-variant-numeric: tabular-nums; }
-.team-summary-sep { font-size: 30px; font-weight: 800; color: #0d1607; padding: 0 4px; }
+.team-summary-score {
+  font-size: 30px; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+.team-summary-sep { font-size: 30px; font-weight: 800; color: #fff; padding: 0 4px; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9); }
 .team-summary-name {
-  font-size: 15px; font-weight: 700; color: #0d1607;
+  font-size: 15px; font-weight: 700; color: #fff; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
   max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .team-summary-body { background: var(--surface-2); }
