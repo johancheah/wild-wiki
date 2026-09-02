@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { SeasonGroup as SeasonGroupData } from "@/lib/schedule";
+import { formatMatchDate, type SeasonGroup as SeasonGroupData } from "@/lib/schedule";
 
 export function SeasonGroup({ season, defaultOpen }: { season: SeasonGroupData; defaultOpen: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -38,7 +38,7 @@ export function SeasonGroup({ season, defaultOpen }: { season: SeasonGroupData; 
             &#8627;
           </td>
           <td className="name">{w.label}</td>
-          <td>{w.local_date}</td>
+          <td>{formatMatchDate(w.local_date)}</td>
           <td>
             {w.maps.map((m) => (
               <span

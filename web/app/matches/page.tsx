@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { MapCell } from "@/components/MapCell";
+import { formatMatchDate } from "@/lib/schedule";
 import type { MatchListItem } from "@/lib/types";
 
 export const revalidate = 0;
@@ -40,7 +41,7 @@ export default async function MatchesPage() {
             {matches.map((m) => (
               <tr key={m.match_id} className="linkable">
                 <td>
-                  <Link href={`/matches/${m.match_id}`}>{m.date.slice(0, 10)}</Link>
+                  <Link href={`/matches/${m.match_id}`}>{formatMatchDate(m.date)}</Link>
                 </td>
                 <td className="num">{m.season_id ?? "—"}</td>
                 <td className="type-tag">{m.match_type ?? "—"}</td>

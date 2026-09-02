@@ -8,7 +8,7 @@
   <span class="pill {{ 'win' if match.result == 'WIN' else 'loss' }}" style="vertical-align: middle;">{{ match.result }}</span>
 </h1>
 <div class="subtitle">
-  {{ match.date[:10] }} &middot; {{ match.season_id or "—" }} &middot; {{ match.match_type or "—" }}
+  {{ match.date|fmt_date }} &middot; {{ match.season_id or "—" }} &middot; {{ match.match_type or "—" }}
   {% if match.opponent_name %} &middot; vs {{ match.opponent_name }} ({{ match.opponent_tag }}){% endif %}
   &middot; margin {{ "+%d"|format(match.margin) if match.margin and match.margin > 0 else match.margin }}
   &middot; <span class="pill {{ 'src-api' if match.source == 'api' else 'src-sheet' }}">{{ "API-sourced" if match.source == "api" else "Spreadsheet-sourced" }}</span>

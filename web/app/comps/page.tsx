@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { fetchTeamComps, mapCompSummary } from "@/lib/comps";
+import { formatMatchDate } from "@/lib/schedule";
 import { mapSplash } from "@/lib/assets";
 import { CompRow } from "@/components/CompRow";
 import { CompTooltip } from "@/components/CompTooltip";
@@ -103,7 +104,7 @@ export default async function TeamCompsPage({
             {comps.map((c) => (
               <tr key={c.match_id} className="linkable">
                 <td>
-                  <Link href={`/matches/${c.match_id}`}>{c.date.slice(0, 10)}</Link>
+                  <Link href={`/matches/${c.match_id}`}>{formatMatchDate(c.date)}</Link>
                 </td>
                 <td>
                   <span className={`pill ${c.result === "WIN" ? "win" : "loss"}`}>{c.result}</span>

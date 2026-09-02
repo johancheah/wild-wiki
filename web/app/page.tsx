@@ -2,6 +2,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { fetchUpcomingMatch, fetchLatestMatch } from "@/lib/home";
 import { mapSplash } from "@/lib/assets";
+import { formatMatchDate } from "@/lib/schedule";
 import { MapCell } from "@/components/MapCell";
 import { BoxScoreTable } from "@/components/BoxScoreTable";
 
@@ -59,7 +60,7 @@ export default async function HomePage() {
             </Link>
           </h1>
           <div className="subtitle">
-            {latest.match.date.slice(0, 10)} &middot; {latest.match.season_id ?? "—"} &middot;{" "}
+            {formatMatchDate(latest.match.date)} &middot; {latest.match.season_id ?? "—"} &middot;{" "}
             {latest.match.match_type ?? "—"}
             {latest.match.opponent_name && (
               <>

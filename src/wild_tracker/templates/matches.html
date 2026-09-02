@@ -15,7 +15,7 @@
     <tbody>
       {% for m in matches %}
       <tr class="linkable" onclick="location.href='/matches/{{ m.match_id }}'">
-        <td>{{ m.date[:10] }}</td>
+        <td>{{ m.date|fmt_date }}</td>
         <td class="num">{{ m.season_id or "—" }}</td>
         <td class="type-tag">{{ m.match_type or "—" }}</td>
         <td>{{ ui.map_cell(m.map) }}</td>

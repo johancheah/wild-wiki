@@ -5,8 +5,8 @@ import { supabase } from "@/lib/supabase";
 import { fetchMatchWeekByKey, fetchCombinedBoxScore } from "@/lib/schedule";
 import { fetchMatchFullDetail } from "@/lib/matchDetail";
 import { mergeWeaponMatrices } from "@/lib/weapons";
+import { formatMatchDate } from "@/lib/schedule";
 import { MatchTabs, type MatchTabsEconomyEntry } from "@/components/MatchTabs";
-import { MapCell } from "@/components/MapCell";
 import { Tabs } from "@/components/Tabs";
 import { NavLabelSync } from "@/components/NavLabelSync";
 
@@ -73,48 +73,8 @@ export default async function MatchWeekDetailPage({
         </span>
       </h1>
       <div className="subtitle">
-        {week.local_date} &middot; {week.match_type}
+        {formatMatchDate(week.local_date)} &middot; {week.match_type}
       </div>
-
-      <section>
-        <h2>Maps This Week</h2>
-        <div className="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Map</th>
-                <th>Opponent</th>
-                <th>Result</th>
-                <th className="num-col">Margin</th>
-                <th>Source</th>
-              </tr>
-            </thead>
-            <tbody>
-              {week.maps.map((m) => (
-                <tr key={m.match_id} className="linkable">
-                  <td className="name">
-                    <Link href={`/matches/${m.match_id}`}>
-                      <MapCell map={m.map} />
-                    </Link>
-                  </td>
-                  <td>{m.opponent ?? "—"}</td>
-                  <td>
-                    <span className={`pill ${m.result === "WIN" ? "win" : "loss"}`}>{m.result}</span>
-                  </td>
-                  <td className={`num-col num ${m.margin && m.margin > 0 ? "margin-pos" : "margin-neg"}`}>
-                    {m.margin && m.margin > 0 ? `+${m.margin}` : m.margin}
-                  </td>
-                  <td>
-                    <span className={`pill ${m.source === "api" ? "src-api" : "src-sheet"}`}>
-                      {m.source === "api" ? "API" : "Sheet"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
 
       <Tabs
         tabs={[

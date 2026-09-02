@@ -62,7 +62,7 @@
     <tbody>
       {% for c in comps %}
       <tr class="linkable" onclick="location.href='/matches/{{ c.match_id }}'">
-        <td>{{ c.date[:10] }}</td>
+        <td>{{ c.date|fmt_date }}</td>
         <td><span class="pill {{ 'win' if c.result == 'WIN' else 'loss' }}">{{ c.result }}</span></td>
         <td class="num-col num {{ 'margin-pos' if c.margin and c.margin > 0 else 'margin-neg' }}">{{ "+%d"|format(c.margin) if c.margin and c.margin > 0 else c.margin }}</td>
         <td>{{ ui.comp_row(c.agents) }}</td>

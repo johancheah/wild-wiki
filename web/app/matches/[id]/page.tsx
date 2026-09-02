@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { MatchTabs } from "@/components/MatchTabs";
 import { fetchMatchFullDetail } from "@/lib/matchDetail";
 import { matchRoundScore } from "@/lib/ogAssets";
+import { formatMatchDate } from "@/lib/schedule";
 import type { MatchRow } from "@/lib/types";
 
 export const revalidate = 0;
@@ -51,7 +52,7 @@ export default async function MatchDetailPage({
         </span>
       </h1>
       <div className="subtitle">
-        {match.date.slice(0, 10)} &middot; {match.season_id ?? "—"} &middot; {match.match_type ?? "—"}
+        {formatMatchDate(match.date)} &middot; {match.season_id ?? "—"} &middot; {match.match_type ?? "—"}
         {match.opponent_name && (
           <>
             {" "}

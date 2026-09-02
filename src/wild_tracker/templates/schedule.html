@@ -31,7 +31,7 @@
       <tr class="week-row linkable" onclick="location.href='/schedule/{{ w.season_id|urlencode }}/{{ w.local_date }}'">
         <td class="num" style="padding-left:32px;">&#8627;</td>
         <td class="name">{{ w.label }}</td>
-        <td>{{ w.local_date }}</td>
+        <td>{{ w.local_date|fmt_date }}</td>
         <td>
           {% for m in w.maps %}
             <span class="pill pill-map-result {{ 'win' if m.result == 'WIN' else 'loss' }}" style="margin-right:6px;">

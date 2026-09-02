@@ -7,29 +7,7 @@
   {{ week.season_id }} &middot; {{ week.label }}
   <span class="pill {{ 'win' if week.wins > week.losses else ('loss' if week.losses > week.wins else '') }}" style="vertical-align: middle;">{{ week.record }}</span>
 </h1>
-<div class="subtitle">{{ week.local_date }} &middot; {{ week.match_type }}</div>
-
-<section>
-  <h2>Maps This Week</h2>
-  <div class="table-scroll">
-    <table>
-      <thead>
-        <tr><th>Map</th><th>Opponent</th><th>Result</th><th class="num-col">Margin</th><th>Source</th></tr>
-      </thead>
-      <tbody>
-        {% for m in week.maps %}
-        <tr class="linkable" onclick="location.href='/matches/{{ m.match_id }}'">
-          <td class="name">{{ ui.map_cell(m.map) }}</td>
-          <td>{{ m.opponent or "—" }}</td>
-          <td><span class="pill {{ 'win' if m.result == 'WIN' else 'loss' }}">{{ m.result }}</span></td>
-          <td class="num-col num {{ 'margin-pos' if m.margin and m.margin > 0 else 'margin-neg' }}">{{ "+%d"|format(m.margin) if m.margin and m.margin > 0 else m.margin }}</td>
-          <td><span class="pill {{ 'src-api' if m.source == 'api' else 'src-sheet' }}">{{ "API" if m.source == "api" else "Sheet" }}</span></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</section>
+<div class="subtitle">{{ week.local_date|fmt_date }} &middot; {{ week.match_type }}</div>
 
 <div class="tabs" data-group="week">
   <button class="tab-btn active" data-tab="overall" data-group="week">Overall</button>
