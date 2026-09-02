@@ -160,7 +160,10 @@ nav a.active { color: var(--accent); background: var(--surface-2); }
   color: var(--text-dim);
   white-space: nowrap;
 }
-.player-switcher-dropdown a:hover { color: var(--text); background: var(--surface-2); }
+.player-switcher-dropdown a:hover {
+  color: var(--text);
+  background: linear-gradient(90deg, rgba(169, 241, 79, 0.14), rgba(169, 241, 79, 0.02)), var(--surface-2);
+}
 .player-switcher-dropdown a.active { color: var(--accent); background: var(--surface-2); }
 
 /* Nav-bar instance: compact avatar+name that fades/slides into the pill
@@ -289,7 +292,10 @@ table.sortable-table thead th.sort-desc::after { content: " \25BC"; font-size: 9
 tbody td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--text-dim); white-space: nowrap; }
 tbody tr:last-child td { border-bottom: none; }
 tbody tr.week-alt td { background: var(--surface); }
-tbody tr.linkable:hover td { background: var(--surface-2); cursor: pointer; }
+tbody tr.linkable:hover td {
+  background: linear-gradient(90deg, rgba(169, 241, 79, 0.14), rgba(169, 241, 79, 0.02)), var(--surface-2);
+  cursor: pointer;
+}
 tbody td.name { color: var(--text); font-weight: 600; }
 tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4px; }
 
@@ -529,7 +535,9 @@ table.weapon-matrix-table th, table.weapon-matrix-table td { padding: 8px 6px; }
 
 /* Schedule: collapsible season groups */
 tr.season-header { cursor: pointer; background: var(--surface-2); }
-tr.season-header:hover td { background: var(--surface-2); }
+tr.season-header:hover td {
+  background: linear-gradient(90deg, rgba(169, 241, 79, 0.14), rgba(169, 241, 79, 0.02)), var(--surface-2);
+}
 tr.season-header td { font-weight: 700; letter-spacing: 0.03em; }
 .season-toggle {
   display: inline-block; margin-right: 8px; color: var(--accent);

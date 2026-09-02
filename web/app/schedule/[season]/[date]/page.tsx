@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -9,6 +10,24 @@ import { MapCell } from "@/components/MapCell";
 import { Tabs } from "@/components/Tabs";
 
 export const revalidate = 0;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ season: string; date: string }>;
+}): Promise<Metadata> {
+  const { season, date } = await params;
+  const week = await fetchMatchWeekByKey(supabase, season, date);
+  if (!week) return { title: "Match Week — WILD Gaming" };
+
+  const mapNames = week.maps.map((m) => m.map).join(" & ");
+  const title = `${week.label} (${week.record}) — WILD Gaming`;
+  const description = [week.season_id, mapNames, week.maps[0]?.opponent ? `vs ${week.maps[0].opponent}` : null]
+    .filter(Boolean)
+    .join(" · ");
+
+  return { title, description };
+}
 
 export default async function MatchWeekDetailPage({
   params,

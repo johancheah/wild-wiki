@@ -5,19 +5,24 @@ import { supabase } from "@/lib/supabase";
 import { MatchTabs } from "@/components/MatchTabs";
 import { mapSplash } from "@/lib/assets";
 import { fetchMatchFullDetail } from "@/lib/matchDetail";
+import { matchRoundScore } from "@/lib/ogAssets";
 import type { MatchRow } from "@/lib/types";
 
 export const revalidate = 0;
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const { data: matchRows } = await supabase.from("v_match_row").select("*").eq("match_id", id);
+  const [{ data: matchRows }, { data: roundsRows }] = await Promise.all([
+    supabase.from("v_match_row").select("*").eq("match_id", id),
+    supabase.from("v_match_box_score").select("rounds_played").eq("match_id", id).eq("is_wild_player", true).limit(1),
+  ]);
   const match = (matchRows as MatchRow[] | null)?.[0];
   if (!match) return { title: "Match — WILD Gaming" };
 
-  const marginText = match.margin != null ? (match.margin > 0 ? `+${match.margin}` : `${match.margin}`) : null;
+  const score = matchRoundScore(match.margin, match.result, roundsRows?.[0]?.rounds_played ?? null);
+  const scoreText = score ? `${score.wildScore}-${score.oppScore}` : null;
   const title = `${match.map}${match.opponent_name ? ` vs ${match.opponent_name}` : ""} — WILD Gaming`;
-  const description = [match.result, marginText, match.season_id].filter(Boolean).join(" · ");
+  const description = [match.result, scoreText, match.season_id].filter(Boolean).join(" · ");
 
   return { title, description };
 }

@@ -1,12 +1,12 @@
 import { ImageResponse } from "next/og";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { supabase } from "@/lib/supabase";
 import { mapSplash, agentIcon } from "@/lib/assets";
+import { fileDataUri, matchRoundScore } from "@/lib/ogAssets";
+import { OgTeamPanel, type OgRosterRow } from "@/components/OgTeamPanel";
 import type { MatchRow, BoxScoreRow } from "@/lib/types";
 
 // nodejs (not the edge runtime default for this convention) so we can read
-// the logo/headshot straight off disk via fs rather than round-tripping
+// the logo/headshots straight off disk via fs rather than round-tripping
 // through our own deployed origin, which isn't knowable from inside this
 // handler.
 export const runtime = "nodejs";
@@ -14,48 +14,36 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = "WILD Gaming match result";
 
-const MIME_BY_EXT: Record<string, string> = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp" };
-
-// Reads a public/ asset straight off disk into a data: URI — satori (which
-// next/og's ImageResponse renders through) sniffs the declared mime to pick
-// a decoder, so this must match the file's real format or image decoding
-// throws deep inside satori rather than just mis-rendering.
-async function fileDataUri(relPath: string): Promise<string | null> {
-  try {
-    const buf = await readFile(join(process.cwd(), "public", relPath));
-    const ext = relPath.split(".").pop()?.toLowerCase() ?? "";
-    const mime = MIME_BY_EXT[ext] ?? "image/png";
-    return `data:${mime};base64,${buf.toString("base64")}`;
-  } catch {
-    return null;
-  }
-}
-
 export default async function Image({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [{ data: matchRows }, { data: mvpRows }, logoSrc] = await Promise.all([
+  const [{ data: matchRows }, { data: wildRows }, logoSrc] = await Promise.all([
     supabase.from("v_match_row").select("*").eq("match_id", id),
     supabase
       .from("v_match_box_score")
       .select("*")
       .eq("match_id", id)
       .eq("is_wild_player", true)
-      .order("acs", { ascending: false })
-      .limit(1),
+      .order("acs", { ascending: false }),
     fileDataUri("logo.png"),
   ]);
 
   const match = (matchRows as MatchRow[] | null)?.[0];
-  const mvp = (mvpRows as BoxScoreRow[] | null)?.[0];
+  const wild = (wildRows as BoxScoreRow[] | null) ?? [];
 
   const splash = match ? mapSplash(match.map) : null;
   const isWin = match?.result === "WIN";
-  const margin = match?.margin;
-  const marginText = margin != null ? (margin > 0 ? `+${margin}` : `${margin}`) : null;
+  const score = matchRoundScore(match?.margin ?? null, match?.result ?? null, wild[0]?.rounds_played ?? null);
 
-  const mvpAvatar = mvp?.headshot_filename ? await fileDataUri(`headshots/${mvp.headshot_filename}`) : null;
-  const mvpAgentIcon = mvp?.agent ? agentIcon(mvp.agent) : null;
+  const roster: OgRosterRow[] = await Promise.all(
+    wild.slice(0, 5).map(async (r) => ({
+      player_id: r.player_id,
+      display_name: r.display_name,
+      avatarSrc: r.headshot_filename ? await fileDataUri(`headshots/${r.headshot_filename}`) : null,
+      agentIconSrc: agentIcon(r.agent),
+      acs: r.acs,
+    }))
+  );
 
   return new ImageResponse(
     (
@@ -98,7 +86,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
-        {/* Result pill, top right */}
+        {/* Result pill + real round score, top right */}
         {match?.result && (
           <div
             style={{
@@ -107,19 +95,19 @@ export default async function Image({ params }: { params: Promise<{ id: string }
               right: 64,
               display: "flex",
               alignItems: "center",
-              gap: 12,
+              gap: 14,
               padding: "10px 22px",
               borderRadius: 999,
               background: isWin ? "rgba(47,214,127,0.18)" : "rgba(242,104,95,0.18)",
               border: `2px solid ${isWin ? "#4fd88a" : "#f2685f"}`,
             }}
           >
-            <div style={{ display: "flex", fontSize: 28, fontWeight: 800, color: isWin ? "#4fd88a" : "#f2685f" }}>
+            <div style={{ display: "flex", fontSize: 26, fontWeight: 800, color: isWin ? "#4fd88a" : "#f2685f" }}>
               {match.result}
             </div>
-            {marginText && (
-              <div style={{ display: "flex", fontSize: 22, fontWeight: 600, color: isWin ? "#4fd88a" : "#f2685f" }}>
-                {marginText}
+            {score && (
+              <div style={{ display: "flex", fontSize: 26, fontWeight: 700, color: isWin ? "#4fd88a" : "#f2685f" }}>
+                {score.wildScore}&ndash;{score.oppScore}
               </div>
             )}
           </div>
@@ -137,66 +125,8 @@ export default async function Image({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
-        {/* MVP card, bottom-right */}
-        {mvp && (
-          <div
-            style={{
-              position: "absolute",
-              bottom: 48,
-              right: 64,
-              display: "flex",
-              alignItems: "center",
-              gap: 18,
-              padding: "16px 24px",
-              borderRadius: 16,
-              background: "rgba(18,22,28,0.85)",
-              border: "1px solid #262d38",
-            }}
-          >
-            {mvpAvatar ? (
-              <img
-                src={mvpAvatar}
-                width={64}
-                height={64}
-                style={{ borderRadius: 10, objectFit: "cover" }}
-                alt=""
-              />
-            ) : (
-              <div
-                style={{
-                  display: "flex",
-                  width: 64,
-                  height: 64,
-                  borderRadius: 10,
-                  background: "#181d25",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 24,
-                  color: "#5b6474",
-                  fontWeight: 700,
-                }}
-              >
-                {mvp.display_name.slice(0, 2).toUpperCase()}
-              </div>
-            )}
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", fontSize: 16, fontWeight: 700, color: "#a9f14f", letterSpacing: 1, marginBottom: 4 }}>
-                WILD MVP
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                {mvpAgentIcon && (
-                  <img src={mvpAgentIcon} width={22} height={22} alt="" />
-                )}
-                <div style={{ display: "flex", fontSize: 26, fontWeight: 700, color: "#e7ebf1" }}>
-                  {mvp.display_name}
-                </div>
-                <div style={{ display: "flex", fontSize: 20, color: "#8b95a6" }}>
-                  {mvp.acs !== null ? `${Math.round(mvp.acs)} ACS` : ""}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Team panel, top-right below the result pill */}
+        {roster.length > 0 && <OgTeamPanel title="WILD ROSTER" rows={roster} />}
       </div>
     ),
     { ...size }
