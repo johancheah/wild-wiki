@@ -34,7 +34,7 @@ export function BoxScoreTable({
 }) {
   return (
     <div className="table-scroll">
-      <table className="vlr-table">
+      <table className="vlr-table sticky-first-col">
         <colgroup>
           <col style={{ width: 180 }} />
           <col style={{ width: multiAgent ? 92 : 52 }} />

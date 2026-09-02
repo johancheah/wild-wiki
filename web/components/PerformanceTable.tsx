@@ -43,7 +43,7 @@ export function PerformanceTable({
   const roundsFor = (playerId: string, key: EventRoundKey) => roundsTitle(eventRounds?.[playerId]?.[key]);
   return (
     <div className="table-scroll">
-      <table className="performance-table">
+      <table className="performance-table sticky-first-col">
         <thead>
           <tr>
             <th>Player</th>

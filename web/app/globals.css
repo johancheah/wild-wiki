@@ -633,7 +633,12 @@ tr.week-row td:first-child { color: var(--text-faint); }
      centered flex row clips its overflow equally on both sides, which
      leaves the first tab(s) unreachable by scrolling (scrollLeft can't
      go negative). */
-  .tabs { justify-content: flex-start; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* overflow-y must be pinned to hidden explicitly — leaving it at its
+     default "visible" while overflow-x is "auto" makes the browser force
+     overflow-y to "auto" too (a scroll container can't mix visible on one
+     axis with scroll/auto on the other per the CSS overflow spec), which
+     let this row pick up an unwanted vertical scrollbar/scroll. */
+  .tabs { justify-content: flex-start; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
   .tab-btn { flex-shrink: 0; }
 }
 .tab-panel.hidden { display: none; }

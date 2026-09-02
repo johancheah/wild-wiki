@@ -148,7 +148,7 @@
    <table> elements) line up vertically regardless of content length. #}
 {% macro box_score_table(rows, clickable=True, multi_agent=False) %}
 <div class="table-scroll">
-  <table class="vlr-table">
+  <table class="vlr-table sticky-first-col">
     <colgroup>
       <col style="width:180px"><col style="width:{{ '92px' if multi_agent else '52px' }}">
       <col style="width:56px"><col style="width:132px"><col style="width:52px">
@@ -207,7 +207,7 @@
 
 {% macro performance_table(rows, clickable=True, event_rounds=None) %}
 <div class="table-scroll">
-  <table class="performance-table">
+  <table class="performance-table sticky-first-col">
     <thead>
       <tr>
         <th>Player</th>
@@ -293,7 +293,7 @@
 
 {% macro weapon_matrix_table(weapons) %}
 <div class="table-scroll">
-  <table class="weapon-matrix-table">
+  <table class="weapon-matrix-table sticky-first-col">
     <thead>
       <tr>
         <th>Player</th>

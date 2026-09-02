@@ -10,7 +10,7 @@ import type { WeaponMatrix } from "@/lib/weapons";
 export function WeaponMatrixTable({ matrix }: { matrix: WeaponMatrix }) {
   return (
     <div className="table-scroll">
-      <table className="weapon-matrix-table">
+      <table className="weapon-matrix-table sticky-first-col">
         <thead>
           <tr>
             <th>Player</th>
