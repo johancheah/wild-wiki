@@ -25,16 +25,20 @@ def _block_index(round_number: int) -> int:
     return 2 + (round_number - 24) // 2
 
 
-def compute_match_timeline(
+def compute_wild_side_by_round(
     conn: sqlite3.Connection, match_id: str, wild_team_id: str, enemy_team_id: str
-) -> list[dict]:
+) -> dict[int, str | None]:
+    """Per-round WILD side ("ATK"/"DEF"/None), via the block-inference scheme
+    documented above. Shared by compute_match_timeline (below) and any other
+    query that needs to split rounds by side — e.g. the match-summary ATK/DEF
+    round-win counts — so the inference logic lives in exactly one place.
+    """
     rounds = conn.execute(
-        "SELECT round_number, winning_team_id, result, plant_player_id "
-        "FROM rounds WHERE match_id = ? ORDER BY round_number",
+        "SELECT round_number, plant_player_id FROM rounds WHERE match_id = ? ORDER BY round_number",
         (match_id,),
     ).fetchall()
     if not rounds:
-        return []
+        return {}
 
     planter_team = dict(
         conn.execute(
@@ -75,9 +79,25 @@ def compute_match_timeline(
         if not changed:
             break
 
+    return {r["round_number"]: block_side.get(_block_index(r["round_number"])) for r in rounds}
+
+
+def compute_match_timeline(
+    conn: sqlite3.Connection, match_id: str, wild_team_id: str, enemy_team_id: str
+) -> list[dict]:
+    rounds = conn.execute(
+        "SELECT round_number, winning_team_id, result, plant_player_id "
+        "FROM rounds WHERE match_id = ? ORDER BY round_number",
+        (match_id,),
+    ).fetchall()
+    if not rounds:
+        return []
+
+    wild_side_by_round = compute_wild_side_by_round(conn, match_id, wild_team_id, enemy_team_id)
+
     timeline = []
     for r in rounds:
-        wild_side = block_side.get(_block_index(r["round_number"]))
+        wild_side = wild_side_by_round.get(r["round_number"])
         winner = (
             "wild" if r["winning_team_id"] == wild_team_id
             else "enemy" if r["winning_team_id"] == enemy_team_id

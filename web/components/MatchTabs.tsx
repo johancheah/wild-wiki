@@ -4,12 +4,14 @@ import { WeaponMatrixTable } from "./WeaponMatrixTable";
 import { EconomySection } from "./EconomySection";
 import { RoundTimeline } from "./RoundTimeline";
 import { H2hTable } from "./H2hTable";
+import { TeamSummaryCard } from "./TeamSummaryCard";
 import { Tabs } from "./Tabs";
 import type { WeaponMatrix } from "@/lib/weapons";
 import type { MatchEconomy } from "@/lib/economy";
 import type { TimelineEntry } from "@/lib/timeline";
 import type { H2hMatrix } from "@/lib/h2h";
 import type { EventRounds } from "@/lib/eventRounds";
+import type { MatchTeamSummary } from "@/lib/teamSummary";
 
 export type MatchTabsRow = BoxScoreTableRow & PerformanceRow;
 
@@ -32,6 +34,7 @@ export function MatchTabs({
   opponentName,
   h2h,
   eventRounds,
+  teamSummary,
 }: {
   wildRows: MatchTabsRow[];
   enemyRows?: MatchTabsRow[] | null;
@@ -44,6 +47,7 @@ export function MatchTabs({
   opponentName?: string | null;
   h2h?: H2hMatrix | null;
   eventRounds?: EventRounds;
+  teamSummary?: MatchTeamSummary | null;
 }) {
   return (
     <>
@@ -55,6 +59,7 @@ export function MatchTabs({
             label: "Overview",
             content: (
               <>
+                {teamSummary && <TeamSummaryCard summary={teamSummary} opponentName={opponentName} />}
                 <section>
                   <h2>{boxTitle}</h2>
                   {subtitle && (

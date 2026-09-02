@@ -6,7 +6,7 @@ from collections import defaultdict
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from .round_side import compute_match_timeline
+from .round_side import compute_match_timeline, compute_wild_side_by_round
 
 TEAM_TZ = ZoneInfo("America/New_York")
 
@@ -780,11 +780,15 @@ def match_detail(conn: sqlite3.Connection, match_id: str) -> dict | None:
     weapons = weapon_matrix(conn, match_id, match["team_id"]) if match["team_id"] else None
     h2h = h2h_matrix(conn, match_id, match["team_id"], match["enemy_team_id"]) if match["team_id"] else None
     event_rounds = multi_kill_clutch_rounds(conn, match_id, match["team_id"])
+    team_summary = (
+        match_team_summary(conn, match_id, match["team_id"], match["enemy_team_id"])
+        if match["team_id"] and match["enemy_team_id"] else None
+    )
 
     return {
         "match": match, "box_score": box_score, "weapon_kills": weapon_kills,
         "timeline": timeline, "economy": economy, "weapons": weapons, "h2h": h2h,
-        "event_rounds": event_rounds,
+        "event_rounds": event_rounds, "team_summary": team_summary,
     }
 
 
@@ -858,3 +862,118 @@ def match_economy(conn: sqlite3.Connection, match_id: str, wild_team_id: str, en
     ]
 
     return {"wild_summary": summary[wild_team_id], "enemy_summary": summary[enemy_team_id], "rounds": rounds_out}
+
+
+def match_team_summary(conn: sqlite3.Connection, match_id: str, wild_team_id: str, enemy_team_id: str) -> dict | None:
+    """Team-vs-team round-stat overview for a match's Overview tab (score,
+    ATK/DEF round wins, first bloods, post-plant conversion, clutches,
+    thrifties) — a different thing from h2h_matrix above (a WILD-players x
+    opponent-players kill grid); this is whole-team totals, one row per stat.
+    API-sourced matches only (needs rounds/kill_events) — returns None for
+    spreadsheet-sourced matches, same degrade as timeline/economy.
+    """
+    rounds = conn.execute(
+        "SELECT round_number, winning_team_id, plant_player_id FROM rounds WHERE match_id = ? ORDER BY round_number",
+        (match_id,),
+    ).fetchall()
+    if not rounds:
+        return None
+
+    player_team = {
+        row["player_id"]: row["team_id"]
+        for row in conn.execute("SELECT player_id, team_id FROM match_players WHERE match_id = ?", (match_id,)).fetchall()
+    }
+    wild_players = {pid for pid, tid in player_team.items() if tid == wild_team_id}
+    enemy_players = {pid for pid, tid in player_team.items() if tid == enemy_team_id}
+
+    wild_side_by_round = compute_wild_side_by_round(conn, match_id, wild_team_id, enemy_team_id)
+
+    stats = {wild_team_id: defaultdict(int), enemy_team_id: defaultdict(int)}
+
+    # First blood: the round's first kill by event order (event_index — not
+    # time_in_round_ms, which can be null/tied) — whichever team got it, plus
+    # whether that team went on to win the round ("rounds won off first
+    # blood").
+    first_kills = conn.execute("""
+        SELECT k.round_number, k.killer_id
+        FROM kill_events k
+        WHERE k.match_id = ? AND k.killer_id IS NOT NULL AND k.event_index = (
+          SELECT MIN(event_index) FROM kill_events k2
+          WHERE k2.match_id = k.match_id AND k2.round_number = k.round_number AND k2.killer_id IS NOT NULL
+        )
+    """, (match_id,)).fetchall()
+    fb_team_by_round: dict[int, str | None] = {}
+    for r in first_kills:
+        fb_team_by_round[r["round_number"]] = player_team.get(r["killer_id"])
+
+    for r in rounds:
+        rn, winner = r["round_number"], r["winning_team_id"]
+        side = wild_side_by_round.get(rn)
+        if winner == wild_team_id and side:
+            stats[wild_team_id][f"{side.lower()}_won"] += 1
+        elif winner == enemy_team_id and side:
+            stats[enemy_team_id][("def" if side == "ATK" else "atk") + "_won"] += 1
+
+        fb_team = fb_team_by_round.get(rn)
+        if fb_team in stats:
+            stats[fb_team]["first_bloods"] += 1
+            if winner == fb_team:
+                stats[fb_team]["first_bloods_won"] += 1
+
+        planter_team_id = player_team.get(r["plant_player_id"]) if r["plant_player_id"] else None
+        if planter_team_id in stats:
+            stats[planter_team_id]["plants"] += 1
+            if winner == planter_team_id:
+                stats[planter_team_id]["post_plant_won"] += 1
+
+    # Clutches: same "first team to be down to exactly 1 alive while the
+    # other still has >=1" definition as derive.py::compute_clutches /
+    # multi_kill_clutch_rounds, generalized from WILD-only to whichever team
+    # hits that state first each round — same first (not per-team-first)
+    # eligible moment, since only one clutch situation can meaningfully arise
+    # per round.
+    for r in rounds:
+        kills = conn.execute("""
+            SELECT killer_id, victim_id FROM kill_events
+            WHERE match_id = ? AND round_number = ? ORDER BY event_index ASC
+        """, (match_id, r["round_number"])).fetchall()
+        wild_alive, enemy_alive = set(wild_players), set(enemy_players)
+        clutch_team = None
+        for k in kills:
+            victim = k["victim_id"]
+            wild_alive.discard(victim)
+            enemy_alive.discard(victim)
+            if clutch_team is None:
+                if len(wild_alive) == 1 and len(enemy_alive) >= 1:
+                    clutch_team = wild_team_id
+                elif len(enemy_alive) == 1 and len(wild_alive) >= 1:
+                    clutch_team = enemy_team_id
+        if clutch_team is not None and r["winning_team_id"] == clutch_team:
+            stats[clutch_team]["clutches"] += 1
+
+    # Thrifty: won the round on a low buy (Eco/Semi-Eco — pistol rounds don't
+    # count, everyone starts equal) — reuses match_economy's own bucketing so
+    # "thrifty" means the exact same thing here as in the Economy tab.
+    economy = match_economy(conn, match_id, wild_team_id, enemy_team_id)
+    if economy:
+        for rd in economy["rounds"]:
+            for tid, key in ((wild_team_id, "wild"), (enemy_team_id, "enemy")):
+                info = rd[key]
+                if info and info["won"] and info["bucket"] in ("eco", "semi_eco"):
+                    stats[tid]["thrifties"] += 1
+
+    def row(tid: str) -> dict:
+        s = stats[tid]
+        return {
+            "score": sum(1 for r in rounds if r["winning_team_id"] == tid),
+            "atk_won": s["atk_won"],
+            "def_won": s["def_won"],
+            "first_bloods": s["first_bloods"],
+            "first_bloods_won": s["first_bloods_won"],
+            "plants": s["plants"],
+            "post_plant_won": s["post_plant_won"],
+            "clutches": s["clutches"],
+            "thrifties": s["thrifties"] if economy else None,
+        }
+
+    return {"wild": row(wild_team_id), "enemy": row(enemy_team_id)}

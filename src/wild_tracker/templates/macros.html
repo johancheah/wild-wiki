@@ -319,13 +319,68 @@
 </div>
 {% endmacro %}
 
+{# Team-vs-team round-stat overview card — score plus ATK/DEF round wins,
+   first bloods (rounds won off first blood in parens), post-plant
+   conversion, clutches, and thrifties (rounds won on an Eco/Semi-Eco buy).
+   API-sourced matches only (queries.py::match_team_summary returns None
+   otherwise), so match_tabs below only renders this when present. #}
+{% macro team_summary_card(ts, opponent_name) %}
+<div class="team-summary-card">
+  <div class="team-summary-header">
+    <div class="team-summary-team wild">
+      <img class="team-summary-logo" src="/static/logo.png" alt="WILD">
+      <span class="team-summary-score">{{ ts.wild.score }}</span>
+    </div>
+    <span class="team-summary-sep">&ndash;</span>
+    <div class="team-summary-team enemy">
+      <span class="team-summary-score">{{ ts.enemy.score }}</span>
+      <span class="team-summary-name">{{ opponent_name or "Opponent" }}</span>
+    </div>
+  </div>
+  <div class="team-summary-body">
+    <div class="team-summary-row">
+      <span class="team-summary-val">{{ ts.wild.atk_won }}</span>
+      <span class="team-summary-label">ATK</span>
+      <span class="team-summary-val">{{ ts.enemy.atk_won }}</span>
+    </div>
+    <div class="team-summary-row">
+      <span class="team-summary-val">{{ ts.wild.def_won }}</span>
+      <span class="team-summary-label">DEF</span>
+      <span class="team-summary-val">{{ ts.enemy.def_won }}</span>
+    </div>
+    <div class="team-summary-row">
+      <span class="team-summary-val">{{ ts.wild.first_bloods }} ({{ ts.wild.first_bloods_won }})</span>
+      <span class="team-summary-label">First Bloods</span>
+      <span class="team-summary-val">{{ ts.enemy.first_bloods }} ({{ ts.enemy.first_bloods_won }})</span>
+    </div>
+    <div class="team-summary-row">
+      <span class="team-summary-val">{{ ts.wild.post_plant_won }}/{{ ts.wild.plants }}</span>
+      <span class="team-summary-label">Post Plant</span>
+      <span class="team-summary-val">{{ ts.enemy.post_plant_won }}/{{ ts.enemy.plants }}</span>
+    </div>
+    <div class="team-summary-row">
+      <span class="team-summary-val">{{ ts.wild.clutches }}</span>
+      <span class="team-summary-label">Clutches</span>
+      <span class="team-summary-val">{{ ts.enemy.clutches }}</span>
+    </div>
+    {% if ts.wild.thrifties is not none %}
+    <div class="team-summary-row">
+      <span class="team-summary-val">{{ ts.wild.thrifties }}</span>
+      <span class="team-summary-label">Thrifties</span>
+      <span class="team-summary-val">{{ ts.enemy.thrifties }}</span>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endmacro %}
+
 {# Standard set of match-scoped tabs: Overview / Performance / Weapons /
    Economy — shared by the single-match page and each nested tab group on
    the match-week page (Overall + one per map), so every box score / weapon
    matrix / economy grid on the site is rendered by the exact same markup.
    `group` must be unique on the page (used to scope tab-button clicks and
    panel ids so multiple tab groups can be nested without colliding). #}
-{% macro match_tabs(group, wild_rows, enemy_rows=None, weapons=None, economies=None, box_title="WILD Box Score", multi_agent=False, subtitle=None, timeline=None, opponent_name=None, h2h=None, event_rounds=None) %}
+{% macro match_tabs(group, wild_rows, enemy_rows=None, weapons=None, economies=None, box_title="WILD Box Score", multi_agent=False, subtitle=None, timeline=None, opponent_name=None, h2h=None, event_rounds=None, team_summary=None) %}
   {% if timeline %}{{ round_timeline(timeline, opponent_name) }}{% endif %}
   <div class="tabs" data-group="{{ group }}">
     <button class="tab-btn active" data-tab="overview" data-group="{{ group }}">Overview</button>
@@ -335,6 +390,7 @@
   </div>
 
   <div id="tab-{{ group }}-overview" class="tab-panel" data-group="{{ group }}">
+    {% if team_summary %}{{ team_summary_card(team_summary, opponent_name) }}{% endif %}
     <section>
       <h2>{{ box_title }}</h2>
       {% if subtitle %}<div class="subtitle" style="margin-top:-8px;">{{ subtitle }}</div>{% endif %}

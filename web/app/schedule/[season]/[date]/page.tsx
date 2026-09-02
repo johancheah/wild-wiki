@@ -152,6 +152,7 @@ export default async function MatchWeekDetailPage({
                   opponentName={m.opponent}
                   h2h={d.h2h}
                   eventRounds={d.eventRounds}
+                  teamSummary={d.teamSummary}
                 />
               ) : (
                 <div className="empty-note">This map&apos;s data could not be loaded.</div>

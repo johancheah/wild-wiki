@@ -22,23 +22,24 @@ function blockIndex(roundNumber: number): number {
   return 2 + Math.floor((roundNumber - 24) / 2);
 }
 
-export async function computeMatchTimeline(
+// Per-round WILD side ("ATK"/"DEF"/null), via the block-inference scheme
+// documented above. Shared by computeMatchTimeline (below) and anything else
+// that needs to split rounds by side — e.g. the match-summary ATK/DEF
+// round-win counts — so the inference logic lives in exactly one place.
+// Mirrors round_side.py::compute_wild_side_by_round.
+export async function computeWildSideByRound(
   supabase: SupabaseClient,
   matchId: string,
   wildTeamId: string,
   enemyTeamId: string
-): Promise<TimelineEntry[]> {
+): Promise<Map<number, "ATK" | "DEF" | null>> {
   const [{ data: roundsData }, { data: playersData }] = await Promise.all([
-    supabase
-      .from("rounds")
-      .select("round_number, winning_team_id, result, plant_player_id")
-      .eq("match_id", matchId)
-      .order("round_number"),
+    supabase.from("rounds").select("round_number, plant_player_id").eq("match_id", matchId).order("round_number"),
     supabase.from("match_players").select("player_id, team_id").eq("match_id", matchId),
   ]);
 
   const rounds = roundsData ?? [];
-  if (rounds.length === 0) return [];
+  if (rounds.length === 0) return new Map();
 
   const planterTeam = new Map<string, string>();
   for (const p of playersData ?? []) planterTeam.set(p.player_id, p.team_id);
@@ -75,9 +76,32 @@ export async function computeMatchTimeline(
     if (!changed) break;
   }
 
+  const result = new Map<number, "ATK" | "DEF" | null>();
+  for (const r of rounds) result.set(r.round_number, blockSide.get(blockIndex(r.round_number)) ?? null);
+  return result;
+}
+
+export async function computeMatchTimeline(
+  supabase: SupabaseClient,
+  matchId: string,
+  wildTeamId: string,
+  enemyTeamId: string
+): Promise<TimelineEntry[]> {
+  const [{ data: roundsData }, wildSideByRound] = await Promise.all([
+    supabase
+      .from("rounds")
+      .select("round_number, winning_team_id, result, plant_player_id")
+      .eq("match_id", matchId)
+      .order("round_number"),
+    computeWildSideByRound(supabase, matchId, wildTeamId, enemyTeamId),
+  ]);
+
+  const rounds = roundsData ?? [];
+  if (rounds.length === 0) return [];
+
   const timeline: TimelineEntry[] = [];
   for (const r of rounds) {
-    const wildSide = blockSide.get(blockIndex(r.round_number)) ?? null;
+    const wildSide = wildSideByRound.get(r.round_number) ?? null;
     const winner: "wild" | "enemy" | null =
       r.winning_team_id === wildTeamId ? "wild" : r.winning_team_id === enemyTeamId ? "enemy" : null;
     let winSide: "ATK" | "DEF" | null = null;
