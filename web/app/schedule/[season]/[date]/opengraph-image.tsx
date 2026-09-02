@@ -126,7 +126,7 @@ export default async function Image({ params }: { params: Promise<{ season: stri
 
         {/* Team panel, top-right below the record badge — combined ACS
             across the week's maps, top row is the week's MVP. */}
-        {roster.length > 0 && <OgTeamPanel title="WILD ROSTER · WEEK" rows={roster} />}
+        {roster.length > 0 && <OgTeamPanel title="WILD ROSTER · WEEK" rows={roster} showKda />}
       </div>
     ),
     { ...size }
