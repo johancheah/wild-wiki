@@ -3,6 +3,8 @@
 {% block title %}{{ week.label }} — WILD Gaming{% endblock %}
 {% block content %}
 <a class="back-link" href="/schedule">&larr; Schedule</a>
+{% set splash = map_splash(week.maps[0].map) if week.maps else None %}
+{% if splash %}<img class="map-splash-banner" src="{{ splash }}" alt="{{ week.maps[0].map }}">{% endif %}
 <h1>
   {{ week.season_id }} &middot; {{ week.label }}
   <span class="pill {{ 'win' if week.wins > week.losses else ('loss' if week.losses > week.wins else '') }}" style="vertical-align: middle;">{{ week.record }}</span>

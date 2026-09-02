@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { fetchMatchWeekByKey, fetchCombinedBoxScore } from "@/lib/schedule";
 import { fetchMatchFullDetail } from "@/lib/matchDetail";
 import { mergeWeaponMatrices } from "@/lib/weapons";
+import { mapSplash } from "@/lib/assets";
 import { MatchTabs, type MatchTabsEconomyEntry } from "@/components/MatchTabs";
 import { MapCell } from "@/components/MapCell";
 import { Tabs } from "@/components/Tabs";
@@ -56,6 +57,7 @@ export default async function MatchWeekDetailPage({
   });
 
   const navLabel = week.season_id ? `${week.season_id} · ${week.label}` : week.label;
+  const splash = week.maps.length > 0 ? mapSplash(week.maps[0].map) : null;
 
   return (
     <>
@@ -63,6 +65,10 @@ export default async function MatchWeekDetailPage({
       <Link className="back-link" href="/schedule">
         &larr; Schedule
       </Link>
+      {splash && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="map-splash-banner" src={splash} alt={week.maps[0].map} />
+      )}
       <h1>
         {week.season_id} &middot; {week.label}{" "}
         <span
