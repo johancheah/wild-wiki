@@ -21,7 +21,7 @@ export async function generateMetadata({
   const week = await fetchMatchWeekByKey(supabase, season, date);
   if (!week) return { title: "Match Week — WILD Gaming" };
 
-  const mapNames = week.maps.map((m) => m.map).join(" & ");
+  const mapNames = [...new Set(week.maps.map((m) => m.map))].join(" & ");
   const title = `${week.label} (${week.record}) — WILD Gaming`;
   const description = [week.season_id, mapNames, week.maps[0]?.opponent ? `vs ${week.maps[0].opponent}` : null]
     .filter(Boolean)

@@ -36,7 +36,11 @@ export default async function Image({ params }: { params: Promise<{ season: stri
   const isEvenWeek = week.wins === week.losses;
   const badgeColor = isEvenWeek ? "#8b95a6" : isGoodWeek ? "#4fd88a" : "#f2685f";
 
-  const mapNames = week.maps.map((m) => m.map).join(" & ");
+  // Regular-season weeks play the same assigned map twice (against two
+  // different opponents), so "Summit & Summit" is just noise — collapse to
+  // "Summit" once. Playoffs weeks can run different maps per round, so
+  // those still list each distinct one.
+  const mapNames = [...new Set(week.maps.map((m) => m.map))].join(" & ");
   const opponent = week.maps[0]?.opponent;
 
   const roster: OgRosterRow[] = await Promise.all(
@@ -46,6 +50,9 @@ export default async function Image({ params }: { params: Promise<{ season: stri
       avatarSrc: r.headshot_filename ? await fileDataUri(`headshots/${r.headshot_filename}`) : null,
       agentIconSrc: agentIcon(r.agents.find((a) => a) ?? null),
       acs: r.acs,
+      kills: r.kills,
+      deaths: r.deaths,
+      assists: r.assists,
     }))
   );
 

@@ -179,6 +179,7 @@ nav a.active { color: var(--accent); background: var(--surface-2); }
 .player-switcher-dropdown a:hover {
   color: var(--text);
   background: var(--row-hover);
+  box-shadow: inset 3px 0 0 0 var(--accent);
 }
 .player-switcher-dropdown a.active { color: var(--accent); background: var(--surface-2); }
 
@@ -331,6 +332,13 @@ tbody tr.week-alt td { background: var(--surface); }
 tbody tr.linkable:hover td {
   background: var(--row-hover);
   cursor: pointer;
+}
+/* Green accent strip on the row's far-left edge, matching the same treatment
+   on the MVP row of the OG-image roster panel. An inset box-shadow (not a
+   border) so it doesn't add width and shove the row's content over by 3px
+   on hover — it paints inside the cell's existing box instead. */
+tbody tr.linkable:hover td:first-child {
+  box-shadow: inset 3px 0 0 0 var(--accent);
 }
 tbody td.name { color: var(--text); font-weight: 600; }
 tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4px; }
@@ -573,6 +581,9 @@ table.weapon-matrix-table th, table.weapon-matrix-table td { padding: 8px 6px; }
 tr.season-header { cursor: pointer; background: var(--surface-2); }
 tr.season-header:hover td {
   background: var(--row-hover);
+}
+tr.season-header:hover td:first-child {
+  box-shadow: inset 3px 0 0 0 var(--accent);
 }
 tr.season-header td { font-weight: 700; letter-spacing: 0.03em; }
 .season-toggle {

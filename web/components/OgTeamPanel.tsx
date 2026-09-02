@@ -10,16 +10,27 @@ export type OgRosterRow = {
   avatarSrc: string | null;
   agentIconSrc: string | null;
   acs: number | null;
+  kills: number;
+  deaths: number;
+  assists: number;
 };
 
-export function OgTeamPanel({ title, rows }: { title: string; rows: OgRosterRow[] }) {
+export function OgTeamPanel({
+  title,
+  rows,
+  showKda = false,
+}: {
+  title?: string;
+  rows: OgRosterRow[];
+  showKda?: boolean;
+}) {
   return (
     <div
       style={{
         position: "absolute",
         top: 130,
         right: 64,
-        width: 380,
+        width: showKda ? 430 : 380,
         display: "flex",
         flexDirection: "column",
         borderRadius: 16,
@@ -28,19 +39,21 @@ export function OgTeamPanel({ title, rows }: { title: string; rows: OgRosterRow[
         overflow: "hidden",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          fontSize: 14,
-          fontWeight: 700,
-          color: "#a9f14f",
-          letterSpacing: 1.5,
-          padding: "14px 18px",
-          borderBottom: "1px solid #262d38",
-        }}
-      >
-        {title}
-      </div>
+      {title && (
+        <div
+          style={{
+            display: "flex",
+            fontSize: 14,
+            fontWeight: 700,
+            color: "#a9f14f",
+            letterSpacing: 1.5,
+            padding: "14px 18px",
+            borderBottom: "1px solid #262d38",
+          }}
+        >
+          {title}
+        </div>
+      )}
       {rows.map((r, i) => (
         <div
           key={r.player_id}
@@ -105,6 +118,11 @@ export function OgTeamPanel({ title, rows }: { title: string; rows: OgRosterRow[
               </div>
             )}
           </div>
+          {showKda && (
+            <div style={{ display: "flex", fontSize: 15, fontWeight: 600, color: "#8b95a6", width: 76 }}>
+              {r.kills}/{r.deaths}/{r.assists}
+            </div>
+          )}
           <div style={{ display: "flex", fontSize: 16, fontWeight: 700, color: "#8b95a6" }}>
             {r.acs !== null ? Math.round(r.acs) : "—"}
           </div>

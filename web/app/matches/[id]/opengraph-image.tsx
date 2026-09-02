@@ -42,6 +42,9 @@ export default async function Image({ params }: { params: Promise<{ id: string }
       avatarSrc: r.headshot_filename ? await fileDataUri(`headshots/${r.headshot_filename}`) : null,
       agentIconSrc: agentIcon(r.agent),
       acs: r.acs,
+      kills: r.kills,
+      deaths: r.deaths,
+      assists: r.assists,
     }))
   );
 
@@ -126,7 +129,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         </div>
 
         {/* Team panel, top-right below the result pill */}
-        {roster.length > 0 && <OgTeamPanel title="WILD ROSTER" rows={roster} />}
+        {roster.length > 0 && <OgTeamPanel rows={roster} showKda />}
       </div>
     ),
     { ...size }
