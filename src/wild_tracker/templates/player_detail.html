@@ -28,7 +28,7 @@
 <div class="stat-row">
   <div class="stat"><div class="label">Matches</div><div class="value num">{{ totals.matches_played }}</div></div>
   <div class="stat"><div class="label">ACS</div><div class="value num">{{ "%.0f"|format(totals.acs) if totals.acs is not none else "—" }}</div></div>
-  <div class="stat"><div class="label">K/D</div><div class="value num">{{ totals.kd if totals.kd is not none else "—" }}</div></div>
+  <div class="stat"><div class="label">K/D</div><div class="value num">{{ "%.2f"|format(totals.kd) if totals.kd is not none else "—" }}</div></div>
   <div class="stat"><div class="label">ADR</div><div class="value num">{{ "%.0f"|format(totals.adr) if totals.adr is not none else "—" }}</div></div>
   <div class="stat"><div class="label">HS%</div><div class="value num">{{ totals.hs_pct if totals.hs_pct is not none else "—" }}%</div></div>
   <div class="stat"><div class="label">ECON</div><div class="value num">{{ totals.econ if totals.econ is not none else "—" }}</div></div>

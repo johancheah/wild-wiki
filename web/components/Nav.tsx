@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PlayerSwitcher } from "./PlayerSwitcher";
 import { usePlayerHeader } from "@/lib/PlayerHeaderContext";
+import { useNavLabel } from "@/lib/NavLabelContext";
 
 const LINKS = [
   { href: "/team", label: "Team Stats" },
@@ -19,6 +20,7 @@ export function Nav() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { player, roster } = usePlayerHeader();
+  const { label: navLabel } = useNavLabel();
 
   // Reveal the compact avatar+name once the page's own big player header
   // (well above the fold) has scrolled out of view.
@@ -49,10 +51,16 @@ export function Nav() {
           <img className="brand-logo" src="/logo.png" alt="WILD Gaming" />
         </Link>
 
-        {player && (
+        {player ? (
           <div className={`nav-player ${scrolled ? "visible" : ""}`}>
             <PlayerSwitcher currentPlayer={player} roster={roster} variant="nav" />
           </div>
+        ) : (
+          navLabel && (
+            <div className={`nav-player nav-week-label ${scrolled ? "visible" : ""}`}>
+              <span className="nav-week-text">{navLabel}</span>
+            </div>
+          )
         )}
 
         <nav className="desktop-nav">{navLinks()}</nav>

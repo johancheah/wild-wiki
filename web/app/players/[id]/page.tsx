@@ -136,7 +136,7 @@ export default async function PlayerDetailPage({
                   </div>
                   <div className="stat">
                     <div className="label">K/D</div>
-                    <div className="value num">{player.kd ?? "—"}</div>
+                    <div className="value num">{player.kd !== null ? player.kd.toFixed(2) : "—"}</div>
                   </div>
                   <div className="stat">
                     <div className="label">ADR</div>

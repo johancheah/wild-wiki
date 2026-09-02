@@ -12,6 +12,11 @@
   --win-dim: #2a4b3a;
   --loss: #f2685f;
   --loss-dim: #4a2e2c;
+  /* Row-hover tint: --surface-2 blended with ~8% --accent, precomputed to a
+     flat color (not a gradient) so a hovered row reads as one uniform
+     highlight — a linear-gradient here would restart at every <td>
+     boundary since each cell paints its own background independently. */
+  --row-hover: rgb(36, 46, 40);
 }
 
 * { box-sizing: border-box; }
@@ -173,7 +178,7 @@ nav a.active { color: var(--accent); background: var(--surface-2); }
 }
 .player-switcher-dropdown a:hover {
   color: var(--text);
-  background: linear-gradient(90deg, rgba(169, 241, 79, 0.14), rgba(169, 241, 79, 0.02)), var(--surface-2);
+  background: var(--row-hover);
 }
 .player-switcher-dropdown a.active { color: var(--accent); background: var(--surface-2); }
 
@@ -196,6 +201,23 @@ nav a.active { color: var(--accent); background: var(--surface-2); }
    element. That's not a timing/animation issue, it's just wrong. */
 .nav-player.visible { max-width: 320px; opacity: 1; margin-left: 12px; overflow: visible; }
 
+/* Match-week instance (match week detail page): same fade/slide-in pill as
+   the player switcher above (shares .nav-player for that), but a plain
+   "Season · Week N" label instead of an avatar+switcher — there's nothing
+   to switch between on this page, just a breadcrumb back to what you're
+   looking at once the page's own big header scrolls out of view. */
+.nav-week-label { display: inline-flex; align-items: center; }
+.nav-week-text {
+  display: inline-flex; align-items: center;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 /* Page-header instance (player detail page): the whole avatar+name is the
    click target (not just a caret off to the side), styled to read as the
    page's own h1 rather than a nav pill — bumped up to match font-size. */
@@ -215,6 +237,9 @@ nav a.active { color: var(--accent); background: var(--surface-2); }
     max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block;
   }
   .nav-player .player-switcher-btn { padding: 6px 10px 6px 6px; }
+  .nav-week-text {
+    max-width: 150px; overflow: hidden; text-overflow: ellipsis; padding: 8px 12px;
+  }
 
   /* Anchoring the panel under the button (position:absolute; left:0) puts
      it off-screen or awkwardly clipped depending on where the button
@@ -304,7 +329,7 @@ tbody td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var
 tbody tr:last-child td { border-bottom: none; }
 tbody tr.week-alt td { background: var(--surface); }
 tbody tr.linkable:hover td {
-  background: linear-gradient(90deg, rgba(169, 241, 79, 0.14), rgba(169, 241, 79, 0.02)), var(--surface-2);
+  background: var(--row-hover);
   cursor: pointer;
 }
 tbody td.name { color: var(--text); font-weight: 600; }
@@ -547,7 +572,7 @@ table.weapon-matrix-table th, table.weapon-matrix-table td { padding: 8px 6px; }
 /* Schedule: collapsible season groups */
 tr.season-header { cursor: pointer; background: var(--surface-2); }
 tr.season-header:hover td {
-  background: linear-gradient(90deg, rgba(169, 241, 79, 0.14), rgba(169, 241, 79, 0.02)), var(--surface-2);
+  background: var(--row-hover);
 }
 tr.season-header td { font-weight: 700; letter-spacing: 0.03em; }
 .season-toggle {
@@ -595,10 +620,22 @@ tr.week-row td:first-child { color: var(--text-faint); }
   padding: 10px 18px; font-size: 13px; font-weight: 700; letter-spacing: 0.02em;
   color: var(--text-faint); background: none; border: none; cursor: pointer;
   border-bottom: 2px solid transparent; margin-bottom: -1px;
-  font-family: inherit;
+  font-family: inherit; white-space: nowrap;
 }
 .tab-btn:hover { color: var(--text-dim); }
 .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+@media (max-width: 720px) {
+  /* A box score's tab row (Overview/Performance/Weapons/Economy, or a
+     match week's Overall/Map1/Map2/...) can run wider than a phone
+     screen — scroll it horizontally instead of letting it overflow the
+     viewport. justify-content switches to flex-start here because a
+     centered flex row clips its overflow equally on both sides, which
+     leaves the first tab(s) unreachable by scrolling (scrollLeft can't
+     go negative). */
+  .tabs { justify-content: flex-start; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tab-btn { flex-shrink: 0; }
+}
 .tab-panel.hidden { display: none; }
 
 /* Economy tab */

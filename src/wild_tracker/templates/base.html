@@ -23,6 +23,10 @@
           {{ ui.player_switcher_dropdown(nav_player.player_id, nav_roster) }}
         </span>
       </div>
+      {% elif nav_week %}
+      <div class="nav-player nav-week-label" id="nav-week">
+        <span class="nav-week-text">{{ nav_week }}</span>
+      </div>
       {% endif %}
       <nav class="desktop-nav">
         {{ ui.nav_links(active) }}
@@ -58,11 +62,13 @@
       });
     })();
 
-    // Player detail page only: the compact avatar+name in the nav bar
-    // fades/slides in once the page's own big player header has scrolled
-    // past.
+    // Player detail / match-week detail pages only: the compact
+    // avatar+name (or, on a match week, the "Season · Week N" label) in
+    // the nav bar fades/slides in once the page's own big header has
+    // scrolled past. Only one of the two ever exists on a given page
+    // (base.html renders nav_player OR nav_week, never both).
     (function () {
-      var navPlayer = document.getElementById("nav-player");
+      var navPlayer = document.getElementById("nav-player") || document.getElementById("nav-week");
       if (!navPlayer) return;
       var threshold = 220;
       function onScroll() {

@@ -3,6 +3,7 @@ import "./globals.css";
 import { Nav } from "@/components/Nav";
 import Grainient from "@/components/Grainient";
 import { PlayerHeaderProvider } from "@/lib/PlayerHeaderContext";
+import { NavLabelProvider } from "@/lib/NavLabelContext";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://wild-wiki.vercel.app"),
@@ -43,8 +44,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         </div>
         <PlayerHeaderProvider>
-          <Nav />
-          <main className="wrap">{children}</main>
+          <NavLabelProvider>
+            <Nav />
+            <main className="wrap">{children}</main>
+          </NavLabelProvider>
         </PlayerHeaderProvider>
       </body>
     </html>

@@ -183,4 +183,8 @@ def match_week_detail(request: Request, season_id: str, local_date: str):
     conn.close()
     if data is None:
         raise HTTPException(status_code=404, detail="Match week not found")
-    return templates.TemplateResponse("match_week_detail.html", {"request": request, "active": "schedule", **data})
+    week = data["week"]
+    nav_week = f"{week['season_id']} · {week['label']}" if week["season_id"] else week["label"]
+    return templates.TemplateResponse("match_week_detail.html", {
+        "request": request, "active": "schedule", **data, "nav_week": nav_week,
+    })

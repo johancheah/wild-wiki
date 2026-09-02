@@ -8,6 +8,7 @@ import { mergeWeaponMatrices } from "@/lib/weapons";
 import { MatchTabs, type MatchTabsEconomyEntry } from "@/components/MatchTabs";
 import { MapCell } from "@/components/MapCell";
 import { Tabs } from "@/components/Tabs";
+import { NavLabelSync } from "@/components/NavLabelSync";
 
 export const revalidate = 0;
 
@@ -54,8 +55,11 @@ export default async function MatchWeekDetailPage({
     if (d?.economy) economies.push({ map: m.map, opponent: m.opponent, economy: d.economy });
   });
 
+  const navLabel = week.season_id ? `${week.season_id} · ${week.label}` : week.label;
+
   return (
     <>
+      <NavLabelSync label={navLabel} />
       <Link className="back-link" href="/schedule">
         &larr; Schedule
       </Link>
@@ -124,9 +128,6 @@ export default async function MatchWeekDetailPage({
                 economies={economies}
                 boxTitle="Combined Box Score — WILD"
                 multiAgent
-                subtitle={`Stats summed/averaged across all ${week.maps.length} map${
-                  week.maps.length !== 1 ? "s" : ""
-                } this week (ADR/HS%/ACS/KAST weighted by rounds played, not simple per-map averages).`}
               />
             ),
           },
