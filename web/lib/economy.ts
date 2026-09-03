@@ -105,3 +105,23 @@ export async function computeMatchEconomy(
 
   return { wild_summary: wildSummary, enemy_summary: enemySummary, rounds };
 }
+
+// WILD-only buy-type summary aggregated across a match week's maps, for the
+// Overall tab's Economy sub-tab — round-by-round detail doesn't merge
+// meaningfully across maps with different opponents/round counts, so that
+// stays on each map's own Economy tab (EconomySection). Direct port of
+// queries.py::week_economy_summary; sums each map's wild_summary bucket
+// counts. null if the week has no API-sourced maps.
+const BUCKETS: BuyBucket[] = ["pistol", "eco", "semi_eco", "semi_buy", "full_buy"];
+
+export function aggregateWeekEconomy(economies: MatchEconomy[]): BucketSummary | null {
+  if (economies.length === 0) return null;
+  const summary = blankSummary();
+  for (const e of economies) {
+    for (const b of BUCKETS) {
+      summary[b].n += e.wild_summary[b].n;
+      summary[b].won += e.wild_summary[b].won;
+    }
+  }
+  return summary;
+}

@@ -9,6 +9,19 @@
 </h1>
 <div class="subtitle">{{ week.local_date|fmt_date }} &middot; {{ week.match_type }}</div>
 
+<div class="week-nav">
+  {% if prev_week %}
+  <a class="week-nav-link" href="/schedule/{{ prev_week.season_id|urlencode }}/{{ prev_week.local_date }}">&larr; {{ prev_week.season_id }} &middot; {{ prev_week.label }}</a>
+  {% else %}
+  <span class="week-nav-link disabled">&larr;</span>
+  {% endif %}
+  {% if next_week %}
+  <a class="week-nav-link" href="/schedule/{{ next_week.season_id|urlencode }}/{{ next_week.local_date }}">{{ next_week.season_id }} &middot; {{ next_week.label }} &rarr;</a>
+  {% else %}
+  <span class="week-nav-link disabled">&rarr;</span>
+  {% endif %}
+</div>
+
 <div class="tabs" data-group="week">
   <button class="tab-btn active" data-tab="overall" data-group="week">Overall</button>
   {% for md in maps_detail %}
@@ -25,6 +38,7 @@
        box_title="Combined Box Score — WILD",
        multi_agent=True,
        team_stats=team_stats,
+       combined_economy=combined_economy,
        map=week.maps[0].map if week.maps else None
      ) }}
 </div>

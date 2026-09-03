@@ -319,9 +319,18 @@ def schedule_by_season(conn: sqlite3.Connection) -> list[dict]:
 
 def match_week_detail(conn: sqlite3.Connection, season_id: str, local_date: str) -> dict | None:
     all_weeks = match_weeks(conn)
-    week = next((w for w in all_weeks if w["season_id"] == season_id and w["local_date"] == local_date), None)
-    if week is None:
+    week_idx = next(
+        (i for i, w in enumerate(all_weeks) if w["season_id"] == season_id and w["local_date"] == local_date), None
+    )
+    if week_idx is None:
         return None
+    week = all_weeks[week_idx]
+
+    # all_weeks is sorted most-recent-first, so the chronologically-earlier
+    # neighbor ("previous") sits right after this week in the list, and the
+    # later one ("next") right before it.
+    prev_week = all_weeks[week_idx + 1] if week_idx + 1 < len(all_weeks) else None
+    next_week = all_weeks[week_idx - 1] if week_idx > 0 else None
 
     match_ids = [m["match_id"] for m in week["maps"]]
     placeholders = ", ".join("?" for _ in match_ids)
@@ -381,11 +390,14 @@ def match_week_detail(conn: sqlite3.Connection, season_id: str, local_date: str)
 
     combined_weapons = _merge_weapon_matrices(weapon_matrices)
     team_stats = week_team_stats([md["detail"]["team_summary"] for md in maps_detail if md["detail"]["team_summary"]])
+    combined_economy = week_economy_summary(economies)
 
     return {
         "week": week, "combined_box_score": combined_box_score,
         "combined_weapons": combined_weapons, "economies": economies,
         "maps_detail": maps_detail, "team_stats": team_stats,
+        "combined_economy": combined_economy,
+        "prev_week": prev_week, "next_week": next_week,
     }
 
 
@@ -1049,3 +1061,25 @@ def week_team_stats(team_summaries: list[dict]) -> dict | None:
         "five_v_four": _pct_row(five_v_four_won, five_v_four_total),
         "four_v_five": _pct_row(four_v_five_won, four_v_five_total),
     }
+
+
+def week_economy_summary(economies: list[dict]) -> dict | None:
+    """WILD-only buy-type summary aggregated across a match week's maps, for
+    the Overall tab's Economy sub-tab — round-by-round detail doesn't merge
+    meaningfully across maps with different opponents/round counts, so that
+    stays on each map's own Economy tab (economy_section). Takes the same
+    `economies` list match_week_detail() already builds (each entry's
+    "economy" key is a match_economy() dict); sums each map's wild_summary
+    bucket counts. None if the week has no API-sourced maps (mirrors
+    match_economy's own None for spreadsheet-only matches).
+    """
+    if not economies:
+        return None
+    buckets = ("pistol", "eco", "semi_eco", "semi_buy", "full_buy")
+    summary = {b: {"n": 0, "won": 0} for b in buckets}
+    for e in economies:
+        wild_summary = e["economy"]["wild_summary"]
+        for b in buckets:
+            summary[b]["n"] += wild_summary[b]["n"]
+            summary[b]["won"] += wild_summary[b]["won"]
+    return summary

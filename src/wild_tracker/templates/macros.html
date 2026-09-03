@@ -415,7 +415,7 @@
    matrix / economy grid on the site is rendered by the exact same markup.
    `group` must be unique on the page (used to scope tab-button clicks and
    panel ids so multiple tab groups can be nested without colliding). #}
-{% macro match_tabs(group, wild_rows, enemy_rows=None, weapons=None, economies=None, box_title="WILD Box Score", multi_agent=False, subtitle=None, timeline=None, opponent_name=None, h2h=None, event_rounds=None, team_summary=None, map=None, team_stats=None) %}
+{% macro match_tabs(group, wild_rows, enemy_rows=None, weapons=None, economies=None, box_title="WILD Box Score", multi_agent=False, subtitle=None, timeline=None, opponent_name=None, h2h=None, event_rounds=None, team_summary=None, map=None, team_stats=None, combined_economy=None) %}
   {% if timeline %}{{ round_timeline(timeline, opponent_name) }}{% endif %}
   <div class="tabs" data-group="{{ group }}">
     <button class="tab-btn active" data-tab="overview" data-group="{{ group }}">Overview</button>
@@ -466,12 +466,19 @@
 
   {% if economies %}
   <div id="tab-{{ group }}-economy" class="tab-panel hidden" data-group="{{ group }}">
+    {% if combined_economy %}
+    <section>
+      <h2>Combined Economy — WILD</h2>
+      {{ combined_economy_table(combined_economy) }}
+    </section>
+    {% else %}
     {% for e in economies %}
     <section>
       <h2>{{ e.map }} vs {{ e.opponent or "Opponent" }}</h2>
       {{ economy_section(e.economy, e.opponent) }}
     </section>
     {% endfor %}
+    {% endif %}
   </div>
   {% endif %}
 {% endmacro %}
@@ -530,6 +537,44 @@
   </div>
   {% endfor %}
 </div>
+{% endmacro %}
+
+{# WILD-only buy-type summary aggregated across a whole match week — the
+   Overall tab's Economy sub-tab (round-by-round detail doesn't make sense
+   merged across maps with different opponents/round counts, so that stays
+   on each map's own Economy tab via economy_section below). `summary` is
+   queries.py::week_economy_summary()'s return dict — same {n,won} shape per
+   bucket as economy.wild_summary, just summed over every map that week. #}
+{% macro combined_economy_table(summary) %}
+  {% set bucket_order = ["pistol", "eco", "semi_eco", "semi_buy", "full_buy"] %}
+  {% set bucket_label = {"pistol": "Pistol Won", "eco": "Eco (won)", "semi_eco": "$ (won)", "semi_buy": "$$ (won)", "full_buy": "$$$ (won)"} %}
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Team</th>
+          {% for b in bucket_order %}<th class="num-col">{{ bucket_label[b] }}</th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="name">{{ team_badge(True, None) }}WILD</td>
+          {% for b in bucket_order %}
+            <td class="num-col num">
+              {% if b == "pistol" %}{{ summary[b].won }}
+              {% else %}{{ summary[b].n }} ({{ summary[b].won }}){% endif %}
+            </td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="econ-legend">
+    <span><strong>Eco:</strong> 0&ndash;5k</span>
+    <span><strong>$ Semi-eco:</strong> 5&ndash;10k</span>
+    <span><strong>$$ Semi-buy:</strong> 10&ndash;20k</span>
+    <span><strong>$$$ Full buy:</strong> 20k+</span>
+  </div>
 {% endmacro %}
 
 {# Buy-type summary + round-by-round loadout grid for one map's economy.

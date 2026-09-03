@@ -2,13 +2,14 @@ import { BoxScoreTable, type BoxScoreTableRow } from "./BoxScoreTable";
 import { PerformanceTable, type PerformanceRow } from "./PerformanceTable";
 import { WeaponMatrixTable } from "./WeaponMatrixTable";
 import { EconomySection } from "./EconomySection";
+import { CombinedEconomySection } from "./CombinedEconomySection";
 import { RoundTimeline } from "./RoundTimeline";
 import { H2hTable } from "./H2hTable";
 import { TeamSummaryCard } from "./TeamSummaryCard";
 import { WeekTeamStatsCard } from "./WeekTeamStatsCard";
 import { Tabs } from "./Tabs";
 import type { WeaponMatrix } from "@/lib/weapons";
-import type { MatchEconomy } from "@/lib/economy";
+import type { MatchEconomy, BucketSummary } from "@/lib/economy";
 import type { TimelineEntry } from "@/lib/timeline";
 import type { H2hMatrix } from "@/lib/h2h";
 import type { EventRounds } from "@/lib/eventRounds";
@@ -38,6 +39,7 @@ export function MatchTabs({
   teamSummary,
   map,
   weekTeamStats,
+  combinedEconomy,
 }: {
   wildRows: MatchTabsRow[];
   enemyRows?: MatchTabsRow[] | null;
@@ -53,6 +55,7 @@ export function MatchTabs({
   teamSummary?: MatchTeamSummary | null;
   map?: string | null;
   weekTeamStats?: WeekTeamStats | null;
+  combinedEconomy?: BucketSummary | null;
 }) {
   return (
     <>
@@ -126,7 +129,12 @@ export function MatchTabs({
                 {
                   id: "economy",
                   label: "Economy",
-                  content: (
+                  content: combinedEconomy ? (
+                    <section>
+                      <h2>Combined Economy — WILD</h2>
+                      <CombinedEconomySection summary={combinedEconomy} />
+                    </section>
+                  ) : (
                     <>
                       {economies.map((e) => (
                         <section key={e.map + (e.opponent ?? "")}>

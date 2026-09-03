@@ -379,6 +379,17 @@ tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4
 
 .subtitle { color: var(--text-faint); font-size: 13px; margin: -16px 0 24px; }
 
+/* Match-week page: previous/next week pager. */
+.week-nav {
+  display: flex; justify-content: space-between; align-items: center;
+  margin: -8px 0 24px; gap: 12px;
+}
+.week-nav-link {
+  font-size: 13px; font-weight: 600; color: var(--text-dim);
+}
+.week-nav-link:hover { color: var(--accent); }
+.week-nav-link.disabled { color: var(--text-faint); opacity: 0.35; pointer-events: none; }
+
 .empty-note {
   color: var(--text-faint); font-size: 13.5px; padding: 24px;
   border: 1px dashed var(--border); border-radius: 6px; text-align: center;

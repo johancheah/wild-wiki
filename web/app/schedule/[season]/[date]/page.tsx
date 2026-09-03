@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { fetchMatchWeekByKey, fetchCombinedBoxScore } from "@/lib/schedule";
+import { fetchMatchWeekByKey, fetchMatchWeekWithNeighbors, fetchCombinedBoxScore } from "@/lib/schedule";
 import { fetchMatchFullDetail } from "@/lib/matchDetail";
 import { mergeWeaponMatrices } from "@/lib/weapons";
 import { formatMatchDate } from "@/lib/schedule";
 import { aggregateWeekTeamStats } from "@/lib/teamSummary";
+import { aggregateWeekEconomy } from "@/lib/economy";
 import { MatchTabs, type MatchTabsEconomyEntry } from "@/components/MatchTabs";
 import { Tabs } from "@/components/Tabs";
 import { NavLabelSync } from "@/components/NavLabelSync";
@@ -38,8 +39,9 @@ export default async function MatchWeekDetailPage({
 }) {
   const { season, date } = await params;
 
-  const week = await fetchMatchWeekByKey(supabase, season, date);
-  if (!week) notFound();
+  const result = await fetchMatchWeekWithNeighbors(supabase, season, date);
+  if (!result) notFound();
+  const { week, prevWeek, nextWeek } = result;
 
   const matchIds = week.maps.map((m) => m.match_id);
 
@@ -57,6 +59,7 @@ export default async function MatchWeekDetailPage({
   });
 
   const weekTeamStats = aggregateWeekTeamStats(mapDetails.map((d) => d?.teamSummary).filter((t) => t != null));
+  const combinedEconomy = aggregateWeekEconomy(mapDetails.map((d) => d?.economy).filter((e) => e != null));
 
   const navLabel = week.season_id ? `${week.season_id} · ${week.label}` : week.label;
 
@@ -79,6 +82,23 @@ export default async function MatchWeekDetailPage({
         {formatMatchDate(week.local_date)} &middot; {week.match_type}
       </div>
 
+      <div className="week-nav">
+        {prevWeek ? (
+          <Link className="week-nav-link" href={`/schedule/${encodeURIComponent(prevWeek.season_id ?? "")}/${prevWeek.local_date}`}>
+            &larr; {prevWeek.season_id} &middot; {prevWeek.label}
+          </Link>
+        ) : (
+          <span className="week-nav-link disabled">&larr;</span>
+        )}
+        {nextWeek ? (
+          <Link className="week-nav-link" href={`/schedule/${encodeURIComponent(nextWeek.season_id ?? "")}/${nextWeek.local_date}`}>
+            {nextWeek.season_id} &middot; {nextWeek.label} &rarr;
+          </Link>
+        ) : (
+          <span className="week-nav-link disabled">&rarr;</span>
+        )}
+      </div>
+
       <Tabs
         tabs={[
           {
@@ -92,6 +112,7 @@ export default async function MatchWeekDetailPage({
                 boxTitle="Combined Box Score — WILD"
                 multiAgent
                 weekTeamStats={weekTeamStats}
+                combinedEconomy={combinedEconomy}
                 map={week.maps[0]?.map}
               />
             ),
