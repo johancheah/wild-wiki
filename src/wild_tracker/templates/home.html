@@ -24,7 +24,6 @@
 {% set week = latest_week.week %}
 {% set week_href = "/schedule/" ~ (week.season_id|urlencode) ~ "/" ~ week.local_date %}
 {% set mvp = latest_week.combined_box_score[0] if latest_week.combined_box_score else None %}
-{% set week_map = week.maps[0].map if week.maps else None %}
 <section>
   <div class="latest-head">
     <h2>Latest Result</h2>
@@ -90,8 +89,8 @@
   </section>
 
   <div class="week-bottom-grid">
-    {% if latest_week.team_stats %}{{ ui.team_stats_card(latest_week.team_stats, week_map) }}{% endif %}
-    {% if latest_week.combined_economy %}{{ ui.combined_economy_table(latest_week.combined_economy, week_map) }}{% endif %}
+    {% if latest_week.team_stats %}{{ ui.team_stats_card(latest_week.team_stats) }}{% endif %}
+    {% if latest_week.combined_economy %}{{ ui.combined_economy_table(latest_week.combined_economy) }}{% endif %}
   </div>
 
   <a class="back-link" href="{{ week_href }}">View full week &rarr;</a>

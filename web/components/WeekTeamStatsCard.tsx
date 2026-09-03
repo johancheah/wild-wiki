@@ -1,13 +1,14 @@
 import type { WeekTeamStats, PctRow } from "@/lib/teamSummary";
-import { mapSplash } from "@/lib/assets";
 
 // Whole-week "Team Stats" widget — WILD-only round-conversion rates
 // (ATK/DEF/Post Plant/Retake, plus Opening split into 5v4/4v5), aggregated
 // across every API-sourced map that week. Unlike TeamSummaryCard this isn't
 // a head-to-head (the Overall tab spans two different opponents), so it
-// only ever shows WILD's own numbers. Background is the week's (first) map
-// splash art with a dark scrim (see .week-team-stats-card::before in
-// globals.css) for legibility. Mirrors macros.html::team_stats_card.
+// only ever shows WILD's own numbers. Background is a noisy accent-green
+// gradient (.week-team-stats-card in globals.css) rather than map splash
+// art — a week can span two different maps, and the map is already shown
+// on the map strips above this widget on the homepage. Mirrors
+// macros.html::team_stats_card.
 function Row({ label, r }: { label: string; r: PctRow }) {
   return (
     <div className="week-team-stats-row">
@@ -20,10 +21,9 @@ function Row({ label, r }: { label: string; r: PctRow }) {
   );
 }
 
-export function WeekTeamStatsCard({ stats, map }: { stats: WeekTeamStats; map?: string | null }) {
-  const splash = mapSplash(map);
+export function WeekTeamStatsCard({ stats }: { stats: WeekTeamStats }) {
   return (
-    <div className="week-team-stats-card" style={splash ? { backgroundImage: `url(${splash})` } : undefined}>
+    <div className="week-team-stats-card">
       <div className="week-team-stats-header">Team Stats</div>
       <div className="week-team-stats-grid">
         <div className="week-team-stats-col">

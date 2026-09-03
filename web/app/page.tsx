@@ -17,7 +17,6 @@ export default async function HomePage() {
   const upcomingSplash = upcoming ? mapSplash(upcoming.map) : null;
 
   const weekHref = latest ? `/schedule/${encodeURIComponent(latest.week.season_id ?? "")}/${latest.week.local_date}` : "";
-  const weekMap = latest && latest.week.maps.length > 0 ? latest.week.maps[0].map : null;
   const mvp = latest && latest.combinedBoxScore.length > 0 ? latest.combinedBoxScore[0] : null;
 
   return (
@@ -98,8 +97,8 @@ export default async function HomePage() {
           </section>
 
           <div className="week-bottom-grid">
-            {latest.weekTeamStats && <WeekTeamStatsCard stats={latest.weekTeamStats} map={weekMap} />}
-            {latest.combinedEconomy && <CombinedEconomySection summary={latest.combinedEconomy} map={weekMap} />}
+            {latest.weekTeamStats && <WeekTeamStatsCard stats={latest.weekTeamStats} />}
+            {latest.combinedEconomy && <CombinedEconomySection summary={latest.combinedEconomy} />}
           </div>
 
           <Link className="back-link" href={weekHref}>

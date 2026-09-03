@@ -389,9 +389,8 @@
 </div>
 {% endmacro %}
 
-{% macro team_stats_card(ts, map=None) %}
-{% set splash = map_splash(map) %}
-<div class="week-team-stats-card"{% if splash %} style="background-image: url('{{ splash }}');"{% endif %}>
+{% macro team_stats_card(ts) %}
+<div class="week-team-stats-card">
   <div class="week-team-stats-header">Team Stats</div>
   <div class="week-team-stats-grid">
     <div class="week-team-stats-col">
@@ -426,7 +425,7 @@
 
   <div id="tab-{{ group }}-overview" class="tab-panel" data-group="{{ group }}">
     {% if team_summary %}{{ team_summary_card(team_summary, opponent_name, map) }}{% endif %}
-    {% if team_stats %}{{ team_stats_card(team_stats, map) }}{% endif %}
+    {% if team_stats %}{{ team_stats_card(team_stats) }}{% endif %}
     <section>
       <h2>{{ box_title }}</h2>
       {% if subtitle %}<div class="subtitle" style="margin-top:-8px;">{{ subtitle }}</div>{% endif %}
@@ -467,7 +466,7 @@
   {% if economies %}
   <div id="tab-{{ group }}-economy" class="tab-panel hidden" data-group="{{ group }}">
     {% if combined_economy %}
-    {{ combined_economy_table(combined_economy, map) }}
+    {{ combined_economy_table(combined_economy) }}
     {% else %}
     {% for e in economies %}
     <section>
@@ -541,12 +540,11 @@
    merged across maps with different opponents/round counts, so that stays
    on each map's own Economy tab via economy_section below). Same
    card/row format as team_stats_card ("Pistol 3/4 [75%]" etc, reusing
-   _wts_row) rather than a table, and the same map-splash-art header.
+   _wts_row) rather than a table, and the same noisy-green card background.
    `summary` is queries.py::week_economy_summary()'s return dict — one
    {won,total,pct} row per buy bucket. #}
-{% macro combined_economy_table(summary, map=None) %}
-{% set splash = map_splash(map) %}
-<div class="week-team-stats-card"{% if splash %} style="background-image: url('{{ splash }}');"{% endif %}>
+{% macro combined_economy_table(summary) %}
+<div class="week-team-stats-card">
   <div class="week-team-stats-header">Combined Economy — WILD</div>
   <div class="week-team-stats-grid">
     <div class="week-team-stats-col">

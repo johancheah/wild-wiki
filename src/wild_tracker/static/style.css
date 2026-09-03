@@ -507,24 +507,22 @@ tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4
   .team-summary-row { padding: 10px 18px; }
 }
 
-/* Whole-week "Team Stats" widget (match-week page's Overall tab only) —
-   WILD-only round-conversion rates (distinct from team-summary-card's
-   split-header h2h layout, since this has no opponent to split against).
-   Background is the week's map splash art (like team-summary-header) with
-   a dark scrim so the white stat text stays legible over any map's art. */
+/* Whole-week "Team Stats" widget (match-week page's Overall tab only) and
+   the Combined Economy widget (same card, reused) — WILD-only stats
+   distinct from team-summary-card's split-header h2h layout, since neither
+   has one single opponent/map to key art off of (a week can span two
+   different maps/opponents). Background is a noisy accent-green gradient
+   — a grayscale SVG feTurbulence grain layer, tinted green via
+   background-blend-mode — rather than map splash art, which is already
+   shown on the map strips above these widgets and would be redundant here. */
 .week-team-stats-card {
-  position: relative;
   border-radius: 10px; overflow: hidden;
   margin-bottom: 28px; padding: 18px 28px;
   background-color: var(--accent-dim);
-  background-size: cover; background-position: center;
-}
-.week-team-stats-card::before {
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(120deg, rgba(4, 8, 5, 0.88), rgba(4, 8, 5, 0.6));
-}
-.week-team-stats-header, .week-team-stats-grid {
-  position: relative; z-index: 1;
+  background-image:
+    url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJuIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC44NSIgbnVtT2N0YXZlcz0iMyIgc3RpdGNoVGlsZXM9InN0aXRjaCIvPjxmZUNvbG9yTWF0cml4IHR5cGU9InNhdHVyYXRlIiB2YWx1ZXM9IjAiLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCglMjNuKSIgb3BhY2l0eT0iMC41Ii8+PC9zdmc+"),
+    linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 85%);
+  background-blend-mode: overlay, normal;
 }
 .week-team-stats-header {
   font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;

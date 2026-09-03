@@ -113,7 +113,6 @@ export default async function MatchWeekDetailPage({
                 multiAgent
                 weekTeamStats={weekTeamStats}
                 combinedEconomy={combinedEconomy}
-                map={week.maps[0]?.map}
               />
             ),
           },

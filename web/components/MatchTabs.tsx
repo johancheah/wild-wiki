@@ -68,7 +68,7 @@ export function MatchTabs({
             content: (
               <>
                 {teamSummary && <TeamSummaryCard summary={teamSummary} opponentName={opponentName} map={map} />}
-                {weekTeamStats && <WeekTeamStatsCard stats={weekTeamStats} map={map} />}
+                {weekTeamStats && <WeekTeamStatsCard stats={weekTeamStats} />}
                 <section>
                   <h2>{boxTitle}</h2>
                   {subtitle && (
@@ -130,7 +130,7 @@ export function MatchTabs({
                   id: "economy",
                   label: "Economy",
                   content: combinedEconomy ? (
-                    <CombinedEconomySection summary={combinedEconomy} map={map} />
+                    <CombinedEconomySection summary={combinedEconomy} />
                   ) : (
                     <>
                       {economies.map((e) => (
