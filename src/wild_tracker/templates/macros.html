@@ -389,8 +389,9 @@
 </div>
 {% endmacro %}
 
-{% macro team_stats_card(ts) %}
-<div class="week-team-stats-card">
+{% macro team_stats_card(ts, map=None) %}
+{% set splash = map_splash(map) %}
+<div class="week-team-stats-card"{% if splash %} style="background-image: url('{{ splash }}');"{% endif %}>
   <div class="week-team-stats-header">Team Stats</div>
   <div class="week-team-stats-grid">
     <div class="week-team-stats-col">
@@ -425,7 +426,7 @@
 
   <div id="tab-{{ group }}-overview" class="tab-panel" data-group="{{ group }}">
     {% if team_summary %}{{ team_summary_card(team_summary, opponent_name, map) }}{% endif %}
-    {% if team_stats %}{{ team_stats_card(team_stats) }}{% endif %}
+    {% if team_stats %}{{ team_stats_card(team_stats, map) }}{% endif %}
     <section>
       <h2>{{ box_title }}</h2>
       {% if subtitle %}<div class="subtitle" style="margin-top:-8px;">{{ subtitle }}</div>{% endif %}

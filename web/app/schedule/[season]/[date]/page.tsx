@@ -92,6 +92,7 @@ export default async function MatchWeekDetailPage({
                 boxTitle="Combined Box Score — WILD"
                 multiAgent
                 weekTeamStats={weekTeamStats}
+                map={week.maps[0]?.map}
               />
             ),
           },

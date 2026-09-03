@@ -508,12 +508,23 @@ tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4
 }
 
 /* Whole-week "Team Stats" widget (match-week page's Overall tab only) —
-   WILD-only round-conversion rates, solid-fill card per the user's
-   reference image (distinct from team-summary-card's split-header h2h
-   layout, since this has no opponent to split against). */
+   WILD-only round-conversion rates (distinct from team-summary-card's
+   split-header h2h layout, since this has no opponent to split against).
+   Background is the week's map splash art (like team-summary-header) with
+   a dark scrim so the white stat text stays legible over any map's art. */
 .week-team-stats-card {
-  background: var(--accent-dim); border-radius: 10px; overflow: hidden;
+  position: relative;
+  border-radius: 10px; overflow: hidden;
   margin-bottom: 28px; padding: 18px 28px;
+  background-color: var(--accent-dim);
+  background-size: cover; background-position: center;
+}
+.week-team-stats-card::before {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(120deg, rgba(4, 8, 5, 0.88), rgba(4, 8, 5, 0.6));
+}
+.week-team-stats-header, .week-team-stats-grid {
+  position: relative; z-index: 1;
 }
 .week-team-stats-header {
   font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;

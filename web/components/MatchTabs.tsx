@@ -65,7 +65,7 @@ export function MatchTabs({
             content: (
               <>
                 {teamSummary && <TeamSummaryCard summary={teamSummary} opponentName={opponentName} map={map} />}
-                {weekTeamStats && <WeekTeamStatsCard stats={weekTeamStats} />}
+                {weekTeamStats && <WeekTeamStatsCard stats={weekTeamStats} map={map} />}
                 <section>
                   <h2>{boxTitle}</h2>
                   {subtitle && (
