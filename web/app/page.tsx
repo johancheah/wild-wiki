@@ -2,15 +2,23 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { fetchUpcomingMatch, fetchLatestWeek } from "@/lib/home";
 import { mapSplash } from "@/lib/assets";
-import { formatMatchDate } from "@/lib/schedule";
 import { MapCell } from "@/components/MapCell";
 import { BoxScoreTable } from "@/components/BoxScoreTable";
+import { PerformanceTable } from "@/components/PerformanceTable";
+import { WeekMapStrip } from "@/components/WeekMapStrip";
+import { WeekSpotlight } from "@/components/WeekSpotlight";
+import { WeekTeamStatsCard } from "@/components/WeekTeamStatsCard";
+import { CombinedEconomySection } from "@/components/CombinedEconomySection";
 
 export const revalidate = 0;
 
 export default async function HomePage() {
   const [upcoming, latest] = await Promise.all([fetchUpcomingMatch(supabase), fetchLatestWeek(supabase)]);
   const upcomingSplash = upcoming ? mapSplash(upcoming.map) : null;
+
+  const weekHref = latest ? `/schedule/${encodeURIComponent(latest.week.season_id ?? "")}/${latest.week.local_date}` : "";
+  const weekMap = latest && latest.week.maps.length > 0 ? latest.week.maps[0].map : null;
+  const mvp = latest && latest.combinedBoxScore.length > 0 ? latest.combinedBoxScore[0] : null;
 
   return (
     <>
@@ -40,41 +48,61 @@ export default async function HomePage() {
 
       {latest && (
         <section>
-          <h2>Latest Result</h2>
-          {(() => {
-            const splash = latest.week.maps.length > 0 ? mapSplash(latest.week.maps[0].map) : null;
-            return splash ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="map-splash-banner" src={splash} alt={latest.week.maps[0].map} />
-            ) : null;
-          })()}
-          <h1>
-            <Link href={`/schedule/${encodeURIComponent(latest.week.season_id ?? "")}/${latest.week.local_date}`}>
+          <div className="latest-head">
+            <h2>Latest Result</h2>
+            <Link className="week-pill-link" href={weekHref}>
               {latest.week.season_id} &middot; {latest.week.label}{" "}
               <span
                 className={`pill ${
                   latest.week.wins > latest.week.losses ? "win" : latest.week.losses > latest.week.wins ? "loss" : ""
                 }`}
-                style={{ verticalAlign: "middle" }}
               >
                 {latest.week.record}
               </span>
             </Link>
-          </h1>
-          <div className="subtitle">
-            {formatMatchDate(latest.week.local_date)} &middot; {latest.week.match_type ?? "—"} &middot;{" "}
+          </div>
+
+          <div className="week-maps-row">
             {latest.week.maps.map((m, i) => (
-              <span key={m.match_id}>
-                {i > 0 && ", "}
-                {m.map} vs {m.opponent ?? "Opponent"} ({m.result})
-              </span>
+              <WeekMapStrip
+                key={m.match_id}
+                map={m.map}
+                opponent={m.opponent}
+                matchId={m.match_id}
+                result={m.result}
+                teamSummary={latest.mapTeamSummaries[i]}
+              />
             ))}
           </div>
-          <BoxScoreTable rows={latest.combinedBoxScore} clickable multiAgent />
-          <Link
-            className="back-link"
-            href={`/schedule/${encodeURIComponent(latest.week.season_id ?? "")}/${latest.week.local_date}`}
-          >
+
+          {mvp && (
+            <WeekSpotlight
+              playerId={mvp.player_id}
+              displayName={mvp.display_name}
+              headshotFilename={mvp.headshot_filename}
+              acs={mvp.acs}
+              kills={mvp.kills}
+              deaths={mvp.deaths}
+              assists={mvp.assists}
+            />
+          )}
+
+          <section>
+            <h2>Combined Scoreboard — WILD</h2>
+            <BoxScoreTable rows={latest.combinedBoxScore} clickable multiAgent />
+          </section>
+
+          <section>
+            <h2>Multikills &amp; Clutches — WILD</h2>
+            <PerformanceTable rows={latest.combinedBoxScore} clickable />
+          </section>
+
+          <div className="week-bottom-grid">
+            {latest.weekTeamStats && <WeekTeamStatsCard stats={latest.weekTeamStats} map={weekMap} />}
+            {latest.combinedEconomy && <CombinedEconomySection summary={latest.combinedEconomy} map={weekMap} />}
+          </div>
+
+          <Link className="back-link" href={weekHref}>
             View full week &rarr;
           </Link>
         </section>

@@ -566,6 +566,58 @@ tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4
 .upcoming-card-map .map-icon { width: 30px; height: 30px; }
 .upcoming-card-note { color: var(--text-dim); font-size: 13.5px; margin-top: 6px; }
 
+/* Homepage: latest-week result section (map strips, MVP spotlight, and the
+   Team Stats / Economy pair reused from the match-week page's Overall tab). */
+.latest-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px;
+}
+.latest-head h2 { margin: 0; }
+.week-pill-link { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--text); }
+.week-pill-link:hover { color: var(--accent); }
+
+.week-maps-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+@media (max-width: 640px) { .week-maps-row { grid-template-columns: 1fr; } }
+
+.week-map-strip { display: block; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface-2); }
+.week-map-strip:hover .week-map-name { color: var(--accent); }
+.week-map-art {
+  position: relative; padding: 14px 16px 12px;
+  background-color: var(--surface-2); background-size: cover; background-position: center; overflow: hidden;
+}
+.week-map-art::before {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(120deg, rgba(4, 8, 5, 0.85), rgba(4, 8, 5, 0.5));
+}
+.week-map-name, .week-map-score, .week-map-opp { position: relative; z-index: 1; }
+.week-map-name { font-size: 10.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(255, 255, 255, 0.8); }
+.week-map-score { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; }
+.week-map-score .us, .week-map-score .them {
+  font-size: 30px; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+}
+.week-map-score .them { color: rgba(255, 255, 255, 0.75); }
+.week-map-score .sep { font-size: 18px; font-weight: 700; color: rgba(255, 255, 255, 0.55); }
+.week-map-opp { margin-top: 5px; font-size: 12px; color: rgba(255, 255, 255, 0.85); display: flex; align-items: center; gap: 8px; }
+
+.week-map-stats { display: grid; grid-template-columns: repeat(3, 1fr); }
+.week-map-stats div { padding: 8px; border-right: 1px solid var(--border); border-top: 1px solid var(--border); text-align: center; }
+.week-map-stats div:nth-child(3n) { border-right: none; }
+.week-map-stats b { display: block; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); }
+.week-map-stats label { display: block; margin-top: 2px; font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-faint); }
+
+.week-spotlight {
+  display: flex; align-items: center; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2);
+  padding: 14px 18px; margin-bottom: 24px;
+}
+.week-spotlight:hover .week-spotlight-name { color: var(--accent); }
+.week-spotlight-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--accent); }
+.week-spotlight-name { font-size: 17px; font-weight: 800; margin-top: 1px; color: var(--text); }
+.week-spotlight-stats { display: flex; gap: 14px; margin-top: 3px; font-size: 12.5px; color: var(--text-dim); }
+.week-spotlight-stats b { color: var(--text); font-variant-numeric: tabular-nums; }
+
+.week-bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+.week-bottom-grid .week-team-stats-card { margin-bottom: 0; }
+@media (max-width: 640px) { .week-bottom-grid { grid-template-columns: 1fr; } }
+
 /* VLR-style box score: each stat in its own chip */
 table.vlr-table { min-width: 760px; }
 .stat-chip {

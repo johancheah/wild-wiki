@@ -23,19 +23,77 @@
 {% if latest_week %}
 {% set week = latest_week.week %}
 {% set week_href = "/schedule/" ~ (week.season_id|urlencode) ~ "/" ~ week.local_date %}
+{% set mvp = latest_week.combined_box_score[0] if latest_week.combined_box_score else None %}
+{% set week_map = week.maps[0].map if week.maps else None %}
 <section>
-  <h2>Latest Result</h2>
-  {% set splash = map_splash(week.maps[0].map) if week.maps else None %}
-  {% if splash %}<img class="map-splash-banner" src="{{ splash }}" alt="{{ week.maps[0].map }}">{% endif %}
-  <h1 style="cursor:pointer;" onclick="location.href='{{ week_href }}'">
-    {{ week.season_id }} &middot; {{ week.label }}
-    <span class="pill {{ 'win' if week.wins > week.losses else ('loss' if week.losses > week.wins else '') }}" style="vertical-align: middle;">{{ week.record }}</span>
-  </h1>
-  <div class="subtitle">
-    {{ week.local_date|fmt_date }} &middot; {{ week.match_type or "—" }}
-    &middot; {% for m in week.maps %}{{ m.map }} vs {{ m.opponent or "Opponent" }} ({{ m.result }}){{ ", " if not loop.last }}{% endfor %}
+  <div class="latest-head">
+    <h2>Latest Result</h2>
+    <a class="week-pill-link" href="{{ week_href }}">
+      {{ week.season_id }} &middot; {{ week.label }}
+      <span class="pill {{ 'win' if week.wins > week.losses else ('loss' if week.losses > week.wins else '') }}">{{ week.record }}</span>
+    </a>
   </div>
-  {{ ui.box_score_table(latest_week.combined_box_score, clickable=True, multi_agent=True) }}
+
+  <div class="week-maps-row">
+    {% for md in latest_week.maps_detail %}
+    {% set ts = md.detail.team_summary %}
+    {% set splash = map_splash(md.map) %}
+    <a class="week-map-strip" href="/matches/{{ md.match_id }}">
+      <div class="week-map-art"{% if splash %} style="background-image:url('{{ splash }}');"{% endif %}>
+        <div class="week-map-name">{{ md.map }}</div>
+        {% if ts %}
+        <div class="week-map-score">
+          <span class="us">{{ ts.wild.score }}</span><span class="sep">&ndash;</span><span class="them">{{ ts.enemy.score }}</span>
+        </div>
+        {% endif %}
+        <div class="week-map-opp">
+          vs {{ md.opponent or "Opponent" }}
+          <span class="pill {{ 'win' if md.detail.match.result == 'WIN' else 'loss' }}">{{ md.detail.match.result }}</span>
+        </div>
+      </div>
+      {% if ts %}
+      <div class="week-map-stats">
+        <div><b>{{ ts.wild.atk_won }}/{{ ts.enemy.atk_won }}</b><label>ATK</label></div>
+        <div><b>{{ ts.wild.def_won }}/{{ ts.enemy.def_won }}</b><label>DEF</label></div>
+        <div><b>{{ ts.wild.first_bloods }}/{{ ts.enemy.first_bloods }}</b><label>First Bloods</label></div>
+        <div><b>{{ ts.wild.post_plant_won }}/{{ ts.enemy.post_plant_won }}</b><label>Post Plant</label></div>
+        <div><b>{{ ts.wild.clutches }}/{{ ts.enemy.clutches }}</b><label>Clutches</label></div>
+        <div><b>{{ ts.wild.thrifties }}/{{ ts.enemy.thrifties }}</b><label>Thrifties</label></div>
+      </div>
+      {% endif %}
+    </a>
+    {% endfor %}
+  </div>
+
+  {% if mvp %}
+  <a class="week-spotlight" href="/players/{{ mvp.player_id }}">
+    {{ ui.avatar(mvp.display_name, mvp.headshot_filename, "lg") }}
+    <div>
+      <div class="week-spotlight-label">Player of the Week</div>
+      <div class="week-spotlight-name">{{ mvp.display_name }}</div>
+      <div class="week-spotlight-stats">
+        <span><b>{{ "%.0f"|format(mvp.acs) if mvp.acs is not none else "—" }}</b> ACS</span>
+        <span><b>{{ mvp.kills }} / {{ mvp.deaths }} / {{ mvp.assists }}</b> K/D/A</span>
+      </div>
+    </div>
+  </a>
+  {% endif %}
+
+  <section>
+    <h2>Combined Scoreboard — WILD</h2>
+    {{ ui.box_score_table(latest_week.combined_box_score, clickable=True, multi_agent=True) }}
+  </section>
+
+  <section>
+    <h2>Multikills &amp; Clutches — WILD</h2>
+    {{ ui.performance_table(latest_week.combined_box_score, clickable=True) }}
+  </section>
+
+  <div class="week-bottom-grid">
+    {% if latest_week.team_stats %}{{ ui.team_stats_card(latest_week.team_stats, week_map) }}{% endif %}
+    {% if latest_week.combined_economy %}{{ ui.combined_economy_table(latest_week.combined_economy, week_map) }}{% endif %}
+  </div>
+
   <a class="back-link" href="{{ week_href }}">View full week &rarr;</a>
 </section>
 {% endif %}
