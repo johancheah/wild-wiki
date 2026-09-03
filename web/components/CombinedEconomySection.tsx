@@ -1,64 +1,40 @@
-import { TeamBadge } from "./TeamBadge";
-import type { BuyBucket, BucketSummary } from "@/lib/economy";
-
-const BUCKET_ORDER: BuyBucket[] = ["pistol", "eco", "semi_eco", "semi_buy", "full_buy"];
-const BUCKET_LABEL: Record<BuyBucket, string> = {
-  pistol: "Pistol Won",
-  eco: "Eco (won)",
-  semi_eco: "$ (won)",
-  semi_buy: "$$ (won)",
-  full_buy: "$$$ (won)",
-};
+import type { WeekEconomySummary, PctRow } from "@/lib/economy";
+import { mapSplash } from "@/lib/assets";
 
 // WILD-only buy-type summary aggregated across a whole match week — the
-// Overall tab's Economy sub-tab (round-by-round detail doesn't merge
-// meaningfully across maps with different opponents/round counts, so that
-// stays on each map's own EconomySection). Mirrors
-// macros.html::combined_economy_table.
-export function CombinedEconomySection({ summary }: { summary: BucketSummary }) {
+// Overall tab's Economy sub-tab (round-by-round detail doesn't make sense
+// merged across maps with different opponents/round counts, so that stays
+// on each map's own Economy tab via EconomySection). Same card/row format
+// as WeekTeamStatsCard ("Pistol 3/4 [75%]" etc) and the same map-splash-art
+// header, rather than a table. Mirrors macros.html::combined_economy_table.
+function Row({ label, r }: { label: string; r: PctRow }) {
   return (
-    <>
-      <div className="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Team</th>
-              {BUCKET_ORDER.map((b) => (
-                <th className="num-col" key={b}>
-                  {BUCKET_LABEL[b]}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="name">
-                <TeamBadge isWild name={null} />
-                WILD
-              </td>
-              {BUCKET_ORDER.map((b) => (
-                <td className="num-col num" key={b}>
-                  {b === "pistol" ? summary[b].won : `${summary[b].n} (${summary[b].won})`}
-                </td>
-              ))}
-            </tr>
-          </tbody>
-        </table>
+    <div className="week-team-stats-row">
+      <span className="wts-label">{label}</span>
+      <span className="wts-frac">
+        {r.won}/{r.total}
+      </span>
+      <span className="wts-pct">{r.pct !== null ? `[${r.pct}%]` : "—"}</span>
+    </div>
+  );
+}
+
+export function CombinedEconomySection({ summary, map }: { summary: WeekEconomySummary; map?: string | null }) {
+  const splash = mapSplash(map);
+  return (
+    <div className="week-team-stats-card" style={splash ? { backgroundImage: `url(${splash})` } : undefined}>
+      <div className="week-team-stats-header">Combined Economy — WILD</div>
+      <div className="week-team-stats-grid">
+        <div className="week-team-stats-col">
+          <Row label="Pistol" r={summary.pistol} />
+          <Row label="Eco" r={summary.eco} />
+          <Row label="Semi-Eco" r={summary.semi_eco} />
+        </div>
+        <div className="week-team-stats-col">
+          <Row label="Semi-Buy" r={summary.semi_buy} />
+          <Row label="Full Buy" r={summary.full_buy} />
+        </div>
       </div>
-      <div className="econ-legend">
-        <span>
-          <strong>Eco:</strong> 0&ndash;5k
-        </span>
-        <span>
-          <strong>$ Semi-eco:</strong> 5&ndash;10k
-        </span>
-        <span>
-          <strong>$$ Semi-buy:</strong> 10&ndash;20k
-        </span>
-        <span>
-          <strong>$$$ Full buy:</strong> 20k+
-        </span>
-      </div>
-    </>
+    </div>
   );
 }

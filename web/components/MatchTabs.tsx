@@ -9,7 +9,7 @@ import { TeamSummaryCard } from "./TeamSummaryCard";
 import { WeekTeamStatsCard } from "./WeekTeamStatsCard";
 import { Tabs } from "./Tabs";
 import type { WeaponMatrix } from "@/lib/weapons";
-import type { MatchEconomy, BucketSummary } from "@/lib/economy";
+import type { MatchEconomy, WeekEconomySummary } from "@/lib/economy";
 import type { TimelineEntry } from "@/lib/timeline";
 import type { H2hMatrix } from "@/lib/h2h";
 import type { EventRounds } from "@/lib/eventRounds";
@@ -55,7 +55,7 @@ export function MatchTabs({
   teamSummary?: MatchTeamSummary | null;
   map?: string | null;
   weekTeamStats?: WeekTeamStats | null;
-  combinedEconomy?: BucketSummary | null;
+  combinedEconomy?: WeekEconomySummary | null;
 }) {
   return (
     <>
@@ -130,10 +130,7 @@ export function MatchTabs({
                   id: "economy",
                   label: "Economy",
                   content: combinedEconomy ? (
-                    <section>
-                      <h2>Combined Economy — WILD</h2>
-                      <CombinedEconomySection summary={combinedEconomy} />
-                    </section>
+                    <CombinedEconomySection summary={combinedEconomy} map={map} />
                   ) : (
                     <>
                       {economies.map((e) => (

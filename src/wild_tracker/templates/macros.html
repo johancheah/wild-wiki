@@ -467,10 +467,7 @@
   {% if economies %}
   <div id="tab-{{ group }}-economy" class="tab-panel hidden" data-group="{{ group }}">
     {% if combined_economy %}
-    <section>
-      <h2>Combined Economy — WILD</h2>
-      {{ combined_economy_table(combined_economy) }}
-    </section>
+    {{ combined_economy_table(combined_economy, map) }}
     {% else %}
     {% for e in economies %}
     <section>
@@ -542,39 +539,27 @@
 {# WILD-only buy-type summary aggregated across a whole match week — the
    Overall tab's Economy sub-tab (round-by-round detail doesn't make sense
    merged across maps with different opponents/round counts, so that stays
-   on each map's own Economy tab via economy_section below). `summary` is
-   queries.py::week_economy_summary()'s return dict — same {n,won} shape per
-   bucket as economy.wild_summary, just summed over every map that week. #}
-{% macro combined_economy_table(summary) %}
-  {% set bucket_order = ["pistol", "eco", "semi_eco", "semi_buy", "full_buy"] %}
-  {% set bucket_label = {"pistol": "Pistol Won", "eco": "Eco (won)", "semi_eco": "$ (won)", "semi_buy": "$$ (won)", "full_buy": "$$$ (won)"} %}
-  <div class="table-scroll">
-    <table>
-      <thead>
-        <tr>
-          <th>Team</th>
-          {% for b in bucket_order %}<th class="num-col">{{ bucket_label[b] }}</th>{% endfor %}
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="name">{{ team_badge(True, None) }}WILD</td>
-          {% for b in bucket_order %}
-            <td class="num-col num">
-              {% if b == "pistol" %}{{ summary[b].won }}
-              {% else %}{{ summary[b].n }} ({{ summary[b].won }}){% endif %}
-            </td>
-          {% endfor %}
-        </tr>
-      </tbody>
-    </table>
+   on each map's own Economy tab via economy_section below). Same
+   card/row format as team_stats_card ("Pistol 3/4 [75%]" etc, reusing
+   _wts_row) rather than a table, and the same map-splash-art header.
+   `summary` is queries.py::week_economy_summary()'s return dict — one
+   {won,total,pct} row per buy bucket. #}
+{% macro combined_economy_table(summary, map=None) %}
+{% set splash = map_splash(map) %}
+<div class="week-team-stats-card"{% if splash %} style="background-image: url('{{ splash }}');"{% endif %}>
+  <div class="week-team-stats-header">Combined Economy — WILD</div>
+  <div class="week-team-stats-grid">
+    <div class="week-team-stats-col">
+      {{ _wts_row("Pistol", summary.pistol) }}
+      {{ _wts_row("Eco", summary.eco) }}
+      {{ _wts_row("Semi-Eco", summary.semi_eco) }}
+    </div>
+    <div class="week-team-stats-col">
+      {{ _wts_row("Semi-Buy", summary.semi_buy) }}
+      {{ _wts_row("Full Buy", summary.full_buy) }}
+    </div>
   </div>
-  <div class="econ-legend">
-    <span><strong>Eco:</strong> 0&ndash;5k</span>
-    <span><strong>$ Semi-eco:</strong> 5&ndash;10k</span>
-    <span><strong>$$ Semi-buy:</strong> 10&ndash;20k</span>
-    <span><strong>$$$ Full buy:</strong> 20k+</span>
-  </div>
+</div>
 {% endmacro %}
 
 {# Buy-type summary + round-by-round loadout grid for one map's economy.

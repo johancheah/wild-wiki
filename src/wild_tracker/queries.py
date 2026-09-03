@@ -1070,16 +1070,18 @@ def week_economy_summary(economies: list[dict]) -> dict | None:
     stays on each map's own Economy tab (economy_section). Takes the same
     `economies` list match_week_detail() already builds (each entry's
     "economy" key is a match_economy() dict); sums each map's wild_summary
-    bucket counts. None if the week has no API-sourced maps (mirrors
+    bucket counts. Returns the same {won,total,pct} shape as week_team_stats
+    (via _pct_row) so the widget reads the same way as the Team Stats card —
+    "Pistol 3/4 [75%]" etc. None if the week has no API-sourced maps (mirrors
     match_economy's own None for spreadsheet-only matches).
     """
     if not economies:
         return None
     buckets = ("pistol", "eco", "semi_eco", "semi_buy", "full_buy")
-    summary = {b: {"n": 0, "won": 0} for b in buckets}
+    totals = {b: {"n": 0, "won": 0} for b in buckets}
     for e in economies:
         wild_summary = e["economy"]["wild_summary"]
         for b in buckets:
-            summary[b]["n"] += wild_summary[b]["n"]
-            summary[b]["won"] += wild_summary[b]["won"]
-    return summary
+            totals[b]["n"] += wild_summary[b]["n"]
+            totals[b]["won"] += wild_summary[b]["won"]
+    return {b: _pct_row(totals[b]["won"], totals[b]["n"]) for b in buckets}

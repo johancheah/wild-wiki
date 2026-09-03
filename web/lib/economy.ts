@@ -111,17 +111,26 @@ export async function computeMatchEconomy(
 // meaningfully across maps with different opponents/round counts, so that
 // stays on each map's own Economy tab (EconomySection). Direct port of
 // queries.py::week_economy_summary; sums each map's wild_summary bucket
-// counts. null if the week has no API-sourced maps.
+// counts, then reshapes to the same {won,total,pct} row PctRow shape
+// week_team_stats uses, so the widget reads "Pistol 3/4 [75%]" the same way
+// the Team Stats card does. null if the week has no API-sourced maps.
 const BUCKETS: BuyBucket[] = ["pistol", "eco", "semi_eco", "semi_buy", "full_buy"];
 
-export function aggregateWeekEconomy(economies: MatchEconomy[]): BucketSummary | null {
+export type PctRow = { won: number; total: number; pct: number | null };
+export type WeekEconomySummary = Record<BuyBucket, PctRow>;
+
+function pctRow(won: number, total: number): PctRow {
+  return { won, total, pct: total ? Math.round((won / total) * 100) : null };
+}
+
+export function aggregateWeekEconomy(economies: MatchEconomy[]): WeekEconomySummary | null {
   if (economies.length === 0) return null;
-  const summary = blankSummary();
+  const totals = blankSummary();
   for (const e of economies) {
     for (const b of BUCKETS) {
-      summary[b].n += e.wild_summary[b].n;
-      summary[b].won += e.wild_summary[b].won;
+      totals[b].n += e.wild_summary[b].n;
+      totals[b].won += e.wild_summary[b].won;
     }
   }
-  return summary;
+  return Object.fromEntries(BUCKETS.map((b) => [b, pctRow(totals[b].won, totals[b].n)])) as WeekEconomySummary;
 }
