@@ -20,24 +20,23 @@
   {% endif %}
 </section>
 
-{% if latest %}
-{% set m = latest.match %}
-{% set wild_rows = latest.box_score|selectattr("is_wild_player")|list|sort(attribute="acs", reverse=True) %}
+{% if latest_week %}
+{% set week = latest_week.week %}
+{% set week_href = "/schedule/" ~ (week.season_id|urlencode) ~ "/" ~ week.local_date %}
 <section>
   <h2>Latest Result</h2>
-  {% set splash = map_splash(m.map) %}
-  {% if splash %}<img class="map-splash-banner" src="{{ splash }}" alt="{{ m.map }}">{% endif %}
-  <h1 style="cursor:pointer;" onclick="location.href='/matches/{{ m.match_id }}'">
-    {{ m.map }}
-    <span class="pill {{ 'win' if m.result == 'WIN' else 'loss' }}" style="vertical-align: middle;">{{ m.result }}</span>
+  {% set splash = map_splash(week.maps[0].map) if week.maps else None %}
+  {% if splash %}<img class="map-splash-banner" src="{{ splash }}" alt="{{ week.maps[0].map }}">{% endif %}
+  <h1 style="cursor:pointer;" onclick="location.href='{{ week_href }}'">
+    {{ week.season_id }} &middot; {{ week.label }}
+    <span class="pill {{ 'win' if week.wins > week.losses else ('loss' if week.losses > week.wins else '') }}" style="vertical-align: middle;">{{ week.record }}</span>
   </h1>
   <div class="subtitle">
-    {{ m.date|fmt_date }} &middot; {{ m.season_id or "—" }} &middot; {{ m.match_type or "—" }}
-    {% if m.opponent_name %} &middot; vs {{ m.opponent_name }} ({{ m.opponent_tag }}){% endif %}
-    &middot; margin {{ "+%d"|format(m.margin) if m.margin and m.margin > 0 else m.margin }}
+    {{ week.local_date|fmt_date }} &middot; {{ week.match_type or "—" }}
+    &middot; {% for m in week.maps %}{{ m.map }} vs {{ m.opponent or "Opponent" }} ({{ m.result }}){{ ", " if not loop.last }}{% endfor %}
   </div>
-  {{ ui.box_score_table(wild_rows, clickable=True) }}
-  <a class="back-link" href="/matches/{{ m.match_id }}">View full match &rarr;</a>
+  {{ ui.box_score_table(latest_week.combined_box_score, clickable=True, multi_agent=True) }}
+  <a class="back-link" href="{{ week_href }}">View full week &rarr;</a>
 </section>
 {% endif %}
 
