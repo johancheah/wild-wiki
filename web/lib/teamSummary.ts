@@ -13,7 +13,9 @@ import { computeMatchEconomy } from "./economy";
 export type TeamSummarySide = {
   score: number;
   atk_won: number;
+  atk_total: number;
   def_won: number;
+  def_total: number;
   first_bloods: number;
   first_bloods_won: number;
   plants: number;
@@ -26,7 +28,9 @@ export type MatchTeamSummary = { wild: TeamSummarySide; enemy: TeamSummarySide }
 
 type Acc = {
   atk_won: number;
+  atk_total: number;
   def_won: number;
+  def_total: number;
   first_bloods: number;
   first_bloods_won: number;
   plants: number;
@@ -36,7 +40,18 @@ type Acc = {
 };
 
 function blankAcc(): Acc {
-  return { atk_won: 0, def_won: 0, first_bloods: 0, first_bloods_won: 0, plants: 0, post_plant_won: 0, clutches: 0, thrifties: 0 };
+  return {
+    atk_won: 0,
+    atk_total: 0,
+    def_won: 0,
+    def_total: 0,
+    first_bloods: 0,
+    first_bloods_won: 0,
+    plants: 0,
+    post_plant_won: 0,
+    clutches: 0,
+    thrifties: 0,
+  };
 }
 
 export async function computeMatchTeamSummary(
@@ -89,10 +104,17 @@ export async function computeMatchTeamSummary(
     const rn = r.round_number;
     const winner = r.winning_team_id;
     const side = wildSideByRound.get(rn);
-    if (winner === wildTeamId && side) {
-      stats[wildTeamId][side === "ATK" ? "atk_won" : "def_won"] += 1;
-    } else if (winner === enemyTeamId && side) {
-      stats[enemyTeamId][side === "ATK" ? "def_won" : "atk_won"] += 1;
+    if (side) {
+      // Totals (played, not just won) per side — needed for the week-level
+      // "Team Stats" widget's ATK/DEF conversion rates (aggregateWeekTeamStats
+      // below), not just the h2h card's win counts.
+      stats[wildTeamId][side === "ATK" ? "atk_total" : "def_total"] += 1;
+      stats[enemyTeamId][side === "ATK" ? "def_total" : "atk_total"] += 1;
+      if (winner === wildTeamId) {
+        stats[wildTeamId][side === "ATK" ? "atk_won" : "def_won"] += 1;
+      } else if (winner === enemyTeamId) {
+        stats[enemyTeamId][side === "ATK" ? "def_won" : "atk_won"] += 1;
+      }
     }
 
     const fbTeam = fbTeamByRound.get(rn);
@@ -153,7 +175,9 @@ export async function computeMatchTeamSummary(
     return {
       score: score(tid),
       atk_won: s.atk_won,
+      atk_total: s.atk_total,
       def_won: s.def_won,
+      def_total: s.def_total,
       first_bloods: s.first_bloods,
       first_bloods_won: s.first_bloods_won,
       plants: s.plants,
@@ -164,4 +188,72 @@ export async function computeMatchTeamSummary(
   };
 
   return { wild: row(wildTeamId), enemy: row(enemyTeamId) };
+}
+
+// Whole-week "Team Stats" widget (match-week page's Overall tab only) —
+// WILD-only round-conversion rates aggregated across the week's API-sourced
+// maps. Direct port of src/wild_tracker/queries.py::week_team_stats — see
+// its docstring for the RETAKE/5v4/4v5/OPENING derivations; every field
+// here comes from already-computed MatchTeamSummary rows, no new queries.
+export type PctRow = { won: number; total: number; pct: number | null };
+
+export type WeekTeamStats = {
+  atk: PctRow;
+  def: PctRow;
+  post_plant: PctRow;
+  retake: PctRow;
+  opening: PctRow;
+  five_v_four: PctRow;
+  four_v_five: PctRow;
+};
+
+function pctRow(won: number, total: number): PctRow {
+  return { won, total, pct: total ? Math.round((won / total) * 100) : null };
+}
+
+export function aggregateWeekTeamStats(summaries: MatchTeamSummary[]): WeekTeamStats | null {
+  if (summaries.length === 0) return null;
+
+  let atkWon = 0,
+    atkTotal = 0,
+    defWon = 0,
+    defTotal = 0;
+  let plants = 0,
+    postPlantWon = 0;
+  let enemyPlants = 0,
+    enemyPostPlantWon = 0;
+  let wildFb = 0,
+    wildFbWon = 0;
+  let enemyFb = 0,
+    enemyFbWon = 0;
+
+  for (const { wild: w, enemy: e } of summaries) {
+    atkWon += w.atk_won;
+    atkTotal += w.atk_total;
+    defWon += w.def_won;
+    defTotal += w.def_total;
+    plants += w.plants;
+    postPlantWon += w.post_plant_won;
+    enemyPlants += e.plants;
+    enemyPostPlantWon += e.post_plant_won;
+    wildFb += w.first_bloods;
+    wildFbWon += w.first_bloods_won;
+    enemyFb += e.first_bloods;
+    enemyFbWon += e.first_bloods_won;
+  }
+
+  const fiveVFourWon = wildFbWon,
+    fiveVFourTotal = wildFb;
+  const fourVFiveWon = enemyFb - enemyFbWon,
+    fourVFiveTotal = enemyFb;
+
+  return {
+    atk: pctRow(atkWon, atkTotal),
+    def: pctRow(defWon, defTotal),
+    post_plant: pctRow(postPlantWon, plants),
+    retake: pctRow(enemyPlants - enemyPostPlantWon, enemyPlants),
+    opening: pctRow(fiveVFourWon + fourVFiveWon, fiveVFourTotal + fourVFiveTotal),
+    five_v_four: pctRow(fiveVFourWon, fiveVFourTotal),
+    four_v_five: pctRow(fourVFiveWon, fourVFiveTotal),
+  };
 }

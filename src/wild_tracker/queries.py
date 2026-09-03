@@ -380,11 +380,12 @@ def match_week_detail(conn: sqlite3.Connection, season_id: str, local_date: str)
             economies.append({"map": m["map"], "opponent": m["opponent"], "match_id": m["match_id"], "economy": detail["economy"]})
 
     combined_weapons = _merge_weapon_matrices(weapon_matrices)
+    team_stats = week_team_stats([md["detail"]["team_summary"] for md in maps_detail if md["detail"]["team_summary"]])
 
     return {
         "week": week, "combined_box_score": combined_box_score,
         "combined_weapons": combined_weapons, "economies": economies,
-        "maps_detail": maps_detail,
+        "maps_detail": maps_detail, "team_stats": team_stats,
     }
 
 
@@ -909,10 +910,16 @@ def match_team_summary(conn: sqlite3.Connection, match_id: str, wild_team_id: st
     for r in rounds:
         rn, winner = r["round_number"], r["winning_team_id"]
         side = wild_side_by_round.get(rn)
-        if winner == wild_team_id and side:
-            stats[wild_team_id][f"{side.lower()}_won"] += 1
-        elif winner == enemy_team_id and side:
-            stats[enemy_team_id][("def" if side == "ATK" else "atk") + "_won"] += 1
+        if side:
+            # Totals (played, not just won) per side — needed for the
+            # week-level "Team Stats" widget's ATK/DEF conversion rates
+            # (week_team_stats below), not just the h2h card's win counts.
+            stats[wild_team_id][f"{side.lower()}_total"] += 1
+            stats[enemy_team_id][("def" if side == "ATK" else "atk") + "_total"] += 1
+            if winner == wild_team_id:
+                stats[wild_team_id][f"{side.lower()}_won"] += 1
+            elif winner == enemy_team_id:
+                stats[enemy_team_id][("def" if side == "ATK" else "atk") + "_won"] += 1
 
         fb_team = fb_team_by_round.get(rn)
         if fb_team in stats:
@@ -967,7 +974,9 @@ def match_team_summary(conn: sqlite3.Connection, match_id: str, wild_team_id: st
         return {
             "score": sum(1 for r in rounds if r["winning_team_id"] == tid),
             "atk_won": s["atk_won"],
+            "atk_total": s["atk_total"],
             "def_won": s["def_won"],
+            "def_total": s["def_total"],
             "first_bloods": s["first_bloods"],
             "first_bloods_won": s["first_bloods_won"],
             "plants": s["plants"],
@@ -977,3 +986,66 @@ def match_team_summary(conn: sqlite3.Connection, match_id: str, wild_team_id: st
         }
 
     return {"wild": row(wild_team_id), "enemy": row(enemy_team_id)}
+
+
+def _pct_row(won: int, total: int) -> dict:
+    return {"won": won, "total": total, "pct": round(won / total * 100) if total else None}
+
+
+def week_team_stats(team_summaries: list[dict]) -> dict | None:
+    """Whole-week "Team Stats" widget (WILD-only — a match week's Overall tab
+    spans two different opponents, so unlike team_summary_card this isn't a
+    head-to-head; it's WILD's own round-win rates aggregated across the
+    week's maps). Reference image (user-supplied): ATK/DEF/POST PLANT/RETAKE
+    conversion rates, plus OPENING split into 5v4 (WILD got the round's first
+    kill) and 4v5 (opponent did) — every field here is derived purely from
+    match_team_summary()'s already-computed wild/enemy rows, no new queries:
+      - RETAKE = rounds WILD won after the *opponent* planted (opponent's
+        plants minus opponent's post-plant wins).
+      - 5v4 = WILD's own first-blood conversion (first_bloods_won/first_bloods).
+      - 4v5 = the mirror on the opponent's first bloods (their first bloods
+        minus their first-blood wins = rounds WILD clawed back after
+        conceding the opening kill).
+      - OPENING = the two combined (every round has exactly one opening-kill
+        team, so this total always equals total rounds played).
+    Takes a list of already-computed match_team_summary() dicts (one per
+    API-sourced map that week) — callers already have these from maps_detail,
+    so no match_id/team_id plumbing needed here. None if none of the week's
+    maps were API-sourced (mirrors match_team_summary's own None for
+    spreadsheet-only matches).
+    """
+    if not team_summaries:
+        return None
+
+    atk_won = atk_total = def_won = def_total = 0
+    plants = post_plant_won = 0
+    enemy_plants = enemy_post_plant_won = 0
+    wild_fb = wild_fb_won = 0
+    enemy_fb = enemy_fb_won = 0
+    for ts in team_summaries:
+        w, e = ts["wild"], ts["enemy"]
+        atk_won += w["atk_won"]
+        atk_total += w["atk_total"]
+        def_won += w["def_won"]
+        def_total += w["def_total"]
+        plants += w["plants"]
+        post_plant_won += w["post_plant_won"]
+        enemy_plants += e["plants"]
+        enemy_post_plant_won += e["post_plant_won"]
+        wild_fb += w["first_bloods"]
+        wild_fb_won += w["first_bloods_won"]
+        enemy_fb += e["first_bloods"]
+        enemy_fb_won += e["first_bloods_won"]
+
+    five_v_four_won, five_v_four_total = wild_fb_won, wild_fb
+    four_v_five_won, four_v_five_total = enemy_fb - enemy_fb_won, enemy_fb
+
+    return {
+        "atk": _pct_row(atk_won, atk_total),
+        "def": _pct_row(def_won, def_total),
+        "post_plant": _pct_row(post_plant_won, plants),
+        "retake": _pct_row(enemy_plants - enemy_post_plant_won, enemy_plants),
+        "opening": _pct_row(five_v_four_won + four_v_five_won, five_v_four_total + four_v_five_total),
+        "five_v_four": _pct_row(five_v_four_won, five_v_four_total),
+        "four_v_five": _pct_row(four_v_five_won, four_v_five_total),
+    }

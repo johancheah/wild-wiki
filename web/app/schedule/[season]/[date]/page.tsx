@@ -6,6 +6,7 @@ import { fetchMatchWeekByKey, fetchCombinedBoxScore } from "@/lib/schedule";
 import { fetchMatchFullDetail } from "@/lib/matchDetail";
 import { mergeWeaponMatrices } from "@/lib/weapons";
 import { formatMatchDate } from "@/lib/schedule";
+import { aggregateWeekTeamStats } from "@/lib/teamSummary";
 import { MatchTabs, type MatchTabsEconomyEntry } from "@/components/MatchTabs";
 import { Tabs } from "@/components/Tabs";
 import { NavLabelSync } from "@/components/NavLabelSync";
@@ -55,6 +56,8 @@ export default async function MatchWeekDetailPage({
     if (d?.economy) economies.push({ map: m.map, opponent: m.opponent, economy: d.economy });
   });
 
+  const weekTeamStats = aggregateWeekTeamStats(mapDetails.map((d) => d?.teamSummary).filter((t) => t != null));
+
   const navLabel = week.season_id ? `${week.season_id} · ${week.label}` : week.label;
 
   return (
@@ -88,6 +91,7 @@ export default async function MatchWeekDetailPage({
                 economies={economies}
                 boxTitle="Combined Box Score — WILD"
                 multiAgent
+                weekTeamStats={weekTeamStats}
               />
             ),
           },

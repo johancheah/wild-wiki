@@ -375,13 +375,46 @@
 </div>
 {% endmacro %}
 
+{# Whole-week "Team Stats" widget — WILD-only round-conversion rates
+   (ATK/DEF/Post Plant/Retake, plus Opening split into 5v4/4v5), aggregated
+   across every API-sourced map that week. Unlike team_summary_card this
+   isn't a head-to-head (the Overall tab spans two different opponents), so
+   it only ever shows WILD's own numbers. `ts` is queries.py::
+   week_team_stats()'s return dict; each value is a {won,total,pct} row. #}
+{% macro _wts_row(label, r) %}
+<div class="week-team-stats-row">
+  <span class="wts-label">{{ label }}</span>
+  <span class="wts-frac">{{ r.won }}/{{ r.total }}</span>
+  <span class="wts-pct">{{ "[%d%%]"|format(r.pct) if r.pct is not none else "—" }}</span>
+</div>
+{% endmacro %}
+
+{% macro team_stats_card(ts) %}
+<div class="week-team-stats-card">
+  <div class="week-team-stats-header">Team Stats</div>
+  <div class="week-team-stats-grid">
+    <div class="week-team-stats-col">
+      {{ _wts_row("ATK", ts.atk) }}
+      {{ _wts_row("DEF", ts.def) }}
+      {{ _wts_row("Post Plant", ts.post_plant) }}
+      {{ _wts_row("Retake", ts.retake) }}
+    </div>
+    <div class="week-team-stats-col">
+      {{ _wts_row("Opening", ts.opening) }}
+      {{ _wts_row("5v4", ts.five_v_four) }}
+      {{ _wts_row("4v5", ts.four_v_five) }}
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
 {# Standard set of match-scoped tabs: Overview / Performance / Weapons /
    Economy — shared by the single-match page and each nested tab group on
    the match-week page (Overall + one per map), so every box score / weapon
    matrix / economy grid on the site is rendered by the exact same markup.
    `group` must be unique on the page (used to scope tab-button clicks and
    panel ids so multiple tab groups can be nested without colliding). #}
-{% macro match_tabs(group, wild_rows, enemy_rows=None, weapons=None, economies=None, box_title="WILD Box Score", multi_agent=False, subtitle=None, timeline=None, opponent_name=None, h2h=None, event_rounds=None, team_summary=None, map=None) %}
+{% macro match_tabs(group, wild_rows, enemy_rows=None, weapons=None, economies=None, box_title="WILD Box Score", multi_agent=False, subtitle=None, timeline=None, opponent_name=None, h2h=None, event_rounds=None, team_summary=None, map=None, team_stats=None) %}
   {% if timeline %}{{ round_timeline(timeline, opponent_name) }}{% endif %}
   <div class="tabs" data-group="{{ group }}">
     <button class="tab-btn active" data-tab="overview" data-group="{{ group }}">Overview</button>
@@ -392,6 +425,7 @@
 
   <div id="tab-{{ group }}-overview" class="tab-panel" data-group="{{ group }}">
     {% if team_summary %}{{ team_summary_card(team_summary, opponent_name, map) }}{% endif %}
+    {% if team_stats %}{{ team_stats_card(team_stats) }}{% endif %}
     <section>
       <h2>{{ box_title }}</h2>
       {% if subtitle %}<div class="subtitle" style="margin-top:-8px;">{{ subtitle }}</div>{% endif %}
