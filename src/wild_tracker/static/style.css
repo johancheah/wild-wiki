@@ -518,11 +518,11 @@ tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4
 .week-team-stats-card {
   border-radius: 10px; overflow: hidden;
   margin-bottom: 28px; padding: 18px 28px;
-  background-color: var(--accent-dim);
+  background-color: var(--surface-2);
   background-image:
-    url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJuIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC44NSIgbnVtT2N0YXZlcz0iMyIgc3RpdGNoVGlsZXM9InN0aXRjaCIvPjxmZUNvbG9yTWF0cml4IHR5cGU9InNhdHVyYXRlIiB2YWx1ZXM9IjAiLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCglMjNuKSIgb3BhY2l0eT0iMC41Ii8+PC9zdmc+"),
-    linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 85%);
-  background-blend-mode: overlay, normal;
+    url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJuIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC44NSIgbnVtT2N0YXZlcz0iMyIgc3RpdGNoVGlsZXM9InN0aXRjaCIvPjxmZUNvbG9yTWF0cml4IHR5cGU9InNhdHVyYXRlIiB2YWx1ZXM9IjAiLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCglMjNuKSIgb3BhY2l0eT0iMC4yMiIvPjwvc3ZnPg=="),
+    linear-gradient(135deg, var(--accent-dim) 0%, var(--surface-2) 100%);
+  background-blend-mode: soft-light, normal;
 }
 .week-team-stats-header {
   font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
