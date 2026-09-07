@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 import Grainient from "@/components/Grainient";
@@ -9,6 +9,19 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://wild-wiki.vercel.app"),
   title: "WILD Gaming",
   description: "WILD Gaming Valorant Premier tracker",
+  // iOS "Add to Home Screen" ignores favicon.ico/manifest icons — it only
+  // reads apple-touch-icon (app/apple-icon.png, injected automatically by
+  // Next's file convention) and these two meta tags for a standalone
+  // (no browser-chrome) launch with a custom title under the icon.
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "WILD Gaming",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0c0f13",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
