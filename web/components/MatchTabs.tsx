@@ -7,6 +7,8 @@ import { RoundTimeline } from "./RoundTimeline";
 import { H2hTable } from "./H2hTable";
 import { TeamSummaryCard } from "./TeamSummaryCard";
 import { WeekTeamStatsCard } from "./WeekTeamStatsCard";
+import { WeekMapStrip } from "./WeekMapStrip";
+import { WeekSpotlight } from "./WeekSpotlight";
 import { Tabs } from "./Tabs";
 import type { WeaponMatrix } from "@/lib/weapons";
 import type { MatchEconomy, WeekEconomySummary } from "@/lib/economy";
@@ -18,6 +20,30 @@ import type { MatchTeamSummary, WeekTeamStats } from "@/lib/teamSummary";
 export type MatchTabsRow = BoxScoreTableRow & PerformanceRow;
 
 export type MatchTabsEconomyEntry = { map: string; opponent: string | null; economy: MatchEconomy };
+
+// The homepage's "Latest Result" tiles (WeekMapStrip/WeekSpotlight), reused
+// here so the match-week page's Overall/Map N tabs render the exact same
+// map-result tile and MVP callout the homepage does for the same data —
+// only the schedule page passes these; the single-match page keeps its
+// existing TeamSummaryCard-only Overview (mapStrip is what suppresses it).
+export type MapStripData = {
+  map: string;
+  opponent: string | null;
+  matchId: string;
+  result: string | null;
+  teamSummary: MatchTeamSummary | null;
+};
+
+export type SpotlightData = {
+  playerId: string;
+  displayName: string;
+  headshotFilename: string | null;
+  acs: number | null;
+  kills: number;
+  deaths: number;
+  assists: number;
+  label?: string;
+};
 
 // Standard set of match-scoped tabs: Overview / Performance / Weapons /
 // Economy — shared by the single-match page and each nested Tabs instance
@@ -40,6 +66,9 @@ export function MatchTabs({
   map,
   weekTeamStats,
   combinedEconomy,
+  weekMapStrips,
+  mapStrip,
+  spotlight,
 }: {
   wildRows: MatchTabsRow[];
   enemyRows?: MatchTabsRow[] | null;
@@ -56,6 +85,11 @@ export function MatchTabs({
   map?: string | null;
   weekTeamStats?: WeekTeamStats | null;
   combinedEconomy?: WeekEconomySummary | null;
+  /** Week-spanning map tiles (Overall tab) — one WeekMapStrip per map. */
+  weekMapStrips?: MapStripData[] | null;
+  /** Single-map tile (a schedule-page Map N tab) — replaces TeamSummaryCard. */
+  mapStrip?: MapStripData | null;
+  spotlight?: SpotlightData | null;
 }) {
   return (
     <>
@@ -67,7 +101,18 @@ export function MatchTabs({
             label: "Overview",
             content: (
               <>
-                {teamSummary && <TeamSummaryCard summary={teamSummary} opponentName={opponentName} map={map} />}
+                {weekMapStrips && weekMapStrips.length > 0 && (
+                  <div className="week-maps-row">
+                    {weekMapStrips.map((ms) => (
+                      <WeekMapStrip key={ms.matchId} {...ms} />
+                    ))}
+                  </div>
+                )}
+                {mapStrip && <WeekMapStrip {...mapStrip} />}
+                {!mapStrip && teamSummary && (
+                  <TeamSummaryCard summary={teamSummary} opponentName={opponentName} map={map} />
+                )}
+                {spotlight && <WeekSpotlight {...spotlight} />}
                 {weekTeamStats && <WeekTeamStatsCard stats={weekTeamStats} />}
                 <section>
                   <h2>{boxTitle}</h2>

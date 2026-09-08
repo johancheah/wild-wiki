@@ -8,9 +8,27 @@ import { mergeWeaponMatrices } from "@/lib/weapons";
 import { formatMatchDate } from "@/lib/schedule";
 import { aggregateWeekTeamStats } from "@/lib/teamSummary";
 import { aggregateWeekEconomy } from "@/lib/economy";
-import { MatchTabs, type MatchTabsEconomyEntry } from "@/components/MatchTabs";
+import { MatchTabs, type MatchTabsEconomyEntry, type SpotlightData } from "@/components/MatchTabs";
 import { Tabs } from "@/components/Tabs";
 import { NavLabelSync } from "@/components/NavLabelSync";
+import type { BoxScoreTableRow } from "@/components/BoxScoreTable";
+
+// Shared shape of the combined and per-map box-score rows — both carry
+// these fields, just under either name for "agent"/"agents". `label`
+// distinguishes the week-wide Overall tab's "Player of the Week" from a
+// single map's "Map MVP" (same tile, WeekSpotlight's own default label).
+function toSpotlight(row: BoxScoreTableRow, label?: string): SpotlightData {
+  return {
+    playerId: row.player_id,
+    displayName: row.display_name,
+    headshotFilename: row.headshot_filename,
+    acs: row.acs,
+    kills: row.kills,
+    deaths: row.deaths,
+    assists: row.assists,
+    label,
+  };
+}
 
 export const revalidate = 0;
 
@@ -113,6 +131,14 @@ export default async function MatchWeekDetailPage({
                 multiAgent
                 weekTeamStats={weekTeamStats}
                 combinedEconomy={combinedEconomy}
+                weekMapStrips={week.maps.map((m, i) => ({
+                  map: m.map,
+                  opponent: m.opponent,
+                  matchId: m.match_id,
+                  result: m.result,
+                  teamSummary: mapDetails[i]?.teamSummary ?? null,
+                }))}
+                spotlight={combinedBoxScore[0] ? toSpotlight(combinedBoxScore[0]) : null}
               />
             ),
           },
@@ -131,8 +157,14 @@ export default async function MatchWeekDetailPage({
                   opponentName={m.opponent}
                   h2h={d.h2h}
                   eventRounds={d.eventRounds}
-                  teamSummary={d.teamSummary}
-                  map={m.map}
+                  mapStrip={{
+                    map: m.map,
+                    opponent: m.opponent,
+                    matchId: m.match_id,
+                    result: m.result,
+                    teamSummary: d.teamSummary,
+                  }}
+                  spotlight={d.wildRows[0] ? toSpotlight(d.wildRows[0], "Map MVP") : null}
                 />
               ) : (
                 <div className="empty-note">This map&apos;s data could not be loaded.</div>

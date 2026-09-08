@@ -394,12 +394,27 @@ def match_week_detail(conn: sqlite3.Connection, season_id: str, local_date: str)
     team_stats = week_team_stats([md["detail"]["team_summary"] for md in maps_detail if md["detail"]["team_summary"]])
     combined_economy = week_economy_summary(economies)
 
+    # One week_map_strip()-shaped dict per map — same tile the homepage uses
+    # for its "Latest Result" map row, reused on the Overall tab here so the
+    # two pages render map results identically.
+    week_map_strips = [
+        {
+            "map": md["map"],
+            "opponent": md["opponent"],
+            "match_id": md["match_id"],
+            "result": md["detail"]["match"]["result"],
+            "team_summary": md["detail"]["team_summary"],
+        }
+        for md in maps_detail
+    ]
+
     return {
         "week": week, "combined_box_score": combined_box_score,
         "combined_weapons": combined_weapons, "economies": economies,
         "maps_detail": maps_detail, "team_stats": team_stats,
         "combined_economy": combined_economy,
         "prev_week": prev_week, "next_week": next_week,
+        "week_map_strips": week_map_strips,
     }
 
 

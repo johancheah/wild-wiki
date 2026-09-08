@@ -38,7 +38,9 @@
        box_title="Combined Box Score — WILD",
        multi_agent=True,
        team_stats=team_stats,
-       combined_economy=combined_economy
+       combined_economy=combined_economy,
+       week_map_strips=week_map_strips,
+       spotlight=combined_box_score[0] if combined_box_score else None
      ) }}
 </div>
 
@@ -58,8 +60,9 @@
        opponent_name=md.opponent,
        h2h=d.h2h,
        event_rounds=d.event_rounds,
-       team_summary=d.team_summary,
-       map=md.map
+       map_strip={"map": md.map, "opponent": md.opponent, "match_id": md.match_id, "result": d.match.result, "team_summary": d.team_summary},
+       spotlight=wild_rows[0] if wild_rows else None,
+       spotlight_label="Map MVP"
      ) }}
 </div>
 {% endfor %}

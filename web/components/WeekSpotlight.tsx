@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { Avatar } from "./Avatar";
 
-// "Player of the Week" — the top-ACS player from the week's combined box
-// score (already sorted by ACS desc), linking to their player page.
-// Mirrors home.html's week-spotlight markup.
+// Top-ACS player spotlight — "Player of the Week" for a whole match week
+// (homepage, schedule page's Overall tab) or "Map MVP" for a single map
+// (schedule page's Map N tabs), same tile either way. Row is already
+// sorted by ACS desc by the caller. Mirrors home.html's week-spotlight
+// markup.
 export function WeekSpotlight({
   playerId,
   displayName,
@@ -12,6 +14,7 @@ export function WeekSpotlight({
   kills,
   deaths,
   assists,
+  label = "Player of the Week",
 }: {
   playerId: string;
   displayName: string;
@@ -20,12 +23,13 @@ export function WeekSpotlight({
   kills: number;
   deaths: number;
   assists: number;
+  label?: string;
 }) {
   return (
     <Link className="week-spotlight" href={`/players/${playerId}`}>
       <Avatar displayName={displayName} headshotFilename={headshotFilename} size="lg" />
       <div>
-        <div className="week-spotlight-label">Player of the Week</div>
+        <div className="week-spotlight-label">{label}</div>
         <div className="week-spotlight-name">{displayName}</div>
         <div className="week-spotlight-stats">
           <span>
