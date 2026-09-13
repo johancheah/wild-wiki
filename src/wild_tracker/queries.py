@@ -511,7 +511,7 @@ _WEAPON_CATEGORY_ORDER: dict[str, int] = {
     "Ares": 2, "Odin": 2,
     "Bucky": 3, "Judge": 3,
     "Stinger": 4, "Spectre": 4,
-    "Classic": 5, "Shorty": 5, "Frenzy": 5, "Ghost": 5, "Sheriff": 5,
+    "Classic": 5, "Shorty": 5, "Frenzy": 5, "Ghost": 5, "Sheriff": 5, "Bandit": 5,
     "Melee": 6,
 }
 _WEAPON_ABILITY_RANK = 7
@@ -533,7 +533,7 @@ def _sort_weapons(weapon_totals: dict[str, int]) -> list[str]:
 # used, same as the real menu always showing every weapon regardless of
 # loadout.
 _BUY_MENU_COLUMNS: list[list[tuple[str, list[str]]]] = [
-    [("Sidearms", ["Classic", "Shorty", "Frenzy", "Ghost", "Sheriff"])],
+    [("Sidearms", ["Classic", "Shorty", "Frenzy", "Ghost", "Bandit", "Sheriff"])],
     [("SMGs", ["Stinger", "Spectre"]), ("Shotguns", ["Bucky", "Judge"])],
     [("Rifles", ["Bulldog", "Guardian", "Phantom", "Vandal"]), ("Machine Guns", ["Ares", "Odin"])],
     [("Sniper Rifles", ["Marshal", "Outlaw", "Operator"])],

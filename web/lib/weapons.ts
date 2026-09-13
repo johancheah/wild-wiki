@@ -30,7 +30,7 @@ const WEAPON_CATEGORY_ORDER: Record<string, number> = {
   Ares: 2, Odin: 2,
   Bucky: 3, Judge: 3,
   Stinger: 4, Spectre: 4,
-  Classic: 5, Shorty: 5, Frenzy: 5, Ghost: 5, Sheriff: 5,
+  Classic: 5, Shorty: 5, Frenzy: 5, Ghost: 5, Bandit: 5, Sheriff: 5,
   Melee: 6,
 };
 const WEAPON_ABILITY_RANK = 7;
@@ -143,7 +143,7 @@ export type PlayerWeaponGrid = { columns: WeaponGridCategory[][]; other: PlayerW
 // used, same as the real menu always showing every weapon regardless of
 // loadout. Mirrors queries.py::_BUY_MENU_COLUMNS / player_weapon_grid.
 const BUY_MENU_COLUMNS: [string, string[]][][] = [
-  [["Sidearms", ["Classic", "Shorty", "Frenzy", "Ghost", "Sheriff"]]],
+  [["Sidearms", ["Classic", "Shorty", "Frenzy", "Ghost", "Bandit", "Sheriff"]]],
   [
     ["SMGs", ["Stinger", "Spectre"]],
     ["Shotguns", ["Bucky", "Judge"]],
