@@ -291,31 +291,59 @@
 </div>
 {% endmacro %}
 
-{% macro weapon_matrix_table(weapons) %}
-<div class="table-scroll">
-  <table class="weapon-matrix-table sticky-first-col">
-    <thead>
-      <tr>
-        <th>Player</th>
-        {% for w in weapons.weapons %}
-        {% set icon = weapon_icon(w) %}
-        <th class="num-col" title="{{ w }}">
-          {% if icon %}<img class="weapon-col-icon" src="{{ icon }}" alt="{{ w }}" title="{{ w }}">{% else %}{{ w }}{% endif %}
-        </th>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      {% for p in weapons.players %}
-      <tr class="linkable" onclick="location.href='/players/{{ p.player_id }}'">
-        <td class="name">{{ avatar(p.display_name, p.headshot_filename) }}{{ p.display_name }}</td>
-        {% for w in weapons.weapons %}
-        <td class="num-col">{{ chip(p.kills_by_weapon[w] if w in p.kills_by_weapon else None, blank_zero=True, square=True) }}</td>
-        {% endfor %}
-      </tr>
+{# One weapon tile for the match/match-week Weapons tab — same tile shell
+   as weapon_tile above (icon + name), but instead of a single career kill
+   chip, a row of small avatar-and-count pairs — one per WILD player who
+   got a kill with this weapon, sorted by kills desc — so the grid still
+   shows *who* got the kills, the whole point of a team (not career) view.
+   `w` is weapon_grid_from_matrix()'s per-weapon entry:
+   {weapon, kills, players: [{player_id, display_name, headshot_filename, kills}]}. #}
+{% macro weapon_tile_players(w) %}
+  {% set icon = weapon_icon(w.weapon) %}
+  <div class="weapon-tile">
+    <div class="weapon-tile-icon">
+      {% if icon %}<img src="{{ icon }}" alt="{{ w.weapon }}">{% else %}<span class="avatar-fallback">—</span>{% endif %}
+    </div>
+    {% if w.players %}
+    <div class="weapon-tile-players">
+      {% for pl in w.players %}
+      <a class="weapon-tile-player" href="/players/{{ pl.player_id }}" title="{{ pl.display_name }}: {{ pl.kills }} kills">
+        {{ avatar(pl.display_name, pl.headshot_filename, "sm") }}
+        <span class="weapon-tile-player-count">{{ pl.kills }}</span>
+      </a>
       {% endfor %}
-    </tbody>
-  </table>
+    </div>
+    {% else %}
+    {{ chip(None, blank_zero=True) }}
+    {% endif %}
+    <div class="weapon-tile-name">{{ w.weapon }}</div>
+  </div>
+{% endmacro %}
+
+{# Match/match-week Weapons tab — same VALORANT-buy-menu grid layout as the
+   player page's career weapon_buy_grid (so both pages read the same way),
+   but each tile breaks kills down per player instead of one team total.
+   `weapon_grid` is queries.py::weapon_grid_from_matrix()'s return dict. #}
+{% macro weapon_buy_grid_players(weapon_grid) %}
+<div class="weapon-grid">
+  {% for col in weapon_grid.columns %}
+  <div class="weapon-grid-col">
+    {% for cat in col %}
+    <div class="weapon-cat-label">{{ cat.label }}</div>
+    {% for w in cat.weapons %}
+    {{ weapon_tile_players(w) }}
+    {% endfor %}
+    {% endfor %}
+  </div>
+  {% endfor %}
+  {% if weapon_grid.other %}
+  <div class="weapon-grid-col">
+    <div class="weapon-cat-label">Melee / Abilities</div>
+    {% for w in weapon_grid.other %}
+    {{ weapon_tile_players(w) }}
+    {% endfor %}
+  </div>
+  {% endif %}
 </div>
 {% endmacro %}
 
@@ -528,7 +556,7 @@
   <div id="tab-{{ group }}-weapons" class="tab-panel hidden" data-group="{{ group }}">
     <section>
       <h2>Weapon Kills — WILD</h2>
-      {{ weapon_matrix_table(weapons) }}
+      {{ weapon_buy_grid_players(weapons) }}
     </section>
   </div>
   {% endif %}

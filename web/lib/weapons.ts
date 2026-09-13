@@ -175,3 +175,49 @@ export async function fetchPlayerWeaponGrid(supabase: SupabaseClient, playerId: 
 
   return { columns, other };
 }
+
+export type WeaponTilePlayer = { player_id: string; display_name: string; headshot_filename: string | null; kills: number };
+export type WeaponTileEntry = { weapon: string; kills: number; players: WeaponTilePlayer[] };
+export type WeaponPlayerGrid = { columns: { label: string; weapons: WeaponTileEntry[] }[][]; other: WeaponTileEntry[] };
+
+// Reshapes a WeaponMatrix (weapon_matrix()/mergeWeaponMatrices() shape)
+// into the same VALORANT-buy-menu grid layout as fetchPlayerWeaponGrid
+// (fixed category columns, every weapon always shown) — but each weapon
+// carries a per-player kill breakdown (headshot + count) instead of one
+// team-total chip, for the match/match-week Weapons tab. Visually matches
+// the player page's Weapon Stats grid, per the user's request, while still
+// showing who got the kills (the whole point of a *team* weapons tab).
+// Mirrors src/wild_tracker/queries.py::weapon_grid_from_matrix.
+export function weaponGridFromMatrix(matrix: WeaponMatrix | null): WeaponPlayerGrid | null {
+  if (!matrix) return null;
+
+  const byWeapon = new Map<string, WeaponTilePlayer[]>();
+  for (const p of matrix.players) {
+    for (const [weapon, kills] of Object.entries(p.kills_by_weapon)) {
+      if (!kills) continue;
+      if (!byWeapon.has(weapon)) byWeapon.set(weapon, []);
+      byWeapon.get(weapon)!.push({
+        player_id: p.player_id,
+        display_name: p.display_name,
+        headshot_filename: p.headshot_filename,
+        kills,
+      });
+    }
+  }
+  for (const players of byWeapon.values()) players.sort((a, b) => b.kills - a.kills);
+
+  const weaponEntry = (w: string): WeaponTileEntry => {
+    const players = byWeapon.get(w) ?? [];
+    return { weapon: w, kills: players.reduce((s, pl) => s + pl.kills, 0), players };
+  };
+
+  const columns = BUY_MENU_COLUMNS.map((col) => col.map(([label, weapons]) => ({ label, weapons: weapons.map(weaponEntry) })));
+
+  const known = new Set(BUY_MENU_COLUMNS.flat().flatMap(([, weapons]) => weapons));
+  const other = [...byWeapon.keys()]
+    .filter((w) => !known.has(w))
+    .map(weaponEntry)
+    .sort((a, b) => b.kills - a.kills);
+
+  return { columns, other };
+}

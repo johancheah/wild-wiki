@@ -385,12 +385,12 @@ def match_week_detail(conn: sqlite3.Connection, season_id: str, local_date: str)
         if detail is None:
             continue
         maps_detail.append({"map": m["map"], "opponent": m["opponent"], "match_id": m["match_id"], "detail": detail})
-        if detail["weapons"]:
-            weapon_matrices.append(detail["weapons"])
+        if detail["weapon_matrix"]:
+            weapon_matrices.append(detail["weapon_matrix"])
         if detail["economy"]:
             economies.append({"map": m["map"], "opponent": m["opponent"], "match_id": m["match_id"], "economy": detail["economy"]})
 
-    combined_weapons = _merge_weapon_matrices(weapon_matrices)
+    combined_weapons = weapon_grid_from_matrix(_merge_weapon_matrices(weapon_matrices))
     team_stats = week_team_stats([md["detail"]["team_summary"] for md in maps_detail if md["detail"]["team_summary"]])
     combined_economy = week_economy_summary(economies)
 
@@ -626,6 +626,53 @@ def _merge_weapon_matrices(matrices: list[dict]) -> dict | None:
     return {"weapons": weapons, "players": player_rows}
 
 
+def weapon_grid_from_matrix(matrix: dict | None) -> dict | None:
+    """Reshapes weapon_matrix()/_merge_weapon_matrices()'s {weapons, players}
+    output into the same VALORANT-buy-menu grid layout as player_weapon_grid
+    (fixed category columns, every weapon always shown) — but each weapon
+    carries a per-player kill breakdown (headshot + count) instead of one
+    team-total chip, for the match/match-week Weapons tab. Visually matches
+    the player page's Weapon Stats grid, per the user's request, while still
+    showing who got the kills (the whole point of a *team* weapons tab).
+    """
+    if not matrix:
+        return None
+
+    by_weapon: dict[str, list[dict]] = defaultdict(list)
+    for p in matrix["players"]:
+        for weapon, kills in p["kills_by_weapon"].items():
+            if kills:
+                by_weapon[weapon].append({
+                    "player_id": p["player_id"], "display_name": p["display_name"],
+                    "headshot_filename": p["headshot_filename"], "kills": kills,
+                })
+    for players in by_weapon.values():
+        players.sort(key=lambda pl: pl["kills"], reverse=True)
+
+    def weapon_entry(w: str) -> dict:
+        players = by_weapon.get(w, [])
+        return {"weapon": w, "kills": sum(pl["kills"] for pl in players), "players": players}
+
+    columns = [
+        [
+            {"label": label, "weapons": [weapon_entry(w) for w in weapons]}
+            for label, weapons in col
+        ]
+        for col in _BUY_MENU_COLUMNS
+    ]
+
+    # Melee + ability-kills aren't in the fixed buy-menu list — shown
+    # separately, only the ones actually used, kills desc (same convention
+    # as player_weapon_grid's "other" column).
+    known = {w for col in _BUY_MENU_COLUMNS for _, ws in col for w in ws}
+    other = sorted(
+        (weapon_entry(w) for w in by_weapon if w not in known),
+        key=lambda x: x["kills"], reverse=True,
+    )
+
+    return {"columns": columns, "other": other}
+
+
 def h2h_matrix(conn: sqlite3.Connection, match_id: str, wild_team_id: str, enemy_team_id: str | None) -> dict | None:
     """Head-to-head kill/death grid for the match's Performance tab — one
     row per WILD player, one column per opponent player, kills scored on
@@ -807,7 +854,7 @@ def match_detail(conn: sqlite3.Connection, match_id: str) -> dict | None:
         timeline = compute_match_timeline(conn, match_id, match["team_id"], match["enemy_team_id"])
 
     economy = match_economy(conn, match_id, match["team_id"], match["enemy_team_id"]) if match["team_id"] else None
-    weapons = weapon_matrix(conn, match_id, match["team_id"]) if match["team_id"] else None
+    weapon_matrix_raw = weapon_matrix(conn, match_id, match["team_id"]) if match["team_id"] else None
     h2h = h2h_matrix(conn, match_id, match["team_id"], match["enemy_team_id"]) if match["team_id"] else None
     event_rounds = multi_kill_clutch_rounds(conn, match_id, match["team_id"])
     team_summary = (
@@ -817,8 +864,9 @@ def match_detail(conn: sqlite3.Connection, match_id: str) -> dict | None:
 
     return {
         "match": match, "box_score": box_score, "weapon_kills": weapon_kills,
-        "timeline": timeline, "economy": economy, "weapons": weapons, "h2h": h2h,
-        "event_rounds": event_rounds, "team_summary": team_summary,
+        "timeline": timeline, "economy": economy,
+        "weapons": weapon_grid_from_matrix(weapon_matrix_raw), "weapon_matrix": weapon_matrix_raw,
+        "h2h": h2h, "event_rounds": event_rounds, "team_summary": team_summary,
     }
 
 

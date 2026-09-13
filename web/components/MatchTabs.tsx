@@ -1,6 +1,6 @@
 import { BoxScoreTable, type BoxScoreTableRow } from "./BoxScoreTable";
 import { PerformanceTable, type PerformanceRow } from "./PerformanceTable";
-import { WeaponMatrixTable } from "./WeaponMatrixTable";
+import { WeaponBuyGridPlayers } from "./WeaponBuyGridPlayers";
 import { EconomySection } from "./EconomySection";
 import { CombinedEconomySection } from "./CombinedEconomySection";
 import { RoundTimeline } from "./RoundTimeline";
@@ -10,7 +10,7 @@ import { WeekTeamStatsCard } from "./WeekTeamStatsCard";
 import { WeekMapStrip } from "./WeekMapStrip";
 import { WeekSpotlight } from "./WeekSpotlight";
 import { Tabs } from "./Tabs";
-import type { WeaponMatrix } from "@/lib/weapons";
+import type { WeaponPlayerGrid } from "@/lib/weapons";
 import type { MatchEconomy, WeekEconomySummary } from "@/lib/economy";
 import type { TimelineEntry } from "@/lib/timeline";
 import type { H2hMatrix } from "@/lib/h2h";
@@ -72,7 +72,7 @@ export function MatchTabs({
 }: {
   wildRows: MatchTabsRow[];
   enemyRows?: MatchTabsRow[] | null;
-  weapons?: WeaponMatrix | null;
+  weapons?: WeaponPlayerGrid | null;
   economies?: MatchTabsEconomyEntry[] | null;
   boxTitle?: string;
   multiAgent?: boolean;
@@ -163,7 +163,7 @@ export function MatchTabs({
                   content: (
                     <section>
                       <h2>Weapon Kills — WILD</h2>
-                      <WeaponMatrixTable matrix={weapons} />
+                      <WeaponBuyGridPlayers weaponGrid={weapons} />
                     </section>
                   ),
                 },

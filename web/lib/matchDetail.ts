@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { computeMatchTimeline, type TimelineEntry } from "./timeline";
 import { computeMatchEconomy, type MatchEconomy } from "./economy";
-import { fetchWeaponMatrix, type WeaponMatrix } from "./weapons";
+import { fetchWeaponMatrix, weaponGridFromMatrix, type WeaponMatrix, type WeaponPlayerGrid } from "./weapons";
 import { fetchH2hMatrix, type H2hMatrix } from "./h2h";
 import { fetchEventRounds, type EventRounds } from "./eventRounds";
 import { computeMatchTeamSummary, type MatchTeamSummary } from "./teamSummary";
@@ -18,7 +18,8 @@ export type MatchFullDetail = {
   enemyRows: BoxScoreRow[];
   timeline: TimelineEntry[];
   economy: MatchEconomy | null;
-  weapons: WeaponMatrix | null;
+  weapons: WeaponPlayerGrid | null;
+  weaponMatrix: WeaponMatrix | null;
   h2h: H2hMatrix | null;
   eventRounds: EventRounds;
   teamSummary: MatchTeamSummary | null;
@@ -44,7 +45,8 @@ export async function fetchMatchFullDetail(supabase: SupabaseClient, matchId: st
   const economy = match.team_id
     ? await computeMatchEconomy(supabase, matchId, match.team_id, match.enemy_team_id ?? "")
     : null;
-  const weapons = match.team_id ? await fetchWeaponMatrix(supabase, matchId, match.team_id) : null;
+  const weaponMatrix = match.team_id ? await fetchWeaponMatrix(supabase, matchId, match.team_id) : null;
+  const weapons = weaponGridFromMatrix(weaponMatrix);
   const h2h = match.team_id ? await fetchH2hMatrix(supabase, matchId, match.team_id, match.enemy_team_id) : null;
   const eventRounds = await fetchEventRounds(supabase, matchId, match.team_id);
   const teamSummary =
@@ -52,5 +54,5 @@ export async function fetchMatchFullDetail(supabase: SupabaseClient, matchId: st
       ? await computeMatchTeamSummary(supabase, matchId, match.team_id, match.enemy_team_id)
       : null;
 
-  return { match, wildRows, enemyRows, timeline, economy, weapons, h2h, eventRounds, teamSummary };
+  return { match, wildRows, enemyRows, timeline, economy, weapons, weaponMatrix, h2h, eventRounds, teamSummary };
 }

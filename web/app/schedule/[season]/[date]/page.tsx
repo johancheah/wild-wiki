@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { fetchMatchWeekByKey, fetchMatchWeekWithNeighbors, fetchCombinedBoxScore } from "@/lib/schedule";
 import { fetchMatchFullDetail } from "@/lib/matchDetail";
-import { mergeWeaponMatrices } from "@/lib/weapons";
+import { mergeWeaponMatrices, weaponGridFromMatrix } from "@/lib/weapons";
 import { formatMatchDate } from "@/lib/schedule";
 import { aggregateWeekTeamStats } from "@/lib/teamSummary";
 import { aggregateWeekEconomy } from "@/lib/economy";
@@ -68,7 +68,7 @@ export default async function MatchWeekDetailPage({
     Promise.all(week.maps.map((m) => fetchMatchFullDetail(supabase, m.match_id))),
   ]);
 
-  const combinedWeapons = mergeWeaponMatrices(mapDetails.map((d) => d?.weapons ?? null));
+  const combinedWeapons = weaponGridFromMatrix(mergeWeaponMatrices(mapDetails.map((d) => d?.weaponMatrix ?? null)));
 
   const economies: MatchTabsEconomyEntry[] = [];
   week.maps.forEach((m, i) => {
