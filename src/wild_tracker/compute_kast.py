@@ -5,8 +5,9 @@ import json
 import logging
 from collections import defaultdict
 
-from .config import get_db_path
-from .db_sqlite import connect, init_schema
+from .config import get_db_path, load_config
+from .db_sqlite import connect as connect_sqlite, init_schema as init_schema_sqlite
+from .db import connect as connect_postgres
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("wild_tracker.compute_kast")
@@ -55,7 +56,11 @@ def compute_kast_for_match(conn, match_id: str) -> dict[str, float]:
             ).fetchall()
         ]
         for k in kills:
-            k["assistant_ids"] = json.loads(k["assistant_ids"]) if k["assistant_ids"] else []
+            # SQLite stores this as a JSON-encoded TEXT column (needs
+            # json.loads); Postgres's JSONB column comes back already
+            # deserialized into a list via psycopg2 — handle both.
+            raw = k["assistant_ids"]
+            k["assistant_ids"] = json.loads(raw) if isinstance(raw, str) else (raw or [])
 
         died_this_round: set[str] = set()
         for k in kills:
@@ -89,10 +94,10 @@ def compute_kast_for_match(conn, match_id: str) -> dict[str, float]:
     return {pid: round(100.0 * len(kast_rounds.get(pid, set())) / total, 1) for pid in player_team}
 
 
-def run() -> None:
-    conn = connect(get_db_path())
-    init_schema(conn)
-
+def _run(conn) -> None:
+    """Backend-agnostic — conn is duck-typed .execute()/.commit(), same as
+    every other function in this file, so this works unchanged against
+    either db_sqlite's or db.py's connection wrapper."""
     match_ids = [r["match_id"] for r in conn.execute("SELECT match_id FROM matches WHERE source = 'api'").fetchall()]
     logger.info("Computing KAST for %d API-sourced matches", len(match_ids))
 
@@ -107,13 +112,34 @@ def run() -> None:
             updated += 1
 
     conn.commit()
-    conn.close()
     logger.info("Updated kast_pct for %d player-match rows", updated)
 
 
+def run() -> None:
+    """Local SQLite (data/wild.sqlite3) — used by sync_local.py's flow /
+    the bare `python -m wild_tracker.compute_kast` CLI."""
+    conn = connect_sqlite(get_db_path())
+    init_schema_sqlite(conn)
+    _run(conn)
+    conn.close()
+
+
+def run_postgres() -> None:
+    """Production Postgres (Supabase) — the ingest.py/derive.py pipeline
+    never had a KAST step of its own; this is that step, run after
+    derive.py so newly-ingested matches get real kast_pct in production
+    too, not just locally."""
+    cfg = load_config()
+    conn = connect_postgres(cfg.database_url)
+    _run(conn)
+    conn.close()
+
+
 def main() -> None:
-    argparse.ArgumentParser(description="Compute real KAST% from kill_events/rounds for API-sourced matches.").parse_args()
-    run()
+    parser = argparse.ArgumentParser(description="Compute real KAST% from kill_events/rounds for API-sourced matches.")
+    parser.add_argument("--postgres", action="store_true", help="Target the production Postgres DB instead of local SQLite")
+    args = parser.parse_args()
+    run_postgres() if args.postgres else run()
 
 
 if __name__ == "__main__":

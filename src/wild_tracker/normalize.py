@@ -229,7 +229,13 @@ def normalize_match(raw: dict, wild_premier_team_id: str, match_type: str | None
                     "remaining_credits": _get(stat, "economy", "remaining"),
                     "weapon": _get(stat, "economy", "weapon", "name"),
                     "armor": _get(stat, "economy", "armor", "name"),
-                    "was_afk": 1 if stat.get("was_afk") else 0,
+                    # Real Python bool, not 0/1 — SQLite stores either fine
+                    # (sqlite3 coerces bool to 0/1 automatically), but
+                    # Postgres's round_player_stats.was_afk is a genuine
+                    # BOOLEAN column and psycopg2 rejects a bare int for it
+                    # (DatatypeMismatch), so this must stay a bool for both
+                    # ingest.py (Postgres) and sync_local.py (SQLite) to work.
+                    "was_afk": bool(stat.get("was_afk")),
                 }
             )
 
