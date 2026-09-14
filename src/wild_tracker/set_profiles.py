@@ -18,7 +18,7 @@ PROFILES: list[tuple[str, str, str | None]] = [
     ("308584f8-0993-5d8c-aac6-3ab1285805a5", "boney", "an.png"),
     ("2f452013-77d1-56e4-a40e-f4d719f0849b", "fungus", "erik.png"),
     ("61fc9ee9-d20a-5d64-9148-3e636121e34e", "choopapi", "josh.png"),
-    ("xlsx-player-sultan-1479", "sultan", None),
+    ("399ffb94-1f65-5355-9dc6-1bff373266b1", "sultan", "rafid.png"),  # Rafid; was a synthetic id until merged 2026-09
     ("4a807314-981b-589d-95b5-5f88910a10ea", "burro", "sameer.png"),
     ("f9ed4d2c-83ba-5a25-8422-16e3e85e7c13", "waqasu", "waqas.png"),
     ("cd195545-f653-5fc0-b8f8-f3f0e1b391d0", "fisko", None),  # Fisko#Bear

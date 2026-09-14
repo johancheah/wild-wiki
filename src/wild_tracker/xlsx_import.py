@@ -53,7 +53,13 @@ PLAYER_MAP: dict[str, tuple[str, str, str]] = {
     "An": ("308584f8-0993-5d8c-aac6-3ab1285805a5", "Boney M", "JLee"),
     "Erik": ("2f452013-77d1-56e4-a40e-f4d719f0849b", "ColonialFungus", "BLU"),
     "Josh": ("61fc9ee9-d20a-5d64-9148-3e636121e34e", "chooper", "train"),
-    "Rafid": ("xlsx-player-sultan-1479", "Sultan", "1479"),
+    # Rafid's puuid couldn't be resolved when this map was first written
+    # (no recent match on record yet, hence a synthetic "xlsx-player-
+    # sultan-1479" id) — he has since played API-tracked matches under a
+    # real puuid, so the two player records were merged (2026-09) and this
+    # now points at that real id directly, so any re-import lands on the
+    # same row instead of recreating the placeholder.
+    "Rafid": ("399ffb94-1f65-5355-9dc6-1bff373266b1", "Sultan", "1479"),
     "Sameer": ("4a807314-981b-589d-95b5-5f88910a10ea", "krazyburro", "rito"),
     "Waqas": ("f9ed4d2c-83ba-5a25-8422-16e3e85e7c13", "losing my mind", "taco"),
 }

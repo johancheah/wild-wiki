@@ -265,17 +265,31 @@ def match_weeks(conn: sqlite3.Connection) -> list[dict]:
 
     # Chronological week numbering, separately per (season, match_type) —
     # "Week 1" resets for each new season, Playoffs numbered independently
-    # from Regular within the same season.
+    # from Regular within the same season. Regular weeks are numbered by
+    # real elapsed calendar weeks from the season's first Regular week
+    # (rounded to the nearest week), not just an occurrence count — Premier
+    # can skip a week (a bye), and that skipped week still has to consume a
+    # number, or the next played week is mislabeled (e.g. the week after a
+    # bye showing as "Week 3" when the schedule says it's "Week 4").
+    # Playoffs brackets aren't necessarily weekly, so those stay a plain
+    # occurrence count.
+    season_regular_start: dict[str, datetime] = {}
     counters: dict[tuple, int] = defaultdict(int)
     weeks = []
     for key in sorted(groups, key=lambda k: min(m["date"] for m in groups[k])):
         season_id, local_date, match_type = key
-        counters[(season_id, match_type)] += 1
-        n = counters[(season_id, match_type)]
-        label = f"Week {n}" if match_type == "Regular" else (
-            "Playoffs" if n == 1 and sum(1 for k in groups if k[0] == season_id and k[2] == match_type) == 1
-            else f"Playoffs — Round {n}"
-        )
+        if match_type == "Regular":
+            d = datetime.fromisoformat(local_date)
+            start = season_regular_start.setdefault(season_id, d)
+            n = round((d - start).days / 7) + 1
+            label = f"Week {n}"
+        else:
+            counters[(season_id, match_type)] += 1
+            n = counters[(season_id, match_type)]
+            label = (
+                "Playoffs" if n == 1 and sum(1 for k in groups if k[0] == season_id and k[2] == match_type) == 1
+                else f"Playoffs — Round {n}"
+            )
         maps = groups[key]
         wins = sum(1 for m in maps if m["result"] == "WIN")
         losses = sum(1 for m in maps if m["result"] == "LOSS")

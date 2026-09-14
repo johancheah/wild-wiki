@@ -587,7 +587,12 @@ tbody td.player-tag { color: var(--text-faint); font-weight: 400; margin-left: 4
 .week-maps-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
 @media (max-width: 640px) { .week-maps-row { grid-template-columns: 1fr; } }
 
-.week-map-strip { display: block; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface-2); }
+/* margin-bottom here is for the solo tile a single map tab renders (no
+   .week-maps-row wrapper around it); zeroed back out below when it's a grid
+   item inside .week-maps-row, which already spaces itself via its own
+   gap/margin-bottom — without the override this would double up there. */
+.week-map-strip { display: block; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface-2); margin-bottom: 20px; }
+.week-maps-row .week-map-strip { margin-bottom: 0; }
 .week-map-strip:hover .week-map-name { color: var(--accent); }
 .week-map-art {
   position: relative; padding: 14px 16px 12px;
