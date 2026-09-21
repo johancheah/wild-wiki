@@ -15,14 +15,19 @@ export default async function TeamStatsPage() {
       supabase.from("v_team_record_by_map").select("*"),
       supabase.from("v_team_record_by_season").select("*"),
       supabase.from("v_team_record_by_type").select("*"),
-      supabase.from("matches").select("season_id").eq("match_type", "Playoffs"),
+      supabase.from("matches").select("season_id, map, result, date").eq("match_type", "Playoffs").order("date"),
     ]);
 
   const overall = (overallRows?.[0] ?? { wins: 0, losses: 0, draws: 0, total: 0 }) as Overall;
   const winPct = overall.total ? (100 * overall.wins) / overall.total : 0;
   const maps = (byMap ?? []) as ByMap[];
   const seasons = (bySeason ?? []) as BySeason[];
-  const playoffSeasons = new Set((playoffRows ?? []).map((r: { season_id: string | null }) => r.season_id));
+  const playoffMaps = new Map<string | null, { map: string; result: string }[]>();
+  for (const r of (playoffRows ?? []) as { season_id: string | null; map: string; result: string }[]) {
+    const arr = playoffMaps.get(r.season_id) ?? [];
+    arr.push({ map: r.map, result: r.result });
+    playoffMaps.set(r.season_id, arr);
+  }
   const types = (byType ?? []) as ByType[];
 
   return (
@@ -107,7 +112,17 @@ export default async function TeamStatsPage() {
                   <td className="num-col num win">{s.wins}</td>
                   <td className="num-col num loss">{s.n - s.wins}</td>
                   <td className="num-col num">{((100 * s.wins) / s.n).toFixed(1)}%</td>
-                  <td>{playoffSeasons.has(s.season_id) && <span className="pill src-api">Playoffs</span>}</td>
+                  <td>
+                    {(playoffMaps.get(s.season_id) ?? []).map((m, i) => (
+                      <span
+                        key={i}
+                        className={`pill pill-map-result ${m.result === "WIN" ? "win" : "loss"}`}
+                        style={{ marginRight: 6 }}
+                      >
+                        {m.map} {m.result}
+                      </span>
+                    ))}
+                  </td>
                 </tr>
               ))}
             </tbody>

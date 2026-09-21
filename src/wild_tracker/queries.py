@@ -58,6 +58,14 @@ def team_record(conn: sqlite3.Connection) -> dict:
         "FROM matches GROUP BY season_id ORDER BY first_date"
     ).fetchall()]
 
+    playoff_maps: dict = {}
+    for r in conn.execute(
+        "SELECT season_id, map, result FROM matches WHERE match_type='Playoffs' ORDER BY date"
+    ).fetchall():
+        playoff_maps.setdefault(r["season_id"], []).append({"map": r["map"], "result": r["result"]})
+    for s in by_season:
+        s["playoff_maps"] = playoff_maps.get(s["season_id"], [])
+
     by_type = [dict(r) for r in conn.execute(
         "SELECT match_type, COUNT(*) AS n, "
         "  SUM(CASE WHEN result='WIN' THEN 1 ELSE 0 END) AS wins "

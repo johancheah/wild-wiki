@@ -56,7 +56,7 @@
           <td class="num-col num win">{{ s.wins }}</td>
           <td class="num-col num loss">{{ s.n - s.wins }}</td>
           <td class="num-col num">{{ "%.1f"|format(100.0 * s.wins / s.n) }}%</td>
-          <td>{% if s.made_playoffs %}<span class="pill src-api">Playoffs</span>{% endif %}</td>
+          <td>{% for m in s.playoff_maps %}<span class="pill pill-map-result {{ 'win' if m.result == 'WIN' else 'loss' }}" style="margin-right:6px;">{{ m.map }} {{ m.result }}</span>{% endfor %}</td>
         </tr>
         {% endfor %}
       </tbody>
