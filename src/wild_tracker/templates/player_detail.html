@@ -20,6 +20,7 @@
 
 <div class="tabs" data-group="player">
   <button class="tab-btn active" data-tab="overview" data-group="player">Overview</button>
+  <button class="tab-btn" data-tab="stage" data-group="player">Stage</button>
   <button class="tab-btn" data-tab="matchlog" data-group="player">Match Log</button>
 </div>
 
@@ -132,6 +133,38 @@
   {{ ui.weapon_buy_grid(weapon_grid) }}
 </section>
 
+</div>
+
+<div id="tab-player-stage" class="tab-panel hidden" data-group="player">
+<section>
+  <h2>Stats by Stage</h2>
+  <div class="table-scroll">
+    <table class="sticky-first-col">
+      <thead>
+        <tr>
+          <th>Stage</th><th class="num-col">Maps</th><th class="num-col">W</th><th class="num-col">Win %</th>
+          <th class="num-col">ACS</th><th class="num-col">K/D</th><th class="num-col">ADR</th><th class="num-col">HS%</th><th class="num-col">KAST</th><th class="num-col">FK:FD</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in stages %}
+        <tr>
+          <td class="name">{{ s.stage }}</td>
+          <td class="num-col num">{{ s.n }}</td>
+          <td class="num-col num win">{{ s.wins }}</td>
+          <td class="num-col num">{{ "%.0f"|format(100.0 * s.wins / s.n) }}%</td>
+          <td class="num-col num">{{ "%.0f"|format(s.acs) if s.acs is not none else "—" }}</td>
+          <td class="num-col num">{{ "%.2f"|format(s.kd) if s.kd is not none else "—" }}</td>
+          <td class="num-col num">{{ "%.0f"|format(s.adr) if s.adr is not none else "—" }}</td>
+          <td class="num-col num">{{ "%.0f"|format(s.hs_pct) if s.hs_pct is not none else "—" }}%</td>
+          <td class="num-col num">{{ "%.0f"|format(s.kast_pct) if s.kast_pct is not none else "—" }}%</td>
+          <td class="num-col num">{{ "%.2f"|format(s.fkfd) if s.fkfd is not none else "—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
 </div>
 
 <div id="tab-player-matchlog" class="tab-panel hidden" data-group="player">

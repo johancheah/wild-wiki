@@ -197,6 +197,21 @@ def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:
     for r in roles:
         r["pct"] = round(100.0 * r["n"] / total_with_role, 1) if total_with_role else 0.0
 
+    # Per-stage (season_id) performance, most recent stage first.
+    stages = [dict(r) for r in conn.execute("""
+        SELECT season_id AS stage, COUNT(*) AS n,
+          SUM(CASE WHEN match_result='WIN' THEN 1 ELSE 0 END) AS wins,
+          ROUND(SUM(kills) * 1.0 / NULLIF(SUM(deaths), 0), 2) AS kd,
+          ROUND(SUM(acs * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS acs,
+          ROUND(SUM(adr * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS adr,
+          ROUND(SUM(hs_pct * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS hs_pct,
+          ROUND(SUM(kast_pct * rounds_played) * 1.0 / NULLIF(SUM(rounds_played), 0), 1) AS kast_pct,
+          ROUND(SUM(fk) * 1.0 / NULLIF(SUM(fd), 0), 2) AS fkfd,
+          MAX(date) AS last_date
+        FROM v_wild_player_match_stats WHERE player_id = ? AND season_id IS NOT NULL
+        GROUP BY season_id ORDER BY last_date DESC
+    """, (player_id,)).fetchall()]
+
     match_log = [dict(r) for r in conn.execute("""
         SELECT match_id, date, map, season_id, match_type, match_result, margin,
           agent, role, acs, kills, deaths, assists, adr, hs_pct, kast_pct, fk, fd,
@@ -237,7 +252,7 @@ def player_detail(conn: sqlite3.Connection, player_id: str) -> dict | None:
     weapon_grid = player_weapon_grid(conn, player_id)
 
     return {
-        "player": player, "totals": totals, "agents": agents, "roles": roles,
+        "player": player, "totals": totals, "agents": agents, "roles": roles, "stages": stages,
         "match_log": match_log, "match_log_filters": match_log_filters, "weapon_grid": weapon_grid,
     }
 

@@ -95,6 +95,41 @@ export default async function PlayerDetailPage({
   const roster = ((rosterRows ?? []) as NavPlayer[]).sort((a, b) =>
     a.display_name.localeCompare(b.display_name, undefined, { sensitivity: "base" })
   );
+  const stageMap = new Map<string, MatchPlayerStats[]>();
+  for (const m of log) {
+    if (!m.season_id) continue;
+    const arr = stageMap.get(m.season_id) ?? [];
+    arr.push(m);
+    stageMap.set(m.season_id, arr);
+  }
+  const wavg = (rows: MatchPlayerStats[], f: (r: MatchPlayerStats) => number | null | undefined) => {
+    let num = 0;
+    let den = 0;
+    for (const r of rows) {
+      const v = f(r);
+      if (v == null) continue;
+      num += v * (r.rounds_played ?? 0);
+      den += r.rounds_played ?? 0;
+    }
+    return den ? num / den : null;
+  };
+  const sum = (rows: MatchPlayerStats[], f: (r: MatchPlayerStats) => number | null | undefined) =>
+    rows.reduce((s, r) => s + (f(r) ?? 0), 0);
+  const stages = [...stageMap.entries()].map(([stage, rows]) => {
+    const deaths = sum(rows, (r) => r.deaths);
+    const fd = sum(rows, (r) => r.fd);
+    return {
+      stage,
+      n: rows.length,
+      wins: rows.filter((r) => r.match_result === "WIN").length,
+      kd: deaths ? sum(rows, (r) => r.kills) / deaths : null,
+      acs: wavg(rows, (r) => r.acs),
+      adr: wavg(rows, (r) => r.adr),
+      hs_pct: wavg(rows, (r) => r.hs_pct),
+      kast_pct: wavg(rows, (r) => r.kast_pct),
+      fkfd: fd ? sum(rows, (r) => r.fk) / fd : null,
+    };
+  });
   const navPlayer: NavPlayer = {
     player_id: player.player_id,
     display_name: player.display_name,
@@ -311,6 +346,49 @@ export default async function PlayerDetailPage({
                   <WeaponBuyGrid weaponGrid={weaponGrid} />
                 </section>
               </>
+            ),
+          },
+          {
+            id: "stage",
+            label: "Stage",
+            content: (
+              <section>
+                <h2>Stats by Stage</h2>
+                <div className="table-scroll">
+                  <table className="sticky-first-col">
+                    <thead>
+                      <tr>
+                        <th>Stage</th>
+                        <th className="num-col">Maps</th>
+                        <th className="num-col">W</th>
+                        <th className="num-col">Win %</th>
+                        <th className="num-col">ACS</th>
+                        <th className="num-col">K/D</th>
+                        <th className="num-col">ADR</th>
+                        <th className="num-col">HS%</th>
+                        <th className="num-col">KAST</th>
+                        <th className="num-col">FK:FD</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stages.map((s) => (
+                        <tr key={s.stage}>
+                          <td className="name">{s.stage}</td>
+                          <td className="num-col num">{s.n}</td>
+                          <td className="num-col num win">{s.wins}</td>
+                          <td className="num-col num">{((100 * s.wins) / s.n).toFixed(0)}%</td>
+                          <td className="num-col num">{s.acs !== null ? Math.round(s.acs) : "—"}</td>
+                          <td className="num-col num">{s.kd !== null ? s.kd.toFixed(2) : "—"}</td>
+                          <td className="num-col num">{s.adr !== null ? Math.round(s.adr) : "—"}</td>
+                          <td className="num-col num">{s.hs_pct !== null ? `${Math.round(s.hs_pct)}%` : "—"}</td>
+                          <td className="num-col num">{s.kast_pct !== null ? `${Math.round(s.kast_pct)}%` : "—"}</td>
+                          <td className="num-col num">{s.fkfd !== null ? s.fkfd.toFixed(2) : "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
             ),
           },
           {
