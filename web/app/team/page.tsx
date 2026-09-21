@@ -9,18 +9,20 @@ type BySeason = { season_id: string | null; n: number; wins: number; first_date:
 type ByType = { match_type: string; n: number; wins: number };
 
 export default async function TeamStatsPage() {
-  const [{ data: overallRows }, { data: byMap }, { data: bySeason }, { data: byType }] =
+  const [{ data: overallRows }, { data: byMap }, { data: bySeason }, { data: byType }, { data: playoffRows }] =
     await Promise.all([
       supabase.from("v_team_record").select("*"),
       supabase.from("v_team_record_by_map").select("*"),
       supabase.from("v_team_record_by_season").select("*"),
       supabase.from("v_team_record_by_type").select("*"),
+      supabase.from("matches").select("season_id").eq("match_type", "Playoffs"),
     ]);
 
   const overall = (overallRows?.[0] ?? { wins: 0, losses: 0, draws: 0, total: 0 }) as Overall;
   const winPct = overall.total ? (100 * overall.wins) / overall.total : 0;
   const maps = (byMap ?? []) as ByMap[];
   const seasons = (bySeason ?? []) as BySeason[];
+  const playoffSeasons = new Set((playoffRows ?? []).map((r: { season_id: string | null }) => r.season_id));
   const types = (byType ?? []) as ByType[];
 
   return (
@@ -94,6 +96,7 @@ export default async function TeamStatsPage() {
                 <th className="num-col">W</th>
                 <th className="num-col">L</th>
                 <th className="num-col">Win %</th>
+                <th>Playoffs</th>
               </tr>
             </thead>
             <tbody>
@@ -104,6 +107,7 @@ export default async function TeamStatsPage() {
                   <td className="num-col num win">{s.wins}</td>
                   <td className="num-col num loss">{s.n - s.wins}</td>
                   <td className="num-col num">{((100 * s.wins) / s.n).toFixed(1)}%</td>
+                  <td>{playoffSeasons.has(s.season_id) && <span className="pill src-api">Playoffs</span>}</td>
                 </tr>
               ))}
             </tbody>

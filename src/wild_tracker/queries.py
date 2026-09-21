@@ -53,7 +53,8 @@ def team_record(conn: sqlite3.Connection) -> dict:
     by_season = [dict(r) for r in conn.execute(
         "SELECT season_id, COUNT(*) AS n, "
         "  SUM(CASE WHEN result='WIN' THEN 1 ELSE 0 END) AS wins, "
-        "  MIN(date) AS first_date "
+        "  MIN(date) AS first_date, "
+        "  MAX(CASE WHEN match_type='Playoffs' THEN 1 ELSE 0 END) AS made_playoffs "
         "FROM matches GROUP BY season_id ORDER BY first_date"
     ).fetchall()]
 
