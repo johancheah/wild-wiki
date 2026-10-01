@@ -7,9 +7,12 @@ import type { TimelineEntry } from "@/lib/timeline";
 export function RoundTimeline({
   timeline,
   opponentName,
+  highlightedRound,
 }: {
   timeline: TimelineEntry[];
   opponentName: string | null;
+  /** Round label (1-indexed) to highlight, from hovering a Highlights tile. */
+  highlightedRound?: number | null;
 }) {
   if (timeline.length === 0) return null;
 
@@ -19,7 +22,7 @@ export function RoundTimeline({
         <div className="timeline-row timeline-round-nums">
           {timeline.map((t) => (
             <Fragment key={t.round_number}>
-              <span>{t.label}</span>
+              <span className={t.label === highlightedRound ? "round-highlighted" : ""}>{t.label}</span>
               {(t.label === 12 || t.label === 24) && <span className="timeline-gap" />}
             </Fragment>
           ))}
@@ -27,24 +30,27 @@ export function RoundTimeline({
         {(["wild", "enemy"] as const).map((team) => (
           <div className="timeline-row" key={team}>
             <TeamBadge isWild={team === "wild"} name={opponentName} />
-            {timeline.map((t) => (
-              <Fragment key={t.round_number}>
-                {t.winner === null && t.result === null ? (
-                  <div className="timeline-cell empty" title={`Round ${t.label}`} />
-                ) : t.winner === team ? (
-                  <div
-                    className={`timeline-cell ${t.win_side === "ATK" ? "side-atk" : t.win_side === "DEF" ? "side-def" : ""}`}
-                    title={`Round ${t.label}: ${t.result}`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img className="round-icon" src={roundIconUrl(t.result)} alt={t.result ?? ""} />
-                  </div>
-                ) : (
-                  <div className="timeline-cell" title={`Round ${t.label}`} />
-                )}
-                {(t.label === 12 || t.label === 24) && <div className="timeline-gap" />}
-              </Fragment>
-            ))}
+            {timeline.map((t) => {
+              const hl = t.label === highlightedRound ? " round-highlighted" : "";
+              return (
+                <Fragment key={t.round_number}>
+                  {t.winner === null && t.result === null ? (
+                    <div className={`timeline-cell empty${hl}`} title={`Round ${t.label}`} />
+                  ) : t.winner === team ? (
+                    <div
+                      className={`timeline-cell ${t.win_side === "ATK" ? "side-atk" : t.win_side === "DEF" ? "side-def" : ""}${hl}`}
+                      title={`Round ${t.label}: ${t.result}`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img className="round-icon" src={roundIconUrl(t.result)} alt={t.result ?? ""} />
+                    </div>
+                  ) : (
+                    <div className={`timeline-cell${hl}`} title={`Round ${t.label}`} />
+                  )}
+                  {(t.label === 12 || t.label === 24) && <div className="timeline-gap" />}
+                </Fragment>
+              );
+            })}
           </div>
         ))}
       </div>

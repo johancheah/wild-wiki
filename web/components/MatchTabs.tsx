@@ -3,8 +3,7 @@ import { PerformanceTable, type PerformanceRow } from "./PerformanceTable";
 import { WeaponBuyGridPlayers } from "./WeaponBuyGridPlayers";
 import { EconomySection } from "./EconomySection";
 import { CombinedEconomySection } from "./CombinedEconomySection";
-import { RoundTimeline } from "./RoundTimeline";
-import { HighlightsCarousel } from "./HighlightsCarousel";
+import { MatchHighlightsSection } from "./MatchHighlightsSection";
 import { H2hTable } from "./H2hTable";
 import { TeamSummaryCard } from "./TeamSummaryCard";
 import { WeekTeamStatsCard } from "./WeekTeamStatsCard";
@@ -97,8 +96,7 @@ export function MatchTabs({
 }) {
   return (
     <>
-      {timeline && timeline.length > 0 && <RoundTimeline timeline={timeline} opponentName={opponentName ?? null} />}
-      {highlights && highlights.length > 0 && <HighlightsCarousel highlights={highlights} />}
+      <MatchHighlightsSection timeline={timeline} highlights={highlights} opponentName={opponentName} />
       <Tabs
         tabs={[
           {

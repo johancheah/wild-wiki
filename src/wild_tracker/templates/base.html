@@ -122,6 +122,24 @@
       });
     });
 
+    // Highlights carousel hover: lights up the matching round on the round
+    // timeline directly above it. Scoped to the nearest .match-highlights-
+    // wrap (one per map's timeline+carousel pair — see macros.html) so the
+    // match-week page's several per-map carousels don't cross-highlight
+    // each other's timelines.
+    document.querySelectorAll(".highlight-tile").forEach(function (tile) {
+      var wrap = tile.closest(".match-highlights-wrap");
+      if (!wrap) return;
+      var round = tile.dataset.round;
+      function setHighlighted(on) {
+        wrap.querySelectorAll('[data-round="' + round + '"]').forEach(function (el) {
+          el.classList.toggle("round-highlighted", on);
+        });
+      }
+      tile.addEventListener("mouseenter", function () { setHighlighted(true); });
+      tile.addEventListener("mouseleave", function () { setHighlighted(false); });
+    });
+
     // Generic click-to-sort: any table with class="sortable-table" gets
     // per-column sorting driven by each <th data-sort-type="...">. A cell
     // can override what actually gets compared via td[data-value] (e.g. an

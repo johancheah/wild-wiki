@@ -503,8 +503,16 @@
    the two never double up; the single-match page (which passes neither)
    is unaffected and keeps team_summary_card as before. #}
 {% macro match_tabs(group, wild_rows, enemy_rows=None, weapons=None, economies=None, box_title="WILD Box Score", multi_agent=False, subtitle=None, timeline=None, opponent_name=None, h2h=None, event_rounds=None, team_summary=None, map=None, team_stats=None, combined_economy=None, week_map_strips=None, map_strip=None, spotlight=None, spotlight_label="Player of the Week", highlights=None) %}
-  {% if timeline %}{{ round_timeline(timeline, opponent_name) }}{% endif %}
-  {% if highlights %}{{ highlights_carousel(highlights) }}{% endif %}
+  {% if timeline or highlights %}
+  {# Shared wrapper so the hover handler (base.html) can scope "highlight
+     this round on the timeline" lookups to the matching timeline/carousel
+     pair — the match-week page has one of each per map tab, all on the
+     same page, so an unscoped lookup would cross-highlight other maps. #}
+  <div class="match-highlights-wrap">
+    {% if timeline %}{{ round_timeline(timeline, opponent_name) }}{% endif %}
+    {% if highlights %}{{ highlights_carousel(highlights) }}{% endif %}
+  </div>
+  {% endif %}
   <div class="tabs" data-group="{{ group }}">
     <button class="tab-btn active" data-tab="overview" data-group="{{ group }}">Overview</button>
     <button class="tab-btn" data-tab="performance" data-group="{{ group }}">Performance</button>
@@ -773,7 +781,7 @@
   <div class="timeline-grid">
     <div class="timeline-row timeline-round-nums">
       {% for t in timeline %}
-        <span>{{ t.label }}</span>
+        <span data-round="{{ t.label }}">{{ t.label }}</span>
         {% if t.label == 12 or t.label == 24 %}<span class="timeline-gap"></span>{% endif %}
       {% endfor %}
     </div>
@@ -782,13 +790,13 @@
       {{ team_badge(team == "wild", opponent_name) }}
       {% for t in timeline %}
         {% if t.winner is none and t.result is none %}
-          <div class="timeline-cell empty" title="Round {{ t.label }}"></div>
+          <div class="timeline-cell empty" data-round="{{ t.label }}" title="Round {{ t.label }}"></div>
         {% elif t.winner == team %}
-          <div class="timeline-cell {{ 'side-atk' if t.win_side == 'ATK' else ('side-def' if t.win_side == 'DEF' else '') }}" title="Round {{ t.label }}: {{ t.result }}">
+          <div class="timeline-cell {{ 'side-atk' if t.win_side == 'ATK' else ('side-def' if t.win_side == 'DEF' else '') }}" data-round="{{ t.label }}" title="Round {{ t.label }}: {{ t.result }}">
             {{ round_icon(t.result) }}
           </div>
         {% else %}
-          <div class="timeline-cell" title="Round {{ t.label }}"></div>
+          <div class="timeline-cell" data-round="{{ t.label }}" title="Round {{ t.label }}"></div>
         {% endif %}
         {% if t.label == 12 or t.label == 24 %}<div class="timeline-gap"></div>{% endif %}
       {% endfor %}
@@ -811,10 +819,19 @@
   <h2>Highlights</h2>
   <div class="highlights-scroll">
     {% for h in highlights %}
-    <div class="highlight-tile highlight-{{ h.type }}" title="Round {{ h.round }}">
-      {{ avatar(h.player.display_name, h.player.headshot_filename, "lg") }}
-      <div class="highlight-label">{{ h.label }}</div>
-      <div class="highlight-meta">{{ h.player.display_name }} &middot; R{{ h.round }}</div>
+    {% set hs_url = headshot_url(h.player.headshot_filename) %}
+    <div class="highlight-tile highlight-{{ h.type }}" data-round="{{ h.round }}" title="{{ h.player.display_name }} &middot; Round {{ h.round }}">
+      <div class="highlight-photo">
+        {% if hs_url %}
+          <img src="{{ hs_url }}" alt="{{ h.player.display_name }}">
+        {% else %}
+          <span class="highlight-photo-fallback">{{ h.player.display_name[:2]|upper }}</span>
+        {% endif %}
+      </div>
+      <div class="highlight-text">
+        <div class="highlight-label">{{ h.label }}</div>
+        <div class="highlight-meta">Round {{ h.round }}</div>
+      </div>
     </div>
     {% endfor %}
   </div>
