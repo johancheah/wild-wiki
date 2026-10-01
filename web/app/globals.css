@@ -12,6 +12,13 @@
   --win-dim: #2a4b3a;
   --loss: #f2685f;
   --loss-dim: #4a2e2c;
+  /* Highlights-carousel-only accents (components/HighlightsCarousel.tsx):
+     clutch and thrifty need their own hues distinct from both each other
+     and --accent/--win (which read too similarly as "another shade of
+     green" side by side) — and thrifty specifically avoids --loss since a
+     thrifty round is a WILD win, not a loss. */
+  --highlight-clutch: #5ec8f2;
+  --highlight-thrifty: #f2b84f;
   /* Row-hover tint: --surface-2 blended with ~8% --accent, precomputed to a
      flat color (not a gradient) so a hovered row reads as one uniform
      highlight — a linear-gradient here would restart at every <td>
@@ -809,7 +816,7 @@ tr.week-row td:first-child { color: var(--text-faint); }
   overflow: hidden;
 }
 .highlight-photo {
-  position: relative; flex-shrink: 0; width: 70px; overflow: hidden;
+  position: relative; flex-shrink: 0; width: 56px; overflow: hidden;
   background: var(--surface-3, var(--border));
 }
 .highlight-photo img {
@@ -830,12 +837,12 @@ tr.week-row td:first-child { color: var(--text-faint); }
 .highlight-meta { font-size: 11px; color: var(--text-faint); }
 .highlight-tile.highlight-ace { border-left-color: var(--accent); }
 .highlight-tile.highlight-ace .highlight-label { color: var(--accent); }
-.highlight-tile.highlight-multikill { border-left-color: var(--accent); }
-.highlight-tile.highlight-multikill .highlight-label { color: var(--accent); }
-.highlight-tile.highlight-clutch { border-left-color: var(--win); }
-.highlight-tile.highlight-clutch .highlight-label { color: var(--win); }
-.highlight-tile.highlight-thrifty { border-left-color: var(--loss); }
-.highlight-tile.highlight-thrifty .highlight-label { color: var(--loss); }
+.highlight-tile.highlight-multikill { border-left-color: var(--win); }
+.highlight-tile.highlight-multikill .highlight-label { color: var(--win); }
+.highlight-tile.highlight-clutch { border-left-color: var(--highlight-clutch); }
+.highlight-tile.highlight-clutch .highlight-label { color: var(--highlight-clutch); }
+.highlight-tile.highlight-thrifty { border-left-color: var(--highlight-thrifty); }
+.highlight-tile.highlight-thrifty .highlight-label { color: var(--highlight-thrifty); }
 
 /* Round highlighted via a Highlights-tile hover */
 .timeline-cell.round-highlighted {
