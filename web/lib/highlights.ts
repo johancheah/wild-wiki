@@ -35,12 +35,27 @@ export async function fetchMatchHighlights(
     ])
   );
 
+  // Highlights are WILD's moments only — eventRounds (built for the
+  // Performance tab's hover tooltips) carries multi-kills for *both*
+  // teams, so without this filter an opponent's ACE/4K could show up in
+  // our own carousel (caught 2026-10). Clutches don't need this: a clutch
+  // round in eventRounds is only ever recorded for the surviving WILD
+  // player (see fetchEventRounds), never an opponent.
+  const { data: matchPlayerRows } = await supabase
+    .from("match_players")
+    .select("player_id")
+    .eq("match_id", matchId)
+    .eq("team_id", wildTeamId);
+  const wildPlayerIds = new Set((matchPlayerRows ?? []).map((r: { player_id: string }) => r.player_id));
+
   const events: HighlightEvent[] = [];
   for (const [playerId, metrics] of Object.entries(eventRounds)) {
     const player = players.get(playerId);
     if (!player) continue;
-    for (const rd of metrics.five_k) events.push({ type: "ace", label: "ACE", round: rd, player });
-    for (const rd of metrics.four_k) events.push({ type: "multikill", label: "4K", round: rd, player });
+    if (wildPlayerIds.has(playerId)) {
+      for (const rd of metrics.five_k) events.push({ type: "ace", label: "ACE", round: rd, player });
+      for (const rd of metrics.four_k) events.push({ type: "multikill", label: "4K", round: rd, player });
+    }
     for (const n of [1, 2, 3, 4, 5] as const) {
       for (const rd of metrics[`clutch_1v${n}` as keyof typeof metrics] as number[]) {
         events.push({ type: "clutch", label: `1v${n}`, round: rd, player });
@@ -53,16 +68,6 @@ export async function fetchMatchHighlights(
       .filter((r) => r.wild && r.wild.won && (r.wild.bucket === "eco" || r.wild.bucket === "semi_eco"))
       .map((r) => r.label);
     if (thriftyRounds.length > 0) {
-      // Must restrict candidates to WILD players: an un-filtered query can
-      // hand the credit to the round's top-fragging *opponent* instead
-      // (caught 2026-10, schedule page's per-map tab).
-      const { data: matchPlayerRows } = await supabase
-        .from("match_players")
-        .select("player_id")
-        .eq("match_id", matchId)
-        .eq("team_id", wildTeamId);
-      const wildPlayerIds = new Set((matchPlayerRows ?? []).map((r: { player_id: string }) => r.player_id));
-
       const { data: killRows } = await supabase
         .from("kill_events")
         .select("round_number, killer_id")

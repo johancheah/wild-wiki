@@ -886,15 +886,29 @@ def match_highlights(
         ).fetchall()
     }
 
+    # Highlights are WILD's moments only — event_rounds (built for the
+    # Performance tab's hover tooltips) carries multi-kills for *both*
+    # teams, so without this filter an opponent's ACE/4K could show up in
+    # our own carousel (caught 2026-10). Clutches don't need this: a clutch
+    # round in event_rounds is only ever recorded for the surviving WILD
+    # player (see multi_kill_clutch_rounds), never an opponent.
+    wild_players = {
+        row["player_id"]
+        for row in conn.execute(
+            "SELECT player_id FROM match_players WHERE match_id = ? AND team_id = ?", (match_id, wild_team_id)
+        ).fetchall()
+    }
+
     events: list[dict] = []
     for player_id, metrics in event_rounds.items():
         p = players.get(player_id)
         if not p:
             continue
-        for rd in metrics.get("five_k", []):
-            events.append({"type": "ace", "label": "ACE", "round": rd, "player": p})
-        for rd in metrics.get("four_k", []):
-            events.append({"type": "multikill", "label": "4K", "round": rd, "player": p})
+        if player_id in wild_players:
+            for rd in metrics.get("five_k", []):
+                events.append({"type": "ace", "label": "ACE", "round": rd, "player": p})
+            for rd in metrics.get("four_k", []):
+                events.append({"type": "multikill", "label": "4K", "round": rd, "player": p})
         for n in (1, 2, 3, 4, 5):
             for rd in metrics.get(f"clutch_1v{n}", []):
                 events.append({"type": "clutch", "label": f"1v{n}", "round": rd, "player": p})
@@ -907,15 +921,6 @@ def match_highlights(
         if thrifty_rounds:
             # Credit the round's top WILD fragger as the face of the tile —
             # there's no single "thrifty" player the way a clutch has one.
-            # Must restrict candidates to WILD players: an un-filtered query
-            # can hand the credit to the round's top-fragging *opponent*
-            # instead (caught 2026-10, schedule page's per-map tab).
-            wild_players = {
-                row["player_id"]
-                for row in conn.execute(
-                    "SELECT player_id FROM match_players WHERE match_id = ? AND team_id = ?", (match_id, wild_team_id)
-                ).fetchall()
-            }
             kill_counts = conn.execute("""
                 SELECT round_number, killer_id, COUNT(*) AS n
                 FROM kill_events WHERE match_id = ? AND killer_id IS NOT NULL
