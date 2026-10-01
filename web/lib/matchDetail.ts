@@ -5,6 +5,7 @@ import { fetchWeaponMatrix, weaponGridFromMatrix, type WeaponMatrix, type Weapon
 import { fetchH2hMatrix, type H2hMatrix } from "./h2h";
 import { fetchEventRounds, type EventRounds } from "./eventRounds";
 import { computeMatchTeamSummary, type MatchTeamSummary } from "./teamSummary";
+import { fetchMatchHighlights, type HighlightEvent } from "./highlights";
 import type { BoxScoreRow, MatchRow } from "./types";
 
 // Direct port of src/wild_tracker/queries.py::match_detail — one full match's
@@ -23,6 +24,7 @@ export type MatchFullDetail = {
   h2h: H2hMatrix | null;
   eventRounds: EventRounds;
   teamSummary: MatchTeamSummary | null;
+  highlights: HighlightEvent[];
 };
 
 export async function fetchMatchFullDetail(supabase: SupabaseClient, matchId: string): Promise<MatchFullDetail | null> {
@@ -54,5 +56,7 @@ export async function fetchMatchFullDetail(supabase: SupabaseClient, matchId: st
       ? await computeMatchTeamSummary(supabase, matchId, match.team_id, match.enemy_team_id)
       : null;
 
-  return { match, wildRows, enemyRows, timeline, economy, weapons, weaponMatrix, h2h, eventRounds, teamSummary };
+  const highlights = await fetchMatchHighlights(supabase, matchId, match.team_id, eventRounds, economy);
+
+  return { match, wildRows, enemyRows, timeline, economy, weapons, weaponMatrix, h2h, eventRounds, teamSummary, highlights };
 }

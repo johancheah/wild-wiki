@@ -863,6 +863,74 @@ def multi_kill_clutch_rounds(conn: sqlite3.Connection, match_id: str, wild_team_
     return result
 
 
+# Match-page "Highlights" carousel: standout moments (multi-kills 4K+,
+# clutches, thrifty round wins) pulled from data already computed for the
+# Performance tab (event_rounds) and the Economy tab (economy) — no new
+# queries beyond resolving each event's player headshot and, for thrifty
+# rounds (no single credited player), that round's top WILD fragger.
+# API-sourced matches only (both inputs are None for spreadsheet matches).
+def match_highlights(
+    conn: sqlite3.Connection,
+    match_id: str,
+    wild_team_id: str | None,
+    event_rounds: dict[str, dict[str, list[int]]],
+    economy: dict | None,
+) -> list[dict]:
+    if not wild_team_id:
+        return []
+
+    players = {
+        row["player_id"]: dict(row)
+        for row in conn.execute(
+            "SELECT player_id, riot_name, headshot_filename, COALESCE(nickname, riot_name) AS display_name FROM players"
+        ).fetchall()
+    }
+
+    events: list[dict] = []
+    for player_id, metrics in event_rounds.items():
+        p = players.get(player_id)
+        if not p:
+            continue
+        for rd in metrics.get("five_k", []):
+            events.append({"type": "ace", "label": "ACE", "round": rd, "player": p})
+        for rd in metrics.get("four_k", []):
+            events.append({"type": "multikill", "label": "4K", "round": rd, "player": p})
+        for n in (1, 2, 3, 4, 5):
+            for rd in metrics.get(f"clutch_1v{n}", []):
+                events.append({"type": "clutch", "label": f"1v{n}", "round": rd, "player": p})
+
+    if economy:
+        thrifty_rounds = [
+            r["label"] for r in economy["rounds"]
+            if r["wild"] and r["wild"]["won"] and r["wild"]["bucket"] in ("eco", "semi_eco")
+        ]
+        if thrifty_rounds:
+            # Credit the round's top WILD fragger as the face of the tile —
+            # there's no single "thrifty" player the way a clutch has one.
+            kill_counts = conn.execute("""
+                SELECT round_number, killer_id, COUNT(*) AS n
+                FROM kill_events WHERE match_id = ? AND killer_id IS NOT NULL
+                GROUP BY round_number, killer_id
+            """, (match_id,)).fetchall()
+            by_round: dict[int, list[tuple[str, int]]] = defaultdict(list)
+            for r in kill_counts:
+                if players.get(r["killer_id"]):
+                    by_round[r["round_number"] + 1].append((r["killer_id"], r["n"]))
+            for rd in thrifty_rounds:
+                candidates = by_round.get(rd)
+                if not candidates:
+                    continue
+                # Ties (equal kill count) broken by player_id so the credited
+                # player is deterministic — matters because this is also
+                # independently computed in TypeScript for the web app, and
+                # the two must agree on which player's face appears.
+                top_player_id = max(candidates, key=lambda c: (c[1], c[0]))[0]
+                events.append({"type": "thrifty", "label": "THRIFTY", "round": rd, "player": players[top_player_id]})
+
+    events.sort(key=lambda e: e["round"])
+    return events
+
+
 def match_detail(conn: sqlite3.Connection, match_id: str) -> dict | None:
     match_row = conn.execute("""
         SELECT m.*, t.name AS opponent_name, t.tag AS opponent_tag
@@ -899,12 +967,13 @@ def match_detail(conn: sqlite3.Connection, match_id: str) -> dict | None:
         match_team_summary(conn, match_id, match["team_id"], match["enemy_team_id"])
         if match["team_id"] and match["enemy_team_id"] else None
     )
+    highlights = match_highlights(conn, match_id, match["team_id"], event_rounds, economy)
 
     return {
         "match": match, "box_score": box_score, "weapon_kills": weapon_kills,
         "timeline": timeline, "economy": economy,
         "weapons": weapon_grid_from_matrix(weapon_matrix_raw), "weapon_matrix": weapon_matrix_raw,
-        "h2h": h2h, "event_rounds": event_rounds, "team_summary": team_summary,
+        "h2h": h2h, "event_rounds": event_rounds, "team_summary": team_summary, "highlights": highlights,
     }
 
 

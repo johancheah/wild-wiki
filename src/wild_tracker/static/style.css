@@ -777,6 +777,34 @@ tr.week-row td:first-child { color: var(--text-faint); }
   font-size: 9.5px; color: var(--text-faint);
 }
 
+/* Highlights carousel: horizontally-scrolling tiles for standout moments
+   (4K+/ACE, clutches, thrifty wins) — see macros.html::highlights_carousel.
+   Each tile centers the player's headshot over a big event label, colored
+   per event type; the row scrolls (not wraps) on overflow. */
+.highlights-section { margin-bottom: 24px; }
+.highlights-scroll {
+  display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px;
+  scroll-snap-type: x proximity;
+}
+.highlight-tile {
+  flex-shrink: 0; scroll-snap-align: start;
+  width: 108px; padding: 14px 10px 12px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+}
+.highlight-tile .avatar-lg, .highlight-tile .avatar-fallback-lg { margin-right: 0; margin-bottom: 8px; }
+.highlight-label {
+  font-size: 15px; font-weight: 800; letter-spacing: 0.02em; color: var(--text);
+}
+.highlight-meta { margin-top: 4px; font-size: 10.5px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.highlight-tile.highlight-ace { border-color: var(--accent-dim); box-shadow: 0 0 0 1px var(--accent-dim) inset; }
+.highlight-tile.highlight-ace .highlight-label { color: var(--accent); }
+.highlight-tile.highlight-multikill .highlight-label { color: var(--accent); }
+.highlight-tile.highlight-clutch { border-color: var(--win-dim); }
+.highlight-tile.highlight-clutch .highlight-label { color: var(--win); }
+.highlight-tile.highlight-thrifty { border-color: var(--loss-dim); }
+.highlight-tile.highlight-thrifty .highlight-label { color: var(--loss); }
+
 /* Match-detail tabs (Overview / Performance / Economy) */
 .tabs {
   display: flex; justify-content: center; gap: 4px; border-bottom: 1px solid var(--border);

@@ -502,8 +502,9 @@
    team_summary_card — map_strip suppresses team_summary_card entirely so
    the two never double up; the single-match page (which passes neither)
    is unaffected and keeps team_summary_card as before. #}
-{% macro match_tabs(group, wild_rows, enemy_rows=None, weapons=None, economies=None, box_title="WILD Box Score", multi_agent=False, subtitle=None, timeline=None, opponent_name=None, h2h=None, event_rounds=None, team_summary=None, map=None, team_stats=None, combined_economy=None, week_map_strips=None, map_strip=None, spotlight=None, spotlight_label="Player of the Week") %}
+{% macro match_tabs(group, wild_rows, enemy_rows=None, weapons=None, economies=None, box_title="WILD Box Score", multi_agent=False, subtitle=None, timeline=None, opponent_name=None, h2h=None, event_rounds=None, team_summary=None, map=None, team_stats=None, combined_economy=None, week_map_strips=None, map_strip=None, spotlight=None, spotlight_label="Player of the Week", highlights=None) %}
   {% if timeline %}{{ round_timeline(timeline, opponent_name) }}{% endif %}
+  {% if highlights %}{{ highlights_carousel(highlights) }}{% endif %}
   <div class="tabs" data-group="{{ group }}">
     <button class="tab-btn active" data-tab="overview" data-group="{{ group }}">Overview</button>
     <button class="tab-btn" data-tab="performance" data-group="{{ group }}">Performance</button>
@@ -795,5 +796,28 @@
     {% endfor %}
   </div>
 </div>
+{% endif %}
+{% endmacro %}
+
+{# Highlights carousel: horizontally-scrolling tiles for standout moments
+   from this match (4K+/ACE, clutches, thrifty round wins) — see
+   queries.py::match_highlights for how the event list is built. One tile
+   per event, in round order; the row scrolls on overflow (touch/trackpad/
+   drag) rather than wrapping, so a high-highlight map doesn't bloat the
+   page vertically. #}
+{% macro highlights_carousel(highlights) %}
+{% if highlights %}
+<section class="highlights-section">
+  <h2>Highlights</h2>
+  <div class="highlights-scroll">
+    {% for h in highlights %}
+    <div class="highlight-tile highlight-{{ h.type }}" title="Round {{ h.round }}">
+      {{ avatar(h.player.display_name, h.player.headshot_filename, "lg") }}
+      <div class="highlight-label">{{ h.label }}</div>
+      <div class="highlight-meta">{{ h.player.display_name }} &middot; R{{ h.round }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
 {% endif %}
 {% endmacro %}

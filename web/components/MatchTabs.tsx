@@ -4,6 +4,7 @@ import { WeaponBuyGridPlayers } from "./WeaponBuyGridPlayers";
 import { EconomySection } from "./EconomySection";
 import { CombinedEconomySection } from "./CombinedEconomySection";
 import { RoundTimeline } from "./RoundTimeline";
+import { HighlightsCarousel } from "./HighlightsCarousel";
 import { H2hTable } from "./H2hTable";
 import { TeamSummaryCard } from "./TeamSummaryCard";
 import { WeekTeamStatsCard } from "./WeekTeamStatsCard";
@@ -16,6 +17,7 @@ import type { TimelineEntry } from "@/lib/timeline";
 import type { H2hMatrix } from "@/lib/h2h";
 import type { EventRounds } from "@/lib/eventRounds";
 import type { MatchTeamSummary, WeekTeamStats } from "@/lib/teamSummary";
+import type { HighlightEvent } from "@/lib/highlights";
 
 export type MatchTabsRow = BoxScoreTableRow & PerformanceRow;
 
@@ -69,6 +71,7 @@ export function MatchTabs({
   weekMapStrips,
   mapStrip,
   spotlight,
+  highlights,
 }: {
   wildRows: MatchTabsRow[];
   enemyRows?: MatchTabsRow[] | null;
@@ -90,10 +93,12 @@ export function MatchTabs({
   /** Single-map tile (a schedule-page Map N tab) — replaces TeamSummaryCard. */
   mapStrip?: MapStripData | null;
   spotlight?: SpotlightData | null;
+  highlights?: HighlightEvent[] | null;
 }) {
   return (
     <>
       {timeline && timeline.length > 0 && <RoundTimeline timeline={timeline} opponentName={opponentName ?? null} />}
+      {highlights && highlights.length > 0 && <HighlightsCarousel highlights={highlights} />}
       <Tabs
         tabs={[
           {
