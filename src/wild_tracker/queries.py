@@ -907,6 +907,15 @@ def match_highlights(
         if thrifty_rounds:
             # Credit the round's top WILD fragger as the face of the tile —
             # there's no single "thrifty" player the way a clutch has one.
+            # Must restrict candidates to WILD players: an un-filtered query
+            # can hand the credit to the round's top-fragging *opponent*
+            # instead (caught 2026-10, schedule page's per-map tab).
+            wild_players = {
+                row["player_id"]
+                for row in conn.execute(
+                    "SELECT player_id FROM match_players WHERE match_id = ? AND team_id = ?", (match_id, wild_team_id)
+                ).fetchall()
+            }
             kill_counts = conn.execute("""
                 SELECT round_number, killer_id, COUNT(*) AS n
                 FROM kill_events WHERE match_id = ? AND killer_id IS NOT NULL
@@ -914,7 +923,7 @@ def match_highlights(
             """, (match_id,)).fetchall()
             by_round: dict[int, list[tuple[str, int]]] = defaultdict(list)
             for r in kill_counts:
-                if players.get(r["killer_id"]):
+                if r["killer_id"] in wild_players and players.get(r["killer_id"]):
                     by_round[r["round_number"] + 1].append((r["killer_id"], r["n"]))
             for rd in thrifty_rounds:
                 candidates = by_round.get(rd)

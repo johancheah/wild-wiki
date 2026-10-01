@@ -53,6 +53,16 @@ export async function fetchMatchHighlights(
       .filter((r) => r.wild && r.wild.won && (r.wild.bucket === "eco" || r.wild.bucket === "semi_eco"))
       .map((r) => r.label);
     if (thriftyRounds.length > 0) {
+      // Must restrict candidates to WILD players: an un-filtered query can
+      // hand the credit to the round's top-fragging *opponent* instead
+      // (caught 2026-10, schedule page's per-map tab).
+      const { data: matchPlayerRows } = await supabase
+        .from("match_players")
+        .select("player_id")
+        .eq("match_id", matchId)
+        .eq("team_id", wildTeamId);
+      const wildPlayerIds = new Set((matchPlayerRows ?? []).map((r: { player_id: string }) => r.player_id));
+
       const { data: killRows } = await supabase
         .from("kill_events")
         .select("round_number, killer_id")
@@ -60,7 +70,7 @@ export async function fetchMatchHighlights(
         .not("killer_id", "is", null);
       const killCounts = new Map<number, Map<string, number>>();
       for (const k of killRows ?? []) {
-        if (!players.has(k.killer_id)) continue;
+        if (!wildPlayerIds.has(k.killer_id) || !players.has(k.killer_id)) continue;
         const roundLabel = k.round_number + 1;
         const byPlayer = killCounts.get(roundLabel) ?? new Map<string, number>();
         byPlayer.set(k.killer_id, (byPlayer.get(k.killer_id) ?? 0) + 1);
@@ -69,9 +79,9 @@ export async function fetchMatchHighlights(
       for (const rd of thriftyRounds) {
         const byPlayer = killCounts.get(rd);
         if (!byPlayer || byPlayer.size === 0) continue;
-        // Ties (equal kill count) broken by player_id so the credited
-        // player is deterministic and agrees with the Python port.
-        const topPlayerId = [...byPlayer.entries()].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))[0][0];
+        // Ties (equal kill count) broken by player_id, highest first —
+        // matches Python's max(candidates, key=lambda c: (c[1], c[0])).
+        const topPlayerId = [...byPlayer.entries()].sort((a, b) => b[1] - a[1] || (a[0] > b[0] ? -1 : 1))[0][0];
         const player = players.get(topPlayerId);
         if (player) events.push({ type: "thrifty", label: "THRIFTY", round: rd, player });
       }

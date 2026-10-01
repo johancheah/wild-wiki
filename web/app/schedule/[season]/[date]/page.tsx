@@ -165,6 +165,7 @@ export default async function MatchWeekDetailPage({
                     teamSummary: d.teamSummary,
                   }}
                   spotlight={d.wildRows[0] ? toSpotlight(d.wildRows[0], "Map MVP") : null}
+                  highlights={d.highlights}
                 />
               ) : (
                 <div className="empty-note">This map&apos;s data could not be loaded.</div>

@@ -62,7 +62,8 @@
        event_rounds=d.event_rounds,
        map_strip={"map": md.map, "opponent": md.opponent, "match_id": md.match_id, "result": d.match.result, "team_summary": d.team_summary},
        spotlight=wild_rows[0] if wild_rows else None,
-       spotlight_label="Map MVP"
+       spotlight_label="Map MVP",
+       highlights=d.highlights
      ) }}
 </div>
 {% endfor %}
