@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import json
 import re
 import sqlite3
 from collections import defaultdict
 from datetime import datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from .round_side import compute_match_timeline, compute_wild_side_by_round
@@ -945,6 +947,62 @@ def match_highlights(
     return events
 
 
+_REPLAY_MAPS_PATH = Path(__file__).parent / "static" / "replay_maps.json"
+
+
+def match_replay(conn: sqlite3.Connection, match_id: str, map_name: str, wild_team_id: str | None) -> dict | None:
+    """Data for the match page's 2D Replay tab: every round's kill/plant/
+    defuse events with the positions of all alive players at that instant
+    (round_events — API-sourced matches only, None otherwise), plus the
+    map's minimap calibration. The API has no continuous movement data, so
+    the replay steps event to event rather than playing back smoothly."""
+    if not wild_team_id:
+        return None
+    cal = json.loads(_REPLAY_MAPS_PATH.read_text()).get(map_name)
+    rows = conn.execute("""
+        SELECT round_number, event_index, kind, time_in_round_ms, actor_id, target_id, weapon, site,
+               location_x, location_y, snapshot
+        FROM round_events WHERE match_id = ? ORDER BY round_number, event_index
+    """, (match_id,)).fetchall()
+    if not rows or not cal:
+        return None
+
+    winners = {
+        r["round_number"]: r["winning_team_id"]
+        for r in conn.execute("SELECT round_number, winning_team_id FROM rounds WHERE match_id = ?", (match_id,)).fetchall()
+    }
+    players = {
+        r["player_id"]: {
+            "name": r["display_name"], "team": "wild" if r["team_id"] == wild_team_id else "enemy",
+            "agent": r["agent"], "headshot": r["headshot_filename"],
+        }
+        for r in conn.execute("""
+            SELECT mp.player_id, mp.team_id, mp.agent, p.headshot_filename, COALESCE(p.nickname, p.riot_name) AS display_name
+            FROM match_players mp JOIN players p ON p.player_id = mp.player_id WHERE mp.match_id = ?
+        """, (match_id,)).fetchall()
+    }
+
+    by_round: dict[int, list[dict]] = defaultdict(list)
+    for r in rows:
+        snap = r["snapshot"]
+        if isinstance(snap, str):  # SQLite TEXT; Postgres JSONB arrives parsed
+            snap = json.loads(snap)
+        by_round[r["round_number"]].append({
+            "kind": r["kind"], "t": r["time_in_round_ms"], "actor": r["actor_id"], "target": r["target_id"],
+            "weapon": r["weapon"], "site": r["site"], "x": r["location_x"], "y": r["location_y"],
+            "players": snap or [],
+        })
+
+    rounds = []
+    for rn in sorted(by_round):
+        w = winners.get(rn)
+        rounds.append({
+            "label": rn + 1, "winner": None if w is None else ("wild" if w == wild_team_id else "enemy"),
+            "events": by_round[rn],
+        })
+    return {"map": map_name, "cal": cal, "players": players, "rounds": rounds}
+
+
 def match_detail(conn: sqlite3.Connection, match_id: str) -> dict | None:
     match_row = conn.execute("""
         SELECT m.*, t.name AS opponent_name, t.tag AS opponent_tag
@@ -982,12 +1040,13 @@ def match_detail(conn: sqlite3.Connection, match_id: str) -> dict | None:
         if match["team_id"] and match["enemy_team_id"] else None
     )
     highlights = match_highlights(conn, match_id, match["team_id"], event_rounds, economy)
+    replay = match_replay(conn, match_id, match["map"], match["team_id"])
 
     return {
         "match": match, "box_score": box_score, "weapon_kills": weapon_kills,
         "timeline": timeline, "economy": economy,
         "weapons": weapon_grid_from_matrix(weapon_matrix_raw), "weapon_matrix": weapon_matrix_raw,
-        "h2h": h2h, "event_rounds": event_rounds, "team_summary": team_summary, "highlights": highlights,
+        "h2h": h2h, "event_rounds": event_rounds, "team_summary": team_summary, "highlights": highlights, "replay": replay,
     }
 
 

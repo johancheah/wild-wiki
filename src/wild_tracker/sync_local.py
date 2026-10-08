@@ -38,6 +38,8 @@ def _store_match(conn, normalized: dict) -> None:
         upsert(conn, "round_player_stats", row)
     for row in normalized["kill_events"]:
         upsert(conn, "kill_events", row)
+    for row in normalized["round_events"]:
+        upsert(conn, "round_events", row)
     conn.commit()
 
 

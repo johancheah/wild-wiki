@@ -6,6 +6,7 @@ import { fetchH2hMatrix, type H2hMatrix } from "./h2h";
 import { fetchEventRounds, type EventRounds } from "./eventRounds";
 import { computeMatchTeamSummary, type MatchTeamSummary } from "./teamSummary";
 import { fetchMatchHighlights, type HighlightEvent } from "./highlights";
+import { fetchMatchReplay, type MatchReplay } from "./replay";
 import type { BoxScoreRow, MatchRow } from "./types";
 
 // Direct port of src/wild_tracker/queries.py::match_detail — one full match's
@@ -25,6 +26,7 @@ export type MatchFullDetail = {
   eventRounds: EventRounds;
   teamSummary: MatchTeamSummary | null;
   highlights: HighlightEvent[];
+  replay: MatchReplay | null;
 };
 
 export async function fetchMatchFullDetail(supabase: SupabaseClient, matchId: string): Promise<MatchFullDetail | null> {
@@ -58,5 +60,7 @@ export async function fetchMatchFullDetail(supabase: SupabaseClient, matchId: st
 
   const highlights = await fetchMatchHighlights(supabase, matchId, match.team_id, eventRounds, economy);
 
-  return { match, wildRows, enemyRows, timeline, economy, weapons, weaponMatrix, h2h, eventRounds, teamSummary, highlights };
+  const replay = await fetchMatchReplay(supabase, matchId, match.map, match.team_id);
+
+  return { match, wildRows, enemyRows, timeline, economy, weapons, weaponMatrix, h2h, eventRounds, teamSummary, highlights, replay };
 }

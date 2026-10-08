@@ -195,3 +195,25 @@ CREATE INDEX IF NOT EXISTS idx_match_players_match ON match_players(match_id);
 CREATE INDEX IF NOT EXISTS idx_round_player_stats_match ON round_player_stats(match_id);
 CREATE INDEX IF NOT EXISTS idx_kill_events_match_round ON kill_events(match_id, round_number);
 CREATE INDEX IF NOT EXISTS idx_matches_team ON matches(team_id);
+
+-- Position snapshots for the match page's 2D Replay tab: one row per kill /
+-- plant / defuse, in round-time order. `snapshot` is a JSON array of
+-- [player_id, x, y, view_radians] for every player alive at that instant
+-- (the API attaches all 10 players' positions to each of these events —
+-- there's no continuous movement data, so the replay steps event to event).
+CREATE TABLE IF NOT EXISTS round_events (
+    match_id            TEXT NOT NULL REFERENCES matches(match_id),
+    round_number        INTEGER NOT NULL,
+    event_index         INTEGER NOT NULL,
+    kind                TEXT NOT NULL,     -- 'kill' | 'plant' | 'defuse'
+    time_in_round_ms    INTEGER,
+    actor_id            TEXT,              -- killer / planter / defuser
+    target_id           TEXT,              -- victim (kills only)
+    weapon              TEXT,
+    site                TEXT,              -- plants only
+    location_x          REAL,
+    location_y          REAL,
+    snapshot            TEXT,
+    PRIMARY KEY (match_id, round_number, event_index)
+);
+CREATE INDEX IF NOT EXISTS idx_round_events_match ON round_events(match_id, round_number);

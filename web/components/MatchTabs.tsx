@@ -17,6 +17,8 @@ import type { H2hMatrix } from "@/lib/h2h";
 import type { EventRounds } from "@/lib/eventRounds";
 import type { MatchTeamSummary, WeekTeamStats } from "@/lib/teamSummary";
 import type { HighlightEvent } from "@/lib/highlights";
+import type { MatchReplay } from "@/lib/replay";
+import { ReplayTab } from "./ReplayTab";
 
 export type MatchTabsRow = BoxScoreTableRow & PerformanceRow;
 
@@ -71,6 +73,7 @@ export function MatchTabs({
   mapStrip,
   spotlight,
   highlights,
+  replay,
 }: {
   wildRows: MatchTabsRow[];
   enemyRows?: MatchTabsRow[] | null;
@@ -93,6 +96,8 @@ export function MatchTabs({
   mapStrip?: MapStripData | null;
   spotlight?: SpotlightData | null;
   highlights?: HighlightEvent[] | null;
+  /** 2D Replay tab data (API-sourced single-map matches only). */
+  replay?: MatchReplay | null;
 }) {
   return (
     <>
@@ -194,6 +199,7 @@ export function MatchTabs({
                 },
               ]
             : []),
+          ...(replay ? [{ id: "replay", label: "2D Replay", content: <ReplayTab replay={replay} /> }] : []),
         ]}
       />
     </>

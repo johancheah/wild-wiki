@@ -502,7 +502,7 @@
    team_summary_card — map_strip suppresses team_summary_card entirely so
    the two never double up; the single-match page (which passes neither)
    is unaffected and keeps team_summary_card as before. #}
-{% macro match_tabs(group, wild_rows, enemy_rows=None, weapons=None, economies=None, box_title="WILD Box Score", multi_agent=False, subtitle=None, timeline=None, opponent_name=None, h2h=None, event_rounds=None, team_summary=None, map=None, team_stats=None, combined_economy=None, week_map_strips=None, map_strip=None, spotlight=None, spotlight_label="Player of the Week", highlights=None) %}
+{% macro match_tabs(group, wild_rows, enemy_rows=None, weapons=None, economies=None, box_title="WILD Box Score", multi_agent=False, subtitle=None, timeline=None, opponent_name=None, h2h=None, event_rounds=None, team_summary=None, map=None, team_stats=None, combined_economy=None, week_map_strips=None, map_strip=None, spotlight=None, spotlight_label="Player of the Week", highlights=None, replay=None) %}
   {% if timeline or highlights %}
   {# Shared wrapper so the hover handler (base.html) can scope "highlight
      this round on the timeline" lookups to the matching timeline/carousel
@@ -518,6 +518,7 @@
     <button class="tab-btn" data-tab="performance" data-group="{{ group }}">Performance</button>
     {% if weapons %}<button class="tab-btn" data-tab="weapons" data-group="{{ group }}">Weapons</button>{% endif %}
     {% if economies %}<button class="tab-btn" data-tab="economy" data-group="{{ group }}">Economy</button>{% endif %}
+    {% if replay %}<button class="tab-btn" data-tab="replay" data-group="{{ group }}">2D Replay</button>{% endif %}
   </div>
 
   <div id="tab-{{ group }}-overview" class="tab-panel" data-group="{{ group }}">
@@ -582,6 +583,31 @@
     </section>
     {% endfor %}
     {% endif %}
+  </div>
+  {% endif %}
+
+  {% if replay %}
+  <div id="tab-{{ group }}-replay" class="tab-panel hidden" data-group="{{ group }}">
+    {# Rendered client-side by static/replay.js from the embedded JSON —
+       see queries.py::match_replay for the data shape. #}
+    <div class="replay" tabindex="0">
+      <div class="replay-rounds"></div>
+      <div class="replay-body">
+        <div class="replay-map-frame">
+          <img class="replay-minimap" alt="{{ replay.map }} minimap">
+          <svg class="replay-svg" viewBox="0 0 1000 1000" aria-hidden="true"></svg>
+        </div>
+        <div class="replay-side">
+          <div class="replay-nav">
+            <button type="button" class="replay-prev" aria-label="Previous event">&#8249;</button>
+            <span class="replay-round-label"></span>
+            <button type="button" class="replay-next" aria-label="Next event">&#8250;</button>
+          </div>
+          <div class="replay-events"></div>
+        </div>
+      </div>
+      <script type="application/json" class="replay-data">{{ replay_json(replay)|safe }}</script>
+    </div>
   </div>
   {% endif %}
 {% endmacro %}

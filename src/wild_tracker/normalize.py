@@ -57,6 +57,88 @@ def _get(d: dict | None, *path: str, default: Any = None) -> Any:
     return cur if cur is not None else default
 
 
+
+def extract_round_events(match_id: str, data: dict) -> list[dict]:
+    """Kill / plant / defuse events with every alive player's position at
+    that instant (the API attaches `player_locations` to each), for the 2D
+    Replay tab. Ordered by round time within each round; event_index is that
+    order. Positions are game coordinates — the replay maps them onto the
+    minimap with per-map calibration (static/replay_maps.json)."""
+
+    def snap(locs):
+        return json.dumps(
+            [
+                [
+                    _get(pl, "player", "puuid"),
+                    _get(pl, "location", "x"),
+                    _get(pl, "location", "y"),
+                    round(pl.get("view_radians") or 0.0, 3),
+                ]
+                for pl in locs or []
+            ],
+            separators=(",", ":"),
+        )
+
+    per_round: dict[int, list[dict]] = {}
+
+    for k in data.get("kills", []) or []:
+        per_round.setdefault(k.get("round"), []).append(
+            {
+                "kind": "kill",
+                "time": k.get("time_in_round_in_ms"),
+                "actor_id": _get(k, "killer", "puuid"),
+                "target_id": _get(k, "victim", "puuid"),
+                "weapon": _get(k, "weapon", "name"),
+                "site": None,
+                "x": _get(k, "location", "x"),
+                "y": _get(k, "location", "y"),
+                "snapshot": snap(k.get("player_locations")),
+            }
+        )
+
+    for r in data.get("rounds", []) or []:
+        rn = r.get("id")
+        for kind in ("plant", "defuse"):
+            ev = r.get(kind)
+            if not ev:
+                continue
+            per_round.setdefault(rn, []).append(
+                {
+                    "kind": kind,
+                    "time": ev.get("round_time_in_ms"),
+                    "actor_id": _get(ev, "player", "puuid"),
+                    "target_id": None,
+                    "weapon": None,
+                    "site": ev.get("site"),
+                    "x": _get(ev, "location", "x"),
+                    "y": _get(ev, "location", "y"),
+                    "snapshot": snap(ev.get("player_locations")),
+                }
+            )
+
+    rows = []
+    for rn, events in per_round.items():
+        events.sort(key=lambda e: (e["time"] if e["time"] is not None else 0, e["kind"] != "kill"))
+        for i, e in enumerate(events):
+            rows.append(
+                {
+                    "match_id": match_id,
+                    "round_number": rn,
+                    "event_index": i,
+                    "kind": e["kind"],
+                    "time_in_round_ms": e["time"],
+                    "actor_id": e["actor_id"],
+                    "target_id": e["target_id"],
+                    "weapon": e["weapon"],
+                    "site": e["site"],
+                    "location_x": e["x"],
+                    "location_y": e["y"],
+                    "snapshot": e["snapshot"],
+                }
+            )
+    return rows
+
+
 def normalize_match(raw: dict, wild_premier_team_id: str, match_type: str | None) -> dict:
     """Turn one match-details-v4 response into rows for every raw table.
 
@@ -272,4 +354,5 @@ def normalize_match(raw: dict, wild_premier_team_id: str, match_type: str | None
         "rounds": round_rows,
         "round_player_stats": round_player_stats_rows,
         "kill_events": kill_event_rows,
+        "round_events": extract_round_events(match_id, data),
     }

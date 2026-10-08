@@ -75,5 +75,6 @@ _PRIMARY_KEYS = {
     "rounds": ["match_id", "round_number"],
     "kill_events": ["match_id", "round_number", "event_index"],
     "round_player_stats": ["match_id", "round_number", "player_id"],
+    "round_events": ["match_id", "round_number", "event_index"],
     "derived_player_match_stats": ["match_id", "player_id"],
 }

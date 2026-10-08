@@ -1,0 +1,86 @@
+{
+  "Ascent": {
+    "file": "Ascent.png",
+    "xMultiplier": 7e-05,
+    "yMultiplier": -7e-05,
+    "xScalarToAdd": 0.813895,
+    "yScalarToAdd": 0.573242
+  },
+  "Split": {
+    "file": "Split.png",
+    "xMultiplier": 7.8e-05,
+    "yMultiplier": -7.8e-05,
+    "xScalarToAdd": 0.842188,
+    "yScalarToAdd": 0.697578
+  },
+  "Bind": {
+    "file": "Bind.png",
+    "xMultiplier": 5.9e-05,
+    "yMultiplier": -5.9e-05,
+    "xScalarToAdd": 0.576941,
+    "yScalarToAdd": 0.967566
+  },
+  "Breeze": {
+    "file": "Breeze.png",
+    "xMultiplier": 7e-05,
+    "yMultiplier": -7e-05,
+    "xScalarToAdd": 0.465123,
+    "yScalarToAdd": 0.833078
+  },
+  "Abyss": {
+    "file": "Abyss.png",
+    "xMultiplier": 8.1e-05,
+    "yMultiplier": -8.1e-05,
+    "xScalarToAdd": 0.5,
+    "yScalarToAdd": 0.5
+  },
+  "Lotus": {
+    "file": "Lotus.png",
+    "xMultiplier": 7.2e-05,
+    "yMultiplier": -7.2e-05,
+    "xScalarToAdd": 0.454789,
+    "yScalarToAdd": 0.917752
+  },
+  "Sunset": {
+    "file": "Sunset.png",
+    "xMultiplier": 7.8e-05,
+    "yMultiplier": -7.8e-05,
+    "xScalarToAdd": 0.5,
+    "yScalarToAdd": 0.515625
+  },
+  "Pearl": {
+    "file": "Pearl.png",
+    "xMultiplier": 7.8e-05,
+    "yMultiplier": -7.8e-05,
+    "xScalarToAdd": 0.480469,
+    "yScalarToAdd": 0.916016
+  },
+  "Summit": {
+    "file": "Summit.png",
+    "xMultiplier": 7.5e-05,
+    "yMultiplier": -7.5e-05,
+    "xScalarToAdd": 0.047401,
+    "yScalarToAdd": 0.978891
+  },
+  "Icebox": {
+    "file": "Icebox.png",
+    "xMultiplier": 7.2e-05,
+    "yMultiplier": -7.2e-05,
+    "xScalarToAdd": 0.460214,
+    "yScalarToAdd": 0.304687
+  },
+  "Corrode": {
+    "file": "Corrode.png",
+    "xMultiplier": 7e-05,
+    "yMultiplier": -7e-05,
+    "xScalarToAdd": 0.526158,
+    "yScalarToAdd": 0.5
+  },
+  "Haven": {
+    "file": "Haven.png",
+    "xMultiplier": 7.5e-05,
+    "yMultiplier": -7.5e-05,
+    "xScalarToAdd": 1.09345,
+    "yScalarToAdd": 0.642728
+  }
+}

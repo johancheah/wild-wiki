@@ -40,6 +40,7 @@
   <main class="wrap">
     {% block content %}{% endblock %}
   </main>
+  <script src="/static/replay.js?v={{ asset_version() }}" defer></script>
   <script>
     // Mobile hamburger menu: toggles the .mobile-menu dropdown (hidden on
     // desktop widths via CSS regardless of this class) and swaps the

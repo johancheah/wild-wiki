@@ -62,12 +62,36 @@ templates.env.globals["headshot_url"] = headshot_url
 templates.env.globals["weapon_icon"] = weapon_icon
 
 
+def replay_json(replay: dict) -> str:
+    """The 2D Replay tab's data as a JSON string for an inline <script
+    type="application/json"> — enriched here with the (server-side-only)
+    agent / weapon icon lookups and the minimap URL so replay.js needs no
+    asset knowledge of its own."""
+    players = {
+        pid: {**p, "icon": agent_icon(p["agent"]), "headshot": headshot_url(p["headshot"])}
+        for pid, p in replay["players"].items()
+    }
+    weapons = {
+        e["weapon"]: weapon_icon(e["weapon"])
+        for rnd in replay["rounds"] for e in rnd["events"] if e["weapon"]
+    }
+    payload = {
+        "players": players, "rounds": replay["rounds"], "cal": replay["cal"],
+        "minimap": f"/static/maps/minimap/{replay['cal']['file']}", "weaponIcons": weapons,
+    }
+    # "</" would let a stray string close the host <script> tag early.
+    return json.dumps(payload, separators=(",", ":")).replace("</", "<\\/")
+
+
+templates.env.globals["replay_json"] = replay_json
+
+
 def asset_version() -> int:
     # Cache-busting query param for style.css — browsers (and this preview
     # tool) can be stubborn about revalidating a <link>-loaded stylesheet
     # even when the bytes on disk have changed; a version query string
     # sidesteps that entirely rather than depending on cache headers.
-    return int(os.path.getmtime(APP_DIR / "static" / "style.css"))
+    return int(max(os.path.getmtime(APP_DIR / "static" / name) for name in ("style.css", "replay.js")))
 
 
 templates.env.globals["asset_version"] = asset_version

@@ -978,3 +978,67 @@ tr.week-row td:first-child { color: var(--text-faint); }
   background: var(--surface-2); border: 1px solid var(--border);
   border-radius: 4px; padding: 2px 6px; white-space: nowrap;
 }
+
+/* 2D Replay tab (match page) — see static/replay.js (local app) and
+   components/ReplayTab.tsx (web app). Map markers are SVG in a 1000x1000
+   viewBox laid over the minimap image. */
+.replay { outline: none; }
+.replay-rounds { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-bottom: 16px; justify-content: center; }
+.replay-round-gap { width: 14px; }
+.replay-round-btn {
+  width: 30px; height: 28px; font-size: 11px; font-weight: 700; cursor: pointer;
+  color: var(--text-dim); background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px;
+  border-bottom: 3px solid var(--border);
+}
+.replay-round-btn.win { border-bottom-color: var(--win); }
+.replay-round-btn.loss { border-bottom-color: var(--loss); }
+.replay-round-btn:hover { color: var(--text); }
+.replay-round-btn.active { color: var(--bg); background: var(--accent); border-color: var(--accent); }
+.replay-body { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 16px; align-items: start; }
+.replay-map-frame {
+  position: relative; width: 100%; aspect-ratio: 1 / 1; max-width: 640px; justify-self: center;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+}
+.replay-minimap, .replay-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.replay-minimap { object-fit: contain; opacity: 0.9; }
+.replay-svg { overflow: visible; }
+.replay-marker-bg { fill: var(--surface); }
+.replay-marker-ring { fill: none; stroke-width: 4; }
+.replay-marker.replay-wild .replay-marker-ring { stroke: var(--accent); }
+.replay-marker.replay-enemy .replay-marker-ring { stroke: var(--loss); }
+.replay-marker.dead { opacity: 0.55; }
+.replay-view { stroke-width: 4; stroke-linecap: round; }
+.replay-marker.replay-wild .replay-view { stroke: var(--accent); }
+.replay-marker.replay-enemy .replay-view { stroke: var(--loss); }
+.replay-x { stroke: #fff; stroke-width: 5; stroke-linecap: round; }
+.replay-kill-line { stroke-width: 3; stroke-dasharray: 8 6; opacity: 0.9; }
+.replay-kill-line.replay-wild { stroke: var(--accent); }
+.replay-kill-line.replay-enemy { stroke: var(--loss); }
+.replay-spike rect { fill: var(--highlight-thrifty); stroke: var(--bg); stroke-width: 3; }
+.replay-side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.replay-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.replay-nav button {
+  width: 34px; height: 30px; font-size: 20px; line-height: 1; cursor: pointer; color: var(--text-dim);
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px;
+}
+.replay-nav button:hover { color: var(--text); }
+.replay-round-label { font-size: 13px; font-weight: 700; color: var(--text-dim); }
+.replay-events { display: flex; flex-direction: column; gap: 4px; max-height: 560px; overflow-y: auto; }
+.replay-event {
+  display: flex; align-items: center; gap: 10px; padding: 6px 8px; text-align: left; cursor: pointer;
+  background: var(--surface-2); border: 1px solid transparent; border-radius: 8px; color: var(--text);
+}
+.replay-event:hover { border-color: var(--border); }
+.replay-event.active { border-color: var(--accent-dim); background: var(--row-hover); }
+.replay-event-time { width: 34px; flex-shrink: 0; font-size: 12px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+.replay-event-body { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; font-size: 12px; }
+.replay-chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 6px 2px 3px; border-radius: 6px; font-weight: 600; }
+.replay-chip img { width: 18px; height: 18px; border-radius: 4px; }
+.replay-chip.replay-wild { background: rgba(169, 241, 79, 0.14); color: var(--accent); }
+.replay-chip.replay-enemy { background: rgba(242, 104, 95, 0.14); color: var(--loss); }
+.replay-weapon { height: 14px; width: auto; max-width: 48px; opacity: 0.85; filter: brightness(1.6); }
+.replay-weapon-text, .replay-spike-text { color: var(--text-dim); font-size: 11px; }
+@media (max-width: 820px) {
+  .replay-body { grid-template-columns: 1fr; }
+  .replay-events { max-height: 320px; }
+}
